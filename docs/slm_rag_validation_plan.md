@@ -74,29 +74,28 @@
 
 #### 3.1.1 기본 응답·기록 요약 비교군
 
-| 구분 | 후보 | 평가 목적 | 라이선스·운영 확인사항 |
+| 후보 | 특징 | 평가 목적 | 라이선스·운영 확인사항 |
 |---|---|---|---|
-| 1차 기준 모델 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | 4B급 로컬 RAG 답변과 기록 요약의 기준 성능. BFCL V4 **FC 모드** 전체 정확도 35.68은 도구 호출 참고값으로만 사용 | Apache 2.0, 정확한 모델 리비전과 양자화 출처 고정 |
-| 필수 경량 비교 | [HyperCLOVA X SEED Text Instruct 1.5B](https://huggingface.co/naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B) | 저사양 환경의 한국어 이해·표현 성능 확인 | 배포 전 커스텀 라이선스, 접근 조건 및 표시 의무 재검토 |
-| 필수 경량 비교 | [EXAONE 4.0 1.2B](https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B) | 모바일·CPU급 환경에서 가능한 기능 범위 확인 | 배포 전 커스텀 라이선스와 재배포 조건 재검토 |
-| 선택 비교 | [Gemma 3 4B](https://deepmind.google/models/gemma/gemma-3/) | 같은 4B급 다국어·멀티모달 계열과 비교 | Gemma 이용약관과 배포 방식 검토 |
-| 선택 비교 | [Phi-4-mini-instruct](https://huggingface.co/microsoft/Phi-4-mini-instruct) | MIT 모델의 운영 편의성과 한국어 성능 비교 | 영어 중심 성능 편향을 프로젝트 데이터로 확인 |
-| 비생성 대조군 | 근거문장 추출 + 검수된 템플릿 | 자유생성이 실제로 주는 이점과 위험을 측정 | 고위험 또는 생성 모델 미통과 시 제품 대안으로 사용 |
-
-[MedGemma 4B](https://huggingface.co/google/medgemma-4b-it)는 의료 특화라는 이유만으로 우선 선정하지 않는다. 한국어 간병 Q&A, 처방전 OCR 및 이 프로젝트의 다회차 사용 흐름에 대한 적합성이 확인되지 않았으므로 초기에는 연구용 그림자 비교군으로만 둘 수 있다.
+| [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | 범용 다국어 4B 모델로 구조화 출력과 도구 사용을 함께 시험하기 좋지만 의료 특화 모델은 아니다. | 4B급 로컬 RAG 답변과 기록 요약의 기준 성능. BFCL V4 **FC 모드** 전체 정확도 35.68은 도구 호출 참고값으로만 사용 | Apache 2.0, 정확한 모델 리비전과 양자화 출처 고정 |
+| [HyperCLOVA X SEED Text Instruct 1.5B](https://huggingface.co/naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B) | 작은 크기에서 한국어 이해·표현을 강점으로 기대할 수 있지만 복잡한 근거 통합 능력은 별도 검증이 필요하다. | 저사양 환경의 한국어 이해·표현 성능 확인 | 배포 전 커스텀 라이선스, 접근 조건 및 표시 의무 재검토 |
+| [EXAONE 4.0 1.2B](https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B) | 1.2B급이라 메모리·지연시간에 유리하지만 긴 문맥과 복합 의료 조건을 보존하는 능력이 제한될 수 있다. | 모바일·CPU급 환경에서 가능한 기능 범위 확인 | 배포 전 커스텀 라이선스와 재배포 조건 재검토 |
+| [Gemma 3 4B](https://deepmind.google/models/gemma/gemma-3/) | 다국어와 이미지 입력을 함께 다룰 수 있는 4B 계열이지만 별도 이용약관과 한국어 의료 성능 확인이 필요하다. | 같은 4B급 다국어·멀티모달 계열과 비교 | Gemma 이용약관과 배포 방식 검토 |
+| [MedGemma 4B](https://huggingface.co/google/medgemma-4b-it) | 의료 텍스트와 이미지를 함께 다루도록 조정된 4B 모델이지만 한국어 간병 Q&A, 국내 처방자료 OCR 및 요구되는 근거 인용 형식은 별도 검증이 필요하다. | 의료 특화 조정이 범용 4B 모델보다 의료 오류와 근거 이탈을 줄이고 이미지 이해를 개선하는지 확인 | 공식 모델 카드의 이용 조건, 정확한 리비전, 양자화 출처 및 로컬 자원 요구량 확인 |
+| [Phi-4-mini-instruct](https://huggingface.co/microsoft/Phi-4-mini-instruct) | 비교적 작은 범용 모델이고 MIT 라이선스가 장점이지만 영어 중심 성능 편향 가능성이 있다. | MIT 모델의 운영 편의성과 한국어 성능 비교 | 영어 중심 성능 편향을 프로젝트 데이터로 확인 |
+| 근거문장 추출 + 검수된 템플릿 | 자유생성이 없어 근거 이탈 위험을 줄일 수 있지만 표현 유연성과 대화 자연스러움이 제한된다. | 자유생성이 실제로 주는 이점과 위험을 측정 | 고위험 또는 생성 모델 미통과 시 제품 대안으로 사용 |
 
 #### 3.1.2 에이전트·도구 호출 추가 비교군
 
 아래 공개 점수는 서로 다른 데이터와 지표를 사용한다. `AgentBench FC AVG`, `ToolBench Pass`, `BFCL V2 Overall`, `BFCL V4 Overall`을 합산하거나 순위처럼 직접 비교하지 않는다. 이 프로젝트에서는 모델이 직접 행동하지 않고, 허용 목록에 있는 읽기 전용 로컬 도구를 올바른 스키마로 선택하는지만 별도 평가한다.
 
-| 구분 | 후보·학습 구성 | 공개 결과와 정확한 의미 | 공개·라이선스 상태 | 이 프로젝트에서의 위치 |
+| 후보·학습 구성 | 특징 | 공개 결과와 정확한 의미 | 공개·라이선스 상태 | 이 프로젝트에서의 위치 |
 |---|---|---|---|---|
-| 종합 멀티스텝 | [AgentRL](https://github.com/THUDM/AgentRL) + [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | [AgentRL 논문](https://arxiv.org/abs/2510.04206)의 ALFWorld·DB·KG·OS·WebShop 5개 AgentBench FC 태스크 성공률 평균 **62.0** | 프레임워크 MIT, AgentBench Apache 2.0, 7B 기반 모델 Apache 2.0. 공식 학습 코드는 있으나 논문 결과 체크포인트 링크는 조사일 현재 확인되지 않음 | 재학습 비용과 재현성을 포함한 연구 비교군. 바로 내려받는 완성 모델로 취급하지 않음 |
-| 극소형 멀티스텝 | [AgentRL](https://github.com/THUDM/AgentRL) + [Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct) | 같은 5개 AgentBench FC 태스크 성공률 평균 **60.0** | 프레임워크 MIT, 기반 모델은 `qwen-research` 라이선스. 결과 체크포인트 링크는 조사일 현재 확인되지 않음 | 저사양 연구 비교군. 상업 배포 가능 여부를 법무 검토하기 전 제품 후보로 확정하지 않음 |
-| API·ToolBench | [CAST 논문](https://arxiv.org/abs/2605.15041) + [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | 논문 표 1의 ToolBench **Pass 80.67 / Win 79.43**, BFCL V2 Overall **88.43** | CAST는 SFT 후 GRPO를 수행하는 학습법이다. 논문에서 공식 코드·데이터·체크포인트 링크를 조사일 현재 확인하지 못함 | 논문 재현성 확인 후 비교. 공개 가중치가 있는 모델명처럼 취급하지 않음 |
-| 소형 함수 호출 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | [BFCL V4](https://gorilla.cs.berkeley.edu/leaderboard.html) 전체 정확도 **51.40**, 2026-04-12 공개 스냅샷의 7B 이하 후보 | Apache 2.0. 모델명은 3B이나 Hugging Face 메타데이터는 4B params로 표시. 영어·중국어 중심이며 `trust_remote_code=True` 예제가 있어 코드 보안 검토 필요 | 내려받아 시험 가능한 필수 도구 호출 비교군. 한국어와 로컬 런타임은 별도 검증 |
-| 3B 도구 특화 | [xLAM-2-3b-fc-r](https://huggingface.co/Salesforce/xLAM-2-3b-fc-r) | 같은 BFCL V4 스냅샷 전체 정확도 **41.22** | CC BY-NC 4.0이고 공식 카드가 연구용 공개라고 명시 | 연구 비교 전용. 현재 조건으로 상업 제품 채택 후보에 포함하지 않음 |
-| 범용 4B 기준선 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | 같은 BFCL V4 스냅샷 FC 모드 전체 정확도 **35.68** | Apache 2.0 | 기본 응답 모델을 도구 전용 모델과 같은 앱 스키마에서 비교하는 기준선 |
+| [AgentRL](https://github.com/THUDM/AgentRL) + [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | 다섯 환경의 멀티턴 RL 성능이 강점이지만 결과 모델을 바로 받는 방식이 아니라 학습 재현이 필요하다. | [AgentRL 논문](https://arxiv.org/abs/2510.04206)의 ALFWorld·DB·KG·OS·WebShop 5개 AgentBench FC 태스크 성공률 평균 **62.0** | 프레임워크 MIT, AgentBench Apache 2.0, 7B 기반 모델 Apache 2.0. 공식 학습 코드는 있으나 논문 결과 체크포인트 링크는 조사일 현재 확인되지 않음 | 재학습 비용과 재현성을 포함한 연구 비교군. 바로 내려받는 완성 모델로 취급하지 않음 |
+| [AgentRL](https://github.com/THUDM/AgentRL) + [Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct) | 3B급에서 7B 구성에 가까운 공개 성능이 장점이지만 학습 재현과 기반 모델 라이선스 검토가 필요하다. | 같은 5개 AgentBench FC 태스크 성공률 평균 **60.0** | 프레임워크 MIT, 기반 모델은 `qwen-research` 라이선스. 결과 체크포인트 링크는 조사일 현재 확인되지 않음 | 저사양 연구 비교군. 상업 배포 가능 여부를 법무 검토하기 전 제품 후보로 확정하지 않음 |
+| [CAST 논문](https://arxiv.org/abs/2605.15041) + [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | 사례별 추론 길이와 스키마 실행을 함께 보정하는 학습법이지만 공개 구현과 체크포인트가 확인되지 않았다. | 논문 표 1의 ToolBench **Pass 80.67 / Win 79.43**, BFCL V2 Overall **88.43** | CAST는 SFT 후 GRPO를 수행하는 학습법이다. 논문에서 공식 코드·데이터·체크포인트 링크를 조사일 현재 확인하지 못함 | 논문 재현성 확인 후 비교. 공개 가중치가 있는 모델명처럼 취급하지 않음 |
+| [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | 내려받을 수 있는 Apache 2.0 도구 호출 모델이지만 영어·중국어 중심이고 커스텀 코드 보안 검토가 필요하다. | [BFCL V4](https://gorilla.cs.berkeley.edu/leaderboard.html) 전체 정확도 **51.40**, 2026-04-12 공개 스냅샷의 7B 이하 후보 | Apache 2.0. 모델명은 3B이나 Hugging Face 메타데이터는 4B params로 표시. 영어·중국어 중심이며 `trust_remote_code=True` 예제가 있어 코드 보안 검토 필요 | 내려받아 시험 가능한 도구 호출 비교군. 한국어와 로컬 런타임은 별도 검증 |
+| [xLAM-2-3b-fc-r](https://huggingface.co/Salesforce/xLAM-2-3b-fc-r) | 3B 크기에서 다회차 함수 호출에 특화됐지만 비상업·연구용 라이선스 때문에 제품 채택이 제한된다. | 같은 BFCL V4 스냅샷 전체 정확도 **41.22** | CC BY-NC 4.0이고 공식 카드가 연구용 공개라고 명시 | 연구 비교 전용. 현재 조건으로 상업 제품 채택 후보에 포함하지 않음 |
+| [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | 범용 응답과 도구 호출을 한 모델로 시험할 수 있고 배포 조건이 단순하지만 도구 특화 후보보다 BFCL 점수가 낮다. | 같은 BFCL V4 스냅샷 FC 모드 전체 정확도 **35.68** | Apache 2.0 | 기본 응답 모델을 도구 전용 모델과 같은 앱 스키마에서 비교하는 기준선 |
 
 BFCL 기준선은 [공식 리더보드](https://gorilla.cs.berkeley.edu/leaderboard.html)의 `Last Updated 2026-04-12`, 평가 커밋 `f7cf735`, `bfcl-eval==2025.12.17`을 고정한다. 특히 Nanbeige는 정확히 `2511` 리비전을 사용한다. `2510` 모델 카드의 **51.4는 Super-GPQA 점수이고 BFCL-V4-Agentic은 17.2**이므로 서로 바꾸어 인용하면 안 된다.
 
@@ -112,12 +111,12 @@ AgentRL 논문의 Qwen2.5-7B 결과는 ALFWorld에서 유효한 도구 호출 �
 
 ### 3.2 이미지·OCR 모델
 
-| 구분 | 후보 | 평가 목적 | 제한조건 |
+| 후보 | 특징 | 평가 목적 | 제한조건 |
 |---|---|---|---|
-| 1차 기준 모델 | [Qwen3-VL-4B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct) | 처방전·약 봉투의 필드 추출과 음식명 후보 생성 | 약·음식 안전성 결론 금지, 사용자 확인 전 미확정 |
-| 필수 한국어 비교 | [HyperCLOVA X SEED Vision Instruct 3B](https://huggingface.co/naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B) | 한국어 인쇄물과 촬영 조건에서의 추출 성능 비교 | 커스텀 코드·라이선스·실행환경 검토 |
-| 전용 OCR 대조군 | 선정 예정인 로컬 OCR 엔진 + 필드 파서 | 범용 VLM 없이도 더 안정적으로 읽을 수 있는지 비교 | 엔진은 한국어·숫자·단위 평가 후 별도 선정 |
-| 수동 대조군 | 사진 확대 + 직접 입력 + 사용자 확인 | 자동 인식이 실제 입력시간과 오류를 줄이는지 측정 | 자동화 실패 시 항상 사용할 수 있어야 함 |
+| [Qwen3-VL-4B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct) | 문서와 음식 이미지를 함께 이해할 수 있는 범용 4B VLM이지만 전용 OCR보다 숫자·단위 전사 안정성이 낮을 수 있다. | 처방전·약 봉투의 필드 추출과 음식명 후보 생성 | 약·음식 안전성 결론 금지, 사용자 확인 전 미확정 |
+| [HyperCLOVA X SEED Vision Instruct 3B](https://huggingface.co/naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B) | 한국어 인쇄물 처리와 작은 모델 크기가 기대 장점이지만 커스텀 코드·라이선스·실행환경 검토가 필요하다. | 한국어 인쇄물과 촬영 조건에서의 추출 성능 비교 | 커스텀 코드·라이선스·실행환경 검토 |
+| 선정 예정인 로컬 OCR 엔진 + 필드 파서 | 좁은 문자인식 작업에 집중해 재현성과 필드 검증에 유리하지만 음식 이미지의 의미 이해는 할 수 없다. | 범용 VLM 없이도 더 안정적으로 읽을 수 있는지 비교 | 엔진은 한국어·숫자·단위 평가 후 별도 선정 |
+| 사진 확대 + 직접 입력 + 사용자 확인 | 자동 추론 오류가 없는 대신 입력 시간이 오래 걸리는 수동 안전 기준선이다. | 자동 인식이 실제 입력시간과 오류를 줄이는지 측정 | 자동화 실패 시 항상 사용할 수 있어야 함 |
 
 OCR·VLM의 출력은 `약으로 보이는 문자열`, `용량·단위`, `횟수·시각`, `음식명 후보` 같은 입력 초안으로 제한한다. 어떤 후보도 사진만으로 약물 복용이나 음식 섭취 가능 여부를 확정할 수 없다.
 
