@@ -1,0 +1,43 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# Downloaded model weights and local model artifacts
+/models/
+/artifacts/models/
+*.gguf
+*.safetensors
+
+# Downloaded or generated datasets and evaluation outputs
+/data/raw/
+/data/staged/
+/artifacts/data/raw/
+/artifacts/data/staged/
+/artifacts/eval/**/results/
+/runs/
+/results/
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter local state and scratch notebook
+.ipynb_checkpoints/
+/temp.ipynb
+
+# Logs and local coverage output
+*.log
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
