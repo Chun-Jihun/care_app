@@ -3,6 +3,7 @@
 - 문서 상태: 초기 구조 제안
 - 기준 문서: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 데이터 스키마: [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)
+- 에이전트 평가: [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md)
 - 적용 범위: 로컬 우선 MVP와 이후 확장 경계
 
 이 문서는 제품 요구사항을 구현 가능한 프로그램 경계와 유스케이스로 나눈 설계 초안이다. 요구사항 원본과 충돌할 경우 요구사항 원본을 우선한다.
@@ -271,6 +272,8 @@ flowchart LR
 
 초기 프로그램은 기능별 화면을 직접 데이터베이스나 LLM에 연결하지 않고, 유스케이스 계층을 통해 도메인·안전·AI·저장소를 조정하는 구조가 적합하다.
 
+아래의 `AI 오케스트레이션 계층`은 하나의 자율 에이전트나 여러 독립 모델을 미리 확정한 표현이 아니다. 논리적 역할, 결정적 구성요소와 역할별 모델 배치 비교는 [`로컬 간병 에이전트 구성 및 성능평가 계획`](./agent_architecture_and_evaluation_plan.md)을 따른다.
+
 ```mermaid
 flowchart TB
     UI[표현 계층<br/>오늘·간병일기·복약·식사·질문·진료 준비·설정]
@@ -335,6 +338,8 @@ flowchart TB
 ## 9. 구현 순서
 
 요구사항에 따라 기능 구현 전에 관련 안전 실패 시나리오와 시험을 먼저 정의한다.
+
+아래 제품 구현에 앞서 합성·비식별 평가환경에서 에이전트 역할·읽기 도구 계약, 단일 에이전트와 역할 분리 토폴로지, trace 기반 실패 원인 분석을 먼저 검증한다. 이 선행 연구는 [`로컬 간병 에이전트 구성 및 성능평가 계획`](./agent_architecture_and_evaluation_plan.md)을 따르며, 로컬 간병일기와 저장 기반의 MVP 우선순위 자체를 대체하지 않는다.
 
 1. **안전 시험 기반:** 환자 혼합, 의료진 지시 출처 오인, 복약 일정 이력 변조, 기록 손실, OCR 자동 확정, 삭제 중단·재개, 외부 유출과 위험 신호 누락 시험을 먼저 작성한다.
 2. **로컬 데이터 기반:** 암호화 저장, 환자·식별정보 분리, 출처 있는 의료진 지시, 앱 잠금, 대화 보관 설정, 수정 이력, 백업·복원과 재개 가능한 삭제를 구현한다.

@@ -19,7 +19,7 @@
 10. [최종 제품 정의](#10-최종-제품-정의)
 11. [참고자료](#11-참고자료)
 
-관련 문서는 [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략 문서보다 우선하는 제품 요구사항 원본이다.
+관련 문서는 [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md), [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략 문서보다 우선하는 제품 요구사항 원본이다.
 
 ## 1. 프로젝트 개요
 
@@ -623,6 +623,19 @@ RAG를 적용해도 환각이 자동으로 사라지는 것은 아니다. 검색
 위 수치는 초기 출시를 위한 제안 기준이며 테스트 세트의 구성과 임상 검수 절차를 함께 명시해야 한다. 특히 `오류 0건`은 준비된 출시 평가 세트에서의 필수 통과조건이지 실제 환경에서 절대적인 무오류를 보장한다는 의미가 아니다.
 
 ## 9. 권장 개발 우선순위
+
+### 선행 검증 단계: 로컬 에이전트 역할·구성·평가
+
+애플리케이션 skeleton을 확정하기 전에 [`로컬 간병 에이전트 구성 및 성능평가 계획`](./agent_architecture_and_evaluation_plan.md)에 따라 에이전트 역할, 도구 계약, 비교 토폴로지와 평가 하네스를 먼저 검증한다.
+
+- 결정적 검색·템플릿, 단일 제한형 에이전트, 역할 분리 파이프라인과 멀티에이전트를 동일 조건에서 비교한다.
+- 각 역할의 입력·출력, 허용된 읽기 전용 도구, 환자 경계와 종료조건을 명시한다.
+- 공개 AgentBench·BFCL·ToolBench 점수와 프로젝트 자체 실험결과를 구분한다.
+- 태스크 성공뿐 아니라 도구·인자 정확도, 반복 신뢰성, 에이전트 간 인계, 근거 충실도, 보류, 환자 격리와 모바일 자원을 함께 측정한다.
+- 실패 실행은 모델, 검색, 도구, 인계, 검증과 양자화 원인을 대조실험으로 분리한다.
+- 에이전트 수를 늘리는 것을 목표로 삼지 않고, 안전조건을 통과한 구성 중 가장 단순하고 추적 가능한 구성을 선택한다.
+
+이 선행 검증은 제품 MVP의 기능 순서를 대체하지 않는다. 로컬 간병일기와 암호화 저장은 계속 1단계 제품 기반이며, 에이전트 실험은 합성·비식별 데이터와 가짜 저장소를 사용해 실제 앱 구현과 분리한다.
 
 ### 1단계: 로컬 간병수첩 기반
 

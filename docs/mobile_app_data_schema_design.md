@@ -3,6 +3,7 @@
 - 문서 상태: 초기 MVP 구현 기준 스키마 제안
 - 기준 문서: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 관련 설계: [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md)
+- 에이전트 평가: [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md)
 - 적용 범위: 로컬 우선 모바일 앱의 저장 구조, 도메인 스키마와 데이터 흐름
 
 이 문서는 특정 모바일 프레임워크나 ORM을 확정하지 않고, SQLite 호환 관계형 저장소를 기준으로 초기 MVP의 데이터 경계와 스키마를 정의한다. 요구사항 원본과 충돌할 경우 요구사항 원본을 우선한다.
@@ -904,6 +905,8 @@ flowchart LR
 ## 13. 구현 순서
 
 요구사항에 따라 각 단계의 안전 실패 시나리오와 시험을 구현 코드보다 먼저 작성한다.
+
+저장소 skeleton에 앞서 수행하는 에이전트 연구는 실제 환자 DB가 아니라 합성 상태 저장소와 가짜 읽기 전용 repository를 사용한다. 역할·도구·trace·평가 데이터의 상세 순서는 [`로컬 간병 에이전트 구성 및 성능평가 계획`](./agent_architecture_and_evaluation_plan.md)을 따르며, 그 결과가 `local_models`와 AI 오케스트레이션 포트의 계약에 반영된다.
 
 1. 환자 교차 조회, 의료진 지시 출처 오인, 과거 복약 일정 변조, 미확정 OCR 사용, 무근거 의료 주장, 고위험 누락, 삭제 단계별 중단·재개, 삭제 연결자 잔존과 평문 파일 생성 시험을 정의한다.
 2. 앱 잠금, 키 관리, `identity.db`·`care.db` 마이그레이션과 저장소 인터페이스의 빈 틀을 만든다.

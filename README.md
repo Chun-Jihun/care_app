@@ -8,6 +8,7 @@
 
 - 제품 요구사항, 경쟁 전략, 유스케이스와 모바일 데이터 스키마를 정리한 상태
 - 로컬 SLM·VLM·RAG와 데이터 검증 계획을 수립한 상태
+- 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
 - `potato-LLM/`에서 SLM 기준선·양자화 실험 자료를 관리 중
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
 
@@ -28,9 +29,22 @@
 | 2 | [경쟁 환경 및 제품 전략](./docs/competitive_landscape_and_product_strategy.md) | 경쟁 서비스, 제품 차별점과 USP-KPI 연결 |
 | 3 | [프로그램 구조 및 유스케이스](./docs/caregiving_notebook_use_case_design.md) | 사용자 흐름, 계층·모듈 경계와 도메인 객체 |
 | 4 | [모바일 데이터 스키마 및 도식](./docs/mobile_app_data_schema_design.md) | 로컬 저장 경계, ERD, OCR·의료 Q&A 흐름과 구현 순서 |
-| 5 | [SLM·VLM·RAG 검증 계획](./docs/slm_rag_validation_plan.md) | 비교 모델, 출시 차단 조건, 평가 데이터와 실행 절차 |
-| 6 | [모델·RAG 데이터 카탈로그](./docs/model_and_rag_data_catalog.md) | 파인튜닝·RAG·평가 데이터의 실제 출처, 권리와 승인 상태 |
-| 7 | [`potato-LLM/`](./potato-LLM/) | SLM 기준선, 양자화 실험 노트북과 벤치마크 자료 |
+| 5 | [로컬 간병 에이전트 구성 및 성능평가](./docs/agent_architecture_and_evaluation_plan.md) | 역할별 책임, 전체 도식, 모델 배치, 토폴로지 비교와 실패 원인 분석 |
+| 6 | [SLM·VLM·RAG 검증 계획](./docs/slm_rag_validation_plan.md) | 비교 모델, 출시 차단 조건, 평가 데이터와 실행 절차 |
+| 7 | [모델·RAG 데이터 카탈로그](./docs/model_and_rag_data_catalog.md) | 파인튜닝·RAG·평가 데이터의 실제 출처, 권리와 승인 상태 |
+| 8 | [`potato-LLM/`](./potato-LLM/) | SLM 기준선, 양자화 실험 노트북과 벤치마크 자료 |
+
+## 현재 최우선 작업
+
+모바일 앱 skeleton보다 먼저 다음 에이전트 연구를 수행한다.
+
+1. 간병 코디네이터, 기록 맥락, 승인 근거 조사, 답변 작성, 근거·정책 검증과 OCR·VLM 역할의 계약을 고정한다.
+2. 합성·비식별 상태와 읽기 전용 도구를 사용하는 `DS-AGENT` 파일럿과 trace 기반 평가 하네스를 만든다.
+3. 결정적 템플릿, 단일 제한형 에이전트, 역할 분리 구성과 역할별 특화 모델을 동일 조건에서 비교한다.
+4. 안전 hard gate를 통과한 구성만 반복 신뢰성, 한국어, 지연시간과 메모리로 비교한다.
+5. 실패 원인을 모델 크기로 단정하지 않고 검색·도구·인계·검증·양자화 대조실험으로 분리한다.
+
+공개 AgentBench·BFCL·ToolBench 점수는 후보 선정 참고값이며 프로젝트 성능이 아니다. 현재 프로젝트 자체 에이전트 실험결과는 아직 없다.
 
 ## 초기 MVP 범위
 
