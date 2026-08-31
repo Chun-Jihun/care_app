@@ -4,6 +4,7 @@
 - 작성 기준일: 2026-09-01
 - 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 세부 모델·RAG 평가 기준: [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md)
+- A1~A5 세부 역할·도구 계약: [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md)
 
 ## 목차
 
@@ -72,6 +73,8 @@
 | A6 | 사진·문서 추출 | 처방전·약 봉투·음식 사진 | 필드 후보, 원문 위치, 신뢰도, 확인 질문 | OCR·VLM 비교 대상 | 약·음식 안전성 확정, 사용자 확인 없는 저장 |
 
 A2와 A3는 처음부터 별도의 자유생성 에이전트로 구현하지 않는다. 검색과 구조화 로직으로 충분한지 먼저 확인한 뒤 LLM 보조가 명확한 이점을 보일 때만 에이전트 역할을 활성화한다. A5도 같은 모델이 자신의 출력을 다시 읽는 것만으로 안전을 보장하지 않으며, 결정적 검사와 사람 검수를 대체할 수 없다.
+
+A1~A5의 LLM-facing 입력·출력 JSON, 읽기 전용 도구 허용 목록, 환자 범위 주입, 인계, 호출 예산과 실패 처리는 [`A1~A5 역할·도구 사용 규약`](./agent_role_and_tool_contracts.md)을 따른다. 해당 규약 `v0.1.0`에서는 모델이 `patient_id`를 지정할 수 없고 A4·A5는 도구를 호출하지 않으며, 형식 수정과 답변 재작성은 각각 최대 한 번으로 제한한다.
 
 ## 4. 전체 구성 도식
 
