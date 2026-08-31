@@ -2,6 +2,7 @@
 
 - 문서 상태: 초기 구조 제안
 - 기준 문서: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
+- 데이터 스키마: [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)
 - 적용 범위: 로컬 우선 MVP와 이후 확장 경계
 
 이 문서는 제품 요구사항을 구현 가능한 프로그램 경계와 유스케이스로 나눈 설계 초안이다. 요구사항 원본과 충돌할 경우 요구사항 원본을 우선한다.

@@ -6,7 +6,7 @@
 
 ## 현재 단계
 
-- 제품 요구사항, 경쟁 전략, 유스케이스와 프로그램 경계를 정리한 상태
+- 제품 요구사항, 경쟁 전략, 유스케이스와 모바일 데이터 스키마를 정리한 상태
 - 로컬 SLM·VLM·RAG와 데이터 검증 계획을 수립한 상태
 - `potato-LLM/`에서 SLM 기준선·양자화 실험 자료를 관리 중
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
@@ -27,9 +27,10 @@
 | 1 | [간병수첩 요구사항](./docs/caregiving_notebook_requirements.md) | 목적, MVP 범위, 기능·비기능 요구사항과 의료 안전 원칙 |
 | 2 | [경쟁 환경 및 제품 전략](./docs/competitive_landscape_and_product_strategy.md) | 경쟁 서비스, 제품 차별점과 USP-KPI 연결 |
 | 3 | [프로그램 구조 및 유스케이스](./docs/caregiving_notebook_use_case_design.md) | 사용자 흐름, 계층·모듈 경계와 도메인 객체 |
-| 4 | [SLM·VLM·RAG 검증 계획](./docs/slm_rag_validation_plan.md) | 비교 모델, 출시 차단 조건, 평가 데이터와 실행 절차 |
-| 5 | [모델·RAG 데이터 카탈로그](./docs/model_and_rag_data_catalog.md) | 파인튜닝·RAG·평가 데이터의 실제 출처, 권리와 승인 상태 |
-| 6 | [`potato-LLM/`](./potato-LLM/) | SLM 기준선, 양자화 실험 노트북과 벤치마크 자료 |
+| 4 | [모바일 데이터 스키마 및 도식](./docs/mobile_app_data_schema_design.md) | 로컬 저장 경계, ERD, OCR·의료 Q&A 흐름과 구현 순서 |
+| 5 | [SLM·VLM·RAG 검증 계획](./docs/slm_rag_validation_plan.md) | 비교 모델, 출시 차단 조건, 평가 데이터와 실행 절차 |
+| 6 | [모델·RAG 데이터 카탈로그](./docs/model_and_rag_data_catalog.md) | 파인튜닝·RAG·평가 데이터의 실제 출처, 권리와 승인 상태 |
+| 7 | [`potato-LLM/`](./potato-LLM/) | SLM 기준선, 양자화 실험 노트북과 벤치마크 자료 |
 
 ## 초기 MVP 범위
 
@@ -76,4 +77,3 @@
 - 대화기록의 기본 보관값과 선택 가능한 보유기간
 - 안전 규칙의 작성·승인 책임과 의료기관 연락 문구
 - 지식베이스 관리 도구와 진료용 내보내기 형식
-
