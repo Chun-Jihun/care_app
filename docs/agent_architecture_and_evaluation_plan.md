@@ -442,27 +442,30 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 
 ### 12.4 다운로드 manifest와 저장 경계
 
-실제 다운로드를 시작할 때 다음 논리 구조를 사용한다. 현재 단계에서는 디렉터리나 파일을 만들지 않는다.
+실제 다운로드와 최초 자산 lock 이후에는 다음 구조를 사용한다. 공개 벤치마크와 모델 원본은 로컬 전용이며 모바일 앱 자산에 포함하지 않는다.
 
 ```text
-artifacts/
-  manifests/
-    models.lock.json
-    data_sources.lock.json
-  models/
-    original/<model-id>/<revision>/
-    quantized/<model-id>/<source-revision>/<format>/
-  data/
-    raw/<publisher>/<dataset>/<snapshot-date>/
+experiments/
+  agent_eval/
+    manifests/
+      asset_sources.json
+      models.lock.json
+      data_sources.lock.json
+models/
+  <model-id>/
+data/
+  <evaluation-dataset>/
+  easy-drug/
+    raw/<snapshot-id>/
     staged/<dataset-version>/
     approved/<snapshot-version>/
-  eval/
-    development/
-    validation/
-    frozen-test/
+experiments/agent_eval/results/
+  development/
+  validation/
+  frozen-test/
 ```
 
-모델 manifest에는 저장소 ID, revision·commit, 개별 파일 SHA-256, 라이선스 확인일, 원본·양자화 관계와 추론 엔진을 기록한다. 데이터 manifest에는 제목, 제공기관, 원문 URL, 이용조건, 수집일, API 버전·요청조건, 원본 해시, 승인상태와 허용 목적을 기록한다.
+모델 manifest에는 저장소 ID, revision·commit, 개별 파일 SHA-256, 라이선스 확인일, 원본·양자화 관계와 추론 엔진을 기록한다. 데이터 manifest에는 제목, 제공기관, 원문 URL, 이용조건, 수집일, API 버전·요청조건, 전체 content-tree SHA-256, 승인상태와 허용 목적을 기록한다. 실제 생성·검증 절차는 [`experiments/agent_eval/manifests/README.md`](../experiments/agent_eval/manifests/README.md)를 따른다.
 
 `raw`는 다운로드 원본이라 모델 입력에 바로 사용하지 않는다. `staged`에서 권리·스키마·중복·의료내용을 검토하고, 임상 검수와 출처 메타데이터를 통과한 조각만 `approved`로 승격한다.
 

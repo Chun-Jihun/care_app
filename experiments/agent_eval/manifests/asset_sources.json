@@ -1,0 +1,229 @@
+{
+  "schema_version": "1.0",
+  "license_checked_at": "2026-09-01",
+  "models": [
+    {
+      "id": "M1",
+      "name": "Qwen3.5-4B",
+      "local_path": "models/qwen3.5_4b",
+      "repository_id": "Qwen/Qwen3.5-4B",
+      "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "expected_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/qwen3.5_4b/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "T1_to_T3_topology_comparison",
+        "A1_to_A5_project_evaluation"
+      ],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    }
+  ],
+  "data_sources": [
+    {
+      "id": "EVAL-FC-BFCL-V4",
+      "name": "Berkeley Function Calling Leaderboard V4",
+      "local_path": "data/BFCL_V4",
+      "source_url": "https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard",
+      "upstream_revision": "unrecorded_at_download",
+      "protocol_target_revision": "f7cf735",
+      "protocol_target_package": "bfcl-eval==2025.12.17",
+      "license": {
+        "spdx": "NOASSERTION",
+        "status": "needs_review_local_export_has_no_root_license"
+      },
+      "roles": ["A1_tool_selection_component_evaluation"],
+      "split_policy": "all downloaded benchmark content is evaluation-only",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-HEALTHBENCH",
+      "name": "HealthBench and HealthBench Meta",
+      "local_path": "data/healthbench",
+      "source_url": "https://huggingface.co/datasets/openai/healthbench",
+      "upstream_revision": "unrecorded_at_download",
+      "license": {
+        "spdx": "MIT",
+        "status": "verified_from_local_dataset_card",
+        "evidence_path": "data/healthbench/README.md"
+      },
+      "roles": [
+        "A4_medical_response_component_evaluation",
+        "A5_verifier_component_evaluation"
+      ],
+      "split_policy": "oss_eval, oss_meta_eval, consensus and hard files are evaluation-only",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-KOMEDQA",
+      "name": "KoMedQA",
+      "local_path": "data/KoMedQA",
+      "source_url": "https://github.com/dianakim44/KoMedQA",
+      "upstream_revision": "unrecorded_at_download",
+      "license": {
+        "spdx": "CC0-1.0",
+        "status": "verified_from_official_repository_on_2026-09-01",
+        "evidence_url": "https://github.com/dianakim44/KoMedQA"
+      },
+      "roles": ["Korean_medical_language_component_evaluation"],
+      "split_policy": "entire local export is reserved for evaluation until contamination review",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-KORMEDMCQA",
+      "name": "KorMedMCQA",
+      "local_path": "data/KorMedMCQA",
+      "source_url": "https://huggingface.co/datasets/sean0042/KorMedMCQA",
+      "upstream_revision": "unrecorded_at_download",
+      "configs": ["dentist", "doctor", "nurse", "pharm"],
+      "license": {
+        "spdx": "CC-BY-NC-2.0",
+        "status": "verified_from_official_dataset_card_on_2026-09-01",
+        "evidence_url": "https://huggingface.co/datasets/sean0042/KorMedMCQA"
+      },
+      "roles": ["Korean_medical_language_component_evaluation"],
+      "split_policy": "train, dev, test and fewshot are all do-not-train for this project evaluation",
+      "commercial_restriction": "noncommercial license; never include in product assets",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-LONGHEALTH",
+      "name": "LongHealth",
+      "local_path": "data/LongHealth",
+      "source_url": "https://github.com/kbressem/LongHealth",
+      "upstream_revision": "unrecorded_at_download",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "data/LongHealth/LICENSE"
+      },
+      "roles": ["A2_time_negation_and_fact_preservation_evaluation"],
+      "split_policy": "all fictional patient cases and questions are evaluation-only",
+      "special_terms": "official README explicitly requests exclusion from model pretraining and public example sharing",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-MIRAGE",
+      "name": "MIRAGE with retrieved_snippets_10k and BioASQ",
+      "local_path": "data/MIRAGE",
+      "source_url": "https://github.com/Teddy-XiongGZ/MIRAGE",
+      "retrieved_snippets_url": "https://virginia.box.com/shared/static/cxq17th6eisl2pn04vp0x723zczlvlzc.zip",
+      "upstream_revision": "unrecorded_at_download",
+      "license": {
+        "spdx": "LicenseRef-US-Government-Public-Domain-Notice",
+        "status": "benchmark_notice_verified_but_component_dataset_rights_need_review",
+        "evidence_path": "data/MIRAGE/LICENSE"
+      },
+      "roles": ["A3_retrieval_component_evaluation"],
+      "included_benchmarks": ["MMLU-Med", "MedQA-US", "MedMCQA", "PubMedQA", "BioASQ"],
+      "split_policy": "benchmark and all retrieved candidates are evaluation-only",
+      "storage_policy": "development_workstation_only; retrieved_snippets_10k is never a mobile asset",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-RAGTRUTH",
+      "name": "RAGTruth",
+      "local_path": "data/RAGTruth",
+      "source_url": "https://github.com/ParticleMedia/RAGTruth",
+      "upstream_revision": "unrecorded_at_download",
+      "license": {
+        "spdx": "MIT",
+        "status": "repository_license_verified_but_upstream_source_corpora_rights_need_review",
+        "evidence_path": "data/RAGTruth/LICENSE"
+      },
+      "roles": ["A5_groundedness_verifier_component_evaluation"],
+      "split_policy": "upstream train and test records are both reserved as do-not-train project evaluation data",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "RAG-DRUG-01",
+      "name": "식품의약품안전처 의약품개요정보(e약은요) raw snapshot",
+      "local_path": "data/easy-drug/raw/20260901T061358Z",
+      "source_url": "https://www.data.go.kr/data/15075057/openapi.do",
+      "publisher": "식품의약품안전처",
+      "dataset_id": "15075057",
+      "upstream_revision": "API_snapshot_20260901T061358Z",
+      "raw_snapshot_manifest": "manifest.json",
+      "license": {
+        "spdx": "NOASSERTION",
+        "status": "official_open_data_terms_recorded; redistribution_and_internal_approval_review_pending",
+        "evidence_url": "https://www.data.go.kr/data/15075057/openapi.do"
+      },
+      "roles": ["approved_drug_knowledge_candidate", "DS_AGENT_evidence_candidate"],
+      "split_policy": "raw API response is not an evaluation split and cannot be used before staged review",
+      "usage": {
+        "purpose": ["rag_candidate", "scenario_compiler_source"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": true
+    },
+    {
+      "id": "EVAL-MEDAGENTBENCH",
+      "name": "MedAgentBench",
+      "local_path": "data/MedAgentBench",
+      "source_url": "https://github.com/stanfordmlgroup/MedAgentBench",
+      "upstream_revision": "not_downloaded",
+      "license": {
+        "spdx": "MIT",
+        "status": "verified_from_official_repository_on_2026-09-01"
+      },
+      "roles": ["A1_medical_tool_use_component_evaluation"],
+      "split_policy": "evaluation-only; FHIR environment and Docker image version must be fixed separately",
+      "usage": {
+        "purpose": ["component_evaluation"],
+        "do_not_train": true,
+        "mobile_bundle": false,
+        "runtime_rag_eligible": false
+      },
+      "required": false
+    }
+  ]
+}
