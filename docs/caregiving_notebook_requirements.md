@@ -19,7 +19,7 @@
 10. [최종 제품 정의](#10-최종-제품-정의)
 11. [참고자료](#11-참고자료)
 
-관련 문서는 [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md), [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md), [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략 문서보다 우선하는 제품 요구사항 원본이다.
+관련 문서는 [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md), [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md), [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`mfds_easy_drug_approval_workflow.md`](./mfds_easy_drug_approval_workflow.md), [`evaluation_source_adapters.md`](./evaluation_source_adapters.md), [`role_component_evaluation_harness.md`](./role_component_evaluation_harness.md), [`evaluation_scenario_compiler.md`](./evaluation_scenario_compiler.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략·실험 문서보다 우선하는 제품 요구사항 원본이다.
 
 ## 1. 프로젝트 개요
 

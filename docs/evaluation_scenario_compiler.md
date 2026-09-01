@@ -215,13 +215,13 @@ python -X utf8 scripts/compile_agent_evaluation_scenarios.py `
 
 ## 9. 현재 한계와 다음 작업
 
-컴파일러 core, 합성 입력 예제와 공개 벤치마크 구성요소용 source adapter는 구현됐지만 다음은 아직 남아 있다.
+컴파일러 core, 합성 입력 예제, 공개 벤치마크 구성요소용 source adapter와 [`공개 case 역할별 하네스`](./role_component_evaluation_harness.md)는 구현됐지만 실제 `DS-AGENT` 계약 E2E에는 다음이 아직 남아 있다.
 
 1. 공개 기록을 DS-AGENT용 구조화 간병 event로 추출·비식별화하고 사람이 검수하는 별도 event adapter
 2. 공개 기록 속 약물과 MFDS `item_seq`의 사람 검수 mapping 파일
 3. 질문·도구·인자 gold label 및 근거 적용 범위를 승인하는 episode review·seal 도구
 4. 위험, 근거 충돌, 도구 timeout, 환자 격리용 scenario recipe 확장
 5. compiled fixture를 읽는 가짜 repository와 결정적 도구 host
-6. T0~T3 실행기, trace 수집기와 자동 채점기
+6. `DS-AGENT` T0~T3 실행기, A1~A5 인계·도구 trace 수집기와 프로젝트 hard gate 채점기
 
 LongHealth adapter는 A2용 질문·정답·원문 locator를 생성하고 이름·생년월일·원문 본문을 출력 case에서 제외한다. 하지만 이를 간병 gold record로 자동 변환하지는 않는다. 자유서술 자동 추출 결과는 별도 검수 없이는 DS-AGENT 정답이 될 수 없기 때문이다.

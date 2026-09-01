@@ -1,10 +1,11 @@
 # 로컬 간병 에이전트 구성 및 성능평가 계획
 
-- 문서 상태: 구현 전 연구·실험 계획
+- 문서 상태: 선행 연구·실험 계획 및 공개 구성요소 하네스 구현 중
 - 작성 기준일: 2026-09-01
 - 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 세부 모델·RAG 평가 기준: [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md)
 - A1~A5 세부 역할·도구 계약: [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md)
+- 공개 구성요소 실행·채점 경계: [`role_component_evaluation_harness.md`](./role_component_evaluation_harness.md)
 
 ## 목차
 
@@ -361,14 +362,15 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 구분 | 상태 | 해석 |
 |---|---|---|
 | 공개 모델·논문 점수 | 프로젝트 결과에서 제외 | 후보·라이선스 탐색 외에는 성능 판단에 사용하지 않음 |
-| 공개 구성요소 평가 데이터 | source adapter 전체 변환 완료, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA를 A1~A5/KO case로 정규화했으나 사람 검수·runner·점수는 아직 없음 |
+| M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash 고정 완료, 추론 미실행 | 약 9.3GB 원본은 RTX 3060 Ti 8GB에 그대로 적재하기 어렵고 현재 실행 환경에 `torch/transformers/accelerate`가 없어, 추적 가능한 양자화와 런타임 고정 전에는 성능 결과가 없음 |
+| 공개 구성요소 평가 데이터 | source adapter 전체 변환 및 runner·grader core 구현, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA 110,599건을 A1~A5/KO case로 정규화했다. 전체 렌더링 검증에서 109,544건이 정상 처리됐고 BFCL 공식 상태형 runtime이 필요한 1,055건만 명시적으로 제외됐다. case 사람 검수·봉인과 모델 성능 결과는 아직 없음 |
 | 프로젝트 `DS-AGENT` 결과 | 후보 compiler 구현, 성능 실험 미실행 | 구조화·비식별 복약 event를 미검수 episode 후보로 변환할 수 있으나 승인 근거·라벨 검수·실행 하네스가 아직 없음 |
 | 목표 모바일 장비 성능 | 미실행 | Android 목표 장비와 로컬 런타임 미확정 |
 | 최종 에이전트 수·모델 배치 | 미확정 | T0~T4 비교 후 가장 단순한 통과 구성을 채택 |
 
 실험을 실행하기 전에는 “멀티에이전트 성능이 좋다”, “Qwen3.5-4B가 최종 모델이다” 또는 “의료 모델이 더 정확하다”라고 결론내리지 않는다.
 
-공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. 두 출력 모두 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다.
+공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md), 역할별 요청·로컬 실행·채점과 결과 해석 경계는 [`역할별 구성요소 평가 하네스`](./role_component_evaluation_harness.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. source adapter와 `DS-AGENT` 후보 출력은 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다. 공개 구성요소 점수도 실제 프로젝트 도구 계약 E2E 또는 의료 출시 hard gate 결과로 승격하지 않는다.
 
 ### 11.2 실행별 결과표
 
@@ -406,7 +408,7 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 
 | 단계 | 모델 | 다운로드 여부 | 첫 용도 | 준비할 파일·정보 |
 |---|---|---|---|---|
-| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **첫 실험 필수** | T1~T3에서 동일 모델을 사용한 구조 비교 | 공식 원본 가중치, tokenizer·config, 모델 카드·라이선스, 고정 revision과 파일 SHA-256 |
+| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본 다운로드·manifest 고정 완료, 양자화·추론 미실행** | T1~T3에서 동일 모델을 사용한 구조 비교 | 원본 revision·파일 SHA-256은 고정됨. 8GB GPU용 로컬 runtime·양자화 설정과 변환 산출물 hash를 추가해야 함 |
 | M2 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | M1 실험 뒤 | 범용 4B 기준선과 모델 세대 효과 | M1과 같은 manifest 항목 |
 | M3 | [MedGemma 1.5 4B](https://huggingface.co/google/medgemma-1.5-4b-it) | T0~T3 뒤 선택 | A4 근거 제한 설명의 의료 특화 비교 | 이용조건 동의 기록, 공식 원본·tokenizer·config, revision·해시 |
 | M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | 도구 선택 오류가 확인될 때만 | A1 코디네이터의 도구 호출 특화 비교 | 정확히 `2511` 리비전, 커스텀 코드 보안 검토, 해시 |
@@ -428,11 +430,11 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 |---|---|---|---|---|
 | D0 | 합성 간병기록·가상 환자 상태 | 요구사항과 데이터 스키마를 이용해 프로젝트에서 직접 작성 | 환자 격리, 복약 누락, 부정·수치·시각 보존, 다단계 도구 사용 | **필수, 외부 다운로드 없음** |
 | D1 | `DS-AGENT` 파일럿 40~60개 | D0와 승인 근거를 연결해 프로젝트에서 직접 라벨링 | T0~T3 태스크 성공, 도구·인자, 인계와 보류 비교 | **필수, 외부 다운로드 없음** |
-| D2 | 식약처 [의약품개요정보(e약은요) OpenAPI](https://www.data.go.kr/data/15075057/openapi.do) 소규모 원본 스냅샷 | API 활용신청 후 원본 JSON과 수집 메타데이터 저장 | 실제 승인 후보 문장 기반 약의 일반 효능·주의사항 RAG | **첫 외부 데이터 후보** |
+| D2 | 식약처 [의약품개요정보(e약은요) OpenAPI](https://www.data.go.kr/data/15075057/openapi.do) 원본 스냅샷 | API 원본 JSON과 수집 메타데이터 저장 후 `raw → staged → review → approved` 게이트 적용 | 실제 승인 후보 문장 기반 약의 일반 효능·주의사항 RAG | **전체 raw 수집·staged·review catalog 완료, `awaiting_selection`; 승인 snapshot 없음** |
 | D3 | 식약처 [DUR 품목정보 OpenAPI](https://www.data.go.kr/data/15059486/openapi.do) 소규모 스냅샷 | API 활용신청 후 원본 JSON 저장 | 생성 답변이 아닌 구조화 규칙·조회 경로 검증 | D2 뒤 선택 |
 | D4 | 식품영양성분DB·질환별 공식 자료 | 첫 복약 실험 종료 후 별도 승인 | 음식·활동 에이전트 확장 | 지금 받지 않음 |
 | D5 | 처방전·약 봉투 이미지와 AI Hub OCR 데이터 | 동의·비식별·권리·보유절차 확정 후 | A6 OCR·VLM 실험 | 지금 받지 않음 |
-| D6 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA | 공개 원천을 고정 manifest로 보존하고 source adapter로 정규화 | A1~A5 구성요소 진단과 한국어 보조평가 | **다운로드·adapter 완료, runner 미구현** |
+| D6 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA | 공개 원천을 고정 manifest로 보존하고 source adapter로 정규화 | A1~A5 구성요소 진단과 한국어 보조평가 | **다운로드·adapter·구성요소 runner/grader core 완료, 사람 검수·모델 실행 미완료** |
 
 첫 도메인은 모든 질환과 약을 포괄하지 않고 **복약 기록과 일반 약 정보 이해**로 제한한다. D2에서 사용할 제품 범위와 개수는 질문·근거 라벨을 먼저 설계한 뒤 확정하며, 내려받은 전체 API 응답을 자동으로 승인 지식으로 사용하지 않는다.
 
@@ -486,7 +488,7 @@ experiments/agent_eval/results/
 2. **최소 자료 준비:** M1 원본과 D0~D2를 준비하고 revision·해시·이용조건 manifest를 작성한다.
 3. **역할·도구 계약 고정:** 첫 텍스트 실험에 필요한 A1~A5 입력·출력 JSON 스키마, 읽기 도구 허용 목록과 종료조건을 작성한다.
 4. **`DS-AGENT` 파일럿 구축:** 합성 기록과 승인 근거로 40~60개를 만들고 라벨·채점 기준을 검수한다.
-5. **평가 하네스 구현:** 가짜 로컬 기록·승인 문서 저장소, 결정적 도구 호스트와 전체 trace 수집기를 만든다.
+5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader core는 구현됐다. 다음으로 검수·봉인된 `DS-AGENT`를 읽는 가짜 로컬 기록·승인 문서 저장소, 결정적 도구 호스트와 A1~A5 전체 trace 수집기를 만든다.
 6. **T0·T1 기준선 실행:** 결정적 구성과 단일 제한형 에이전트를 비교한다.
 7. **T2·T3 역할 분리 실험:** 같은 M1 모델을 사용해 토폴로지 효과만 분리한다.
 8. **추가 다운로드 결정:** 오류 분포를 보고 M2~M4 중 필요한 모델만 준비한다.

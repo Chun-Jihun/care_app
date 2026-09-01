@@ -10,6 +10,8 @@
 - 로컬 SLM·VLM·RAG와 데이터 검증 계획을 수립한 상태
 - 첫 텍스트 실험의 A1~A5 역할·읽기 도구 계약 `v0.1.0`을 고정한 상태
 - 7개 공개 평가 원천의 source adapter와 `DS-AGENT` 후보용 Evaluation Scenario Compiler core를 구현한 상태
+- 공개 case를 A1~A5/KO 구성요소 요청으로 렌더링하고 로컬 실행·채점하는 하네스 core를 구현한 상태. 이는 프로젝트 `DS-AGENT` E2E 결과나 의료 출시 평가가 아님
+- e약은요 전체 raw snapshot을 staged·review catalog로 변환했으며, 임상 검수 품목 선정 전인 `awaiting_selection` 상태
 - 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
 
@@ -34,8 +36,10 @@
 | 6 | [A1~A5 역할·도구 사용 규약](./docs/agent_role_and_tool_contracts.md) | 역할별 입력·출력 JSON, 읽기 도구, 환자 경계, 인계와 실패 처리 |
 | 7 | [SLM·VLM·RAG 검증 계획](./docs/slm_rag_validation_plan.md) | 비교 모델, 출시 차단 조건, 평가 데이터와 실행 절차 |
 | 8 | [모델·RAG 데이터 카탈로그](./docs/model_and_rag_data_catalog.md) | 파인튜닝·RAG·평가 데이터의 실제 출처, 권리와 승인 상태 |
-| 9 | [공개 평가 원천 Source Adapter](./docs/evaluation_source_adapters.md) | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA의 정규화 형식과 사용 경계 |
-| 10 | [Evaluation Scenario Compiler](./docs/evaluation_scenario_compiler.md) | 구조화·비식별 간병 event와 승인 약물 근거를 DS-AGENT 후보 episode로 변환하는 규칙 |
+| 9 | [e약은요 staged → approved 절차](./docs/mfds_easy_drug_approval_workflow.md) | 임상 검수 품목 선정, 근거 span 승인과 runtime 활성화 전 게이트 |
+| 10 | [공개 평가 원천 Source Adapter](./docs/evaluation_source_adapters.md) | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA의 정규화 형식과 사용 경계 |
+| 11 | [A1~A5 역할별 구성요소 평가 하네스](./docs/role_component_evaluation_harness.md) | 공개 case의 역할별 렌더링, 로컬 backend, 결정적 채점과 공식·E2E 결과의 경계 |
+| 12 | [Evaluation Scenario Compiler](./docs/evaluation_scenario_compiler.md) | 구조화·비식별 간병 event와 승인 약물 근거를 DS-AGENT 후보 episode로 변환하는 규칙 |
 
 ## 현재 최우선 작업
 
@@ -43,7 +47,7 @@
 
 1. 고정한 A1~A5 계약 `v0.1.0`을 기준으로 실험 가설·데이터 split·hard gate와 반복 횟수를 사전 등록한다. OCR·VLM인 A6 계약은 텍스트 구조 실험 뒤 별도로 고정한다.
 2. 계획에 명시된 최소 모델·공식 데이터의 이용조건, 리비전과 저장 위치를 확인한 뒤 사용자가 다운로드한다.
-3. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)로 A1~A5 구성요소 입력을 만들고, [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)로 합성·비식별 `DS-AGENT` 후보를 만든다. 두 출력의 검수·봉인을 거친 뒤 trace 기반 평가 하네스를 구현한다.
+3. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)가 만든 합성·비식별 `DS-AGENT` 후보를 검수·봉인하고, 실제 A1~A5 계약을 실행하는 결정적 도구 호스트와 전체 trace 수집기를 구현한다.
 4. 결정적 템플릿, 단일 제한형 에이전트, 역할 분리 구성과 역할별 특화 모델을 동일 조건에서 비교한다.
 5. 안전 hard gate를 통과한 구성만 반복 신뢰성, 한국어, 지연시간과 메모리로 비교하고 실패 원인을 대조실험으로 분리한다.
 
