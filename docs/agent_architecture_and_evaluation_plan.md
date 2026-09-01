@@ -361,13 +361,14 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 구분 | 상태 | 해석 |
 |---|---|---|
 | 공개 모델·논문 점수 | 프로젝트 결과에서 제외 | 후보·라이선스 탐색 외에는 성능 판단에 사용하지 않음 |
+| 공개 구성요소 평가 데이터 | source adapter 전체 변환 완료, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA를 A1~A5/KO case로 정규화했으나 사람 검수·runner·점수는 아직 없음 |
 | 프로젝트 `DS-AGENT` 결과 | 후보 compiler 구현, 성능 실험 미실행 | 구조화·비식별 복약 event를 미검수 episode 후보로 변환할 수 있으나 승인 근거·라벨 검수·실행 하네스가 아직 없음 |
 | 목표 모바일 장비 성능 | 미실행 | Android 목표 장비와 로컬 런타임 미확정 |
 | 최종 에이전트 수·모델 배치 | 미확정 | T0~T4 비교 후 가장 단순한 통과 구성을 채택 |
 
 실험을 실행하기 전에는 “멀티에이전트 성능이 좋다”, “Qwen3.5-4B가 최종 모델이다” 또는 “의료 모델이 더 정확하다”라고 결론내리지 않는다.
 
-`DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. compiler 출력은 사람의 도구 라벨 검수와 의료 근거 적용 검수 전까지 `evaluation_eligible=false`다.
+공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. 두 출력 모두 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다.
 
 ### 11.2 실행별 결과표
 
@@ -431,16 +432,11 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | D3 | 식약처 [DUR 품목정보 OpenAPI](https://www.data.go.kr/data/15059486/openapi.do) 소규모 스냅샷 | API 활용신청 후 원본 JSON 저장 | 생성 답변이 아닌 구조화 규칙·조회 경로 검증 | D2 뒤 선택 |
 | D4 | 식품영양성분DB·질환별 공식 자료 | 첫 복약 실험 종료 후 별도 승인 | 음식·활동 에이전트 확장 | 지금 받지 않음 |
 | D5 | 처방전·약 봉투 이미지와 AI Hub OCR 데이터 | 동의·비식별·권리·보유절차 확정 후 | A6 OCR·VLM 실험 | 지금 받지 않음 |
+| D6 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA | 공개 원천을 고정 manifest로 보존하고 source adapter로 정규화 | A1~A5 구성요소 진단과 한국어 보조평가 | **다운로드·adapter 완료, runner 미구현** |
 
 첫 도메인은 모든 질환과 약을 포괄하지 않고 **복약 기록과 일반 약 정보 이해**로 제한한다. D2에서 사용할 제품 범위와 개수는 질문·근거 라벨을 먼저 설계한 뒤 확정하며, 내려받은 전체 API 응답을 자동으로 승인 지식으로 사용하지 않는다.
 
-다음 대용량·범용 데이터는 첫 도메인 실험 전에 다운로드하지 않는다.
-
-- AgentBench, BFCL, ToolBench 평가 데이터
-- xLAM Function Calling 60k, APIGen-MT-5k와 AI Hub 헬스케어 QA 전체
-- 질병·식품·논문 사이트의 일괄 크롤링 결과
-
-이 데이터들은 프로젝트 도메인 기준선이 실패하고 파인튜닝 또는 별도 일반화 비교가 필요하다는 근거가 생긴 뒤에만 검토한다.
+사용자가 구성요소 평가용으로 선택한 D6 원천은 현재 다운로드·고정·정규화했다. 이 데이터는 프로젝트 도메인 E2E 점수를 대신하지 않으며 파인튜닝이나 모바일 번들에 사용하지 않는다. xLAM Function Calling 60k, APIGen-MT-5k, AI Hub 헬스케어 QA 전체와 질병·식품·논문 사이트의 일괄 크롤링 결과는 프로젝트 기준선에서 실제 필요성이 확인되기 전에는 추가하지 않는다.
 
 ### 12.4 다운로드 manifest와 저장 경계
 

@@ -50,7 +50,7 @@ flowchart LR
     REVIEW --> SEALED[평가용 sealed DS-AGENT]
 ```
 
-원천별 파서와 scenario compiler를 분리한다. LongHealth처럼 사람 이름·생년월일을 포함한 자유서술 가상 임상문서는 이 컴파일러에 직접 넣지 않는다. 원천 adapter가 허용된 구조화 필드만 추출하고 정답 라벨을 검수한 뒤 source bundle을 만들어야 한다.
+원천별 파서와 scenario compiler를 분리한다. 공개 벤치마크용 [`source adapter`](./evaluation_source_adapters.md)는 A1~A5 구성요소 평가 case를 만들며 그 출력을 이 compiler 입력으로 자동 사용하지 않는다. LongHealth처럼 사람 이름·생년월일을 포함한 자유서술 가상 임상문서에서 간병 event를 만들려면 별도의 event 추출·비식별화·사람 검수가 추가로 필요하다.
 
 ## 3. 입력 source bundle
 
@@ -215,13 +215,13 @@ python -X utf8 scripts/compile_agent_evaluation_scenarios.py `
 
 ## 9. 현재 한계와 다음 작업
 
-컴파일러 core와 합성 입력 예제는 구현됐지만 다음은 아직 남아 있다.
+컴파일러 core, 합성 입력 예제와 공개 벤치마크 구성요소용 source adapter는 구현됐지만 다음은 아직 남아 있다.
 
-1. LongHealth 등 각 공개 원천을 구조화 source bundle로 바꾸는 원천별 adapter
+1. 공개 기록을 DS-AGENT용 구조화 간병 event로 추출·비식별화하고 사람이 검수하는 별도 event adapter
 2. 공개 기록 속 약물과 MFDS `item_seq`의 사람 검수 mapping 파일
 3. 질문·도구·인자 gold label 및 근거 적용 범위를 승인하는 episode review·seal 도구
 4. 위험, 근거 충돌, 도구 timeout, 환자 격리용 scenario recipe 확장
 5. compiled fixture를 읽는 가짜 repository와 결정적 도구 host
 6. T0~T3 실행기, trace 수집기와 자동 채점기
 
-LongHealth는 A2의 시각·부정·사실 보존 평가에는 유용하지만, 원문에 포함된 이름·생년월일과 자유서술을 이 컴파일러가 직접 파싱해 간병 gold record로 만들지는 않는다. 자동 추출 결과는 별도 검수 없이는 정답이 될 수 없기 때문이다.
+LongHealth adapter는 A2용 질문·정답·원문 locator를 생성하고 이름·생년월일·원문 본문을 출력 case에서 제외한다. 하지만 이를 간병 gold record로 자동 변환하지는 않는다. 자유서술 자동 추출 결과는 별도 검수 없이는 DS-AGENT 정답이 될 수 없기 때문이다.
