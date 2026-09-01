@@ -13,7 +13,7 @@
 - 공개 case를 A1~A5/KO 구성요소 요청으로 렌더링하고 로컬 실행·채점하는 하네스 core를 구현한 상태. 이는 프로젝트 `DS-AGENT` E2E 결과나 의료 출시 평가가 아님
 - 합성 48개 `DS-AGENT` oracle fixture, 결정적 읽기 전용 도구 host와 SHA-256 체인 trace를 구현·smoke 실행한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
 - 실제 모델 출력을 A1~A5 JSON 계약, 결정적 도구 host와 A5 hard gate에 연결하는 DS-AGENT bundle runner를 구현·replay 통합시험한 상태
-- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고 로더까지 구현했으며, 전용 환경 설치와 실제 모델 smoke는 아직 실행하지 않은 상태
+- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고, 전용 환경과 실제 development 1건 연결 smoke까지 완료한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
 - e약은요 전체 raw snapshot을 staged·review catalog로 변환했으며, 임상 검수 품목 선정 전인 `awaiting_selection` 상태
 - 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
@@ -52,12 +52,12 @@
 모바일 앱 skeleton보다 먼저 다음 에이전트 연구를 수행한다.
 
 1. 고정한 A1~A5 계약 `v0.1.0`을 기준으로 실험 가설·데이터 split·hard gate와 반복 횟수를 사전 등록한다. OCR·VLM인 A6 계약은 텍스트 구조 실험 뒤 별도로 고정한다.
-2. [`RT-M1-HF-BNB-NF4-WIN-001`](./docs/qwen35_local_runtime_decision.md) 전용 Python 3.12 환경을 설치하고, 구현된 [`DS-AGENT 로컬 모델 runner`](./docs/ds_agent_model_runner.md)로 오프라인 1건 smoke를 수행한다.
-3. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)와 [`결정적 도구 호스트·trace 파일럿`](./docs/ds_agent_deterministic_pilot.md)이 만든 48개 합성 기반을 사람이 검수·봉인하고 승인 근거 episode를 추가한다.
+2. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)와 [`결정적 도구 호스트·trace 파일럿`](./docs/ds_agent_deterministic_pilot.md)이 만든 48개 합성 기반을 사람이 검수·봉인하고 승인 근거 episode를 추가한다.
+3. 검수·봉인된 development set에서 A1~A5 정식 scorer를 연결하고 현재 1건 smoke와 분리된 첫 기준선을 실행한다.
 4. 결정적 템플릿, 단일 제한형 에이전트, 역할 분리 구성과 역할별 특화 모델을 동일 조건에서 비교한다.
 5. 안전 hard gate를 통과한 구성만 반복 신뢰성, 한국어, 지연시간과 메모리로 비교하고 실패 원인을 대조실험으로 분리한다.
 
-공개 AgentBench·BFCL·ToolBench 점수는 후보 선정 참고값이며 프로젝트 성능이 아니다. 현재 프로젝트에는 host·trace의 결정적 기반 smoke 결과만 있으며, 실제 모델 에이전트 성능 결과는 아직 없다.
+공개 AgentBench·BFCL·ToolBench 점수는 후보 선정 참고값이며 프로젝트 성능이 아니다. 실제 Qwen3.5-4B development 1건으로 A1~A5 연결 smoke는 통과했지만, 미검수 합성 case 1건이므로 에이전트 성능 결과로 간주하지 않는다.
 
 ## 초기 MVP 범위
 
@@ -90,7 +90,7 @@
 |---|---|---|
 | 애플리케이션 | 로컬 우선, 오프라인 기록과 조회 | 플랫폼 미정 |
 | 저장소 | 환자별 분리, 암호화 DB·사진 저장소·수정 이력 | 제품·암호화 방식 미정 |
-| 텍스트·멀티모달 모델 | Qwen3.5-4B, MedGemma 1.5 4B와 한국어·저사양 후보 비교 | Qwen3.5-4B 데스크톱 NF4 실행 프로필 확정, 설치·평가 전 |
+| 텍스트·멀티모달 모델 | Qwen3.5-4B, MedGemma 1.5 4B와 한국어·저사양 후보 비교 | Qwen3.5-4B 데스크톱 NF4 프로필·전용 환경·1건 연결 smoke 완료, 정식 평가 전 |
 | OCR | 범용 VLM, 한국어 VLM, 전용 OCR+필드 파서와 수동 입력 기준선 비교 | 평가 전 |
 | RAG | 승인 스냅샷 기반 혼합 검색과 재순위화 | 임베딩·재순위 모델 미정 |
 | 안전 | LLM보다 먼저 실행하는 구조화 규칙 엔진 | 규칙 승인자·첫 질환 범위 미정 |

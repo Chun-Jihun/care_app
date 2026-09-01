@@ -48,7 +48,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
 
 
 SCRIPT_VERSION = "0.1.0"
-PROMPT_VERSION = "ds-agent-role-json-v0.1.0"
+PROMPT_VERSION = "ds-agent-role-json-v0.2.2"
 EXECUTION_MODE = "local_model_a1_to_a5_contract"
 FORMAT_REPAIR_LIMIT = 1
 TOOL_OWNER = {
@@ -345,7 +345,11 @@ ROLE_INSTRUCTIONS = {
     ),
     "A2": (
         "You are A2, the record-context analyst. Preserve timestamp, number, unit, "
-        "negation, actor, certainty, record ID and version exactly. Do not infer causality."
+        "negation, actor, certainty, record ID and version exactly. Do not infer causality. "
+        "Every directly relevant confirmed record must remain in relevant_records. An "
+        "unconfirmed drug identity does not erase the recorded medication display label or "
+        "intake status; preserve them as record facts without treating the label as a verified "
+        "real-world drug identity. source_record_ids must exactly match relevant_records IDs."
     ),
     "A3": (
         "You are A3, the approved-evidence analyst. Use only supplied approved tool "
@@ -362,6 +366,170 @@ ROLE_INSTRUCTIONS = {
 }
 
 
+TOOL_ARGUMENT_SCHEMAS: dict[str, dict[str, Any]] = {
+    "search_care_entries": _object_schema(
+        {
+            "entry_types": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "meal",
+                        "symptom",
+                        "medication_intake",
+                        "activity",
+                        "measurement",
+                        "daily_living",
+                        "incident",
+                        "medical_contact",
+                        "handoff",
+                        "general_note",
+                    ],
+                },
+                "minItems": 1,
+                "maxItems": 5,
+                "uniqueItems": True,
+            },
+            "from_utc": {"type": "string", "minLength": 1},
+            "to_utc": {"type": "string", "minLength": 1},
+            "query_terms": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1, "maxLength": 50},
+                "maxItems": 5,
+            },
+            "limit": {"type": "integer", "minimum": 1, "maximum": 20},
+        },
+        required=("entry_types", "from_utc", "to_utc"),
+    ),
+    "get_care_entry_details": _object_schema(
+        {
+            "care_entry_ids": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "minItems": 1,
+                "maxItems": 10,
+                "uniqueItems": True,
+            },
+            "required_fields": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "structured_facts",
+                        "original_excerpt",
+                        "source_links",
+                        "revision",
+                    ],
+                },
+                "minItems": 1,
+                "maxItems": 4,
+                "uniqueItems": True,
+            },
+        },
+        required=("care_entry_ids", "required_fields"),
+    ),
+    "get_active_clinician_instructions": _object_schema(
+        {
+            "topics": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "medication",
+                        "meal",
+                        "hydration",
+                        "activity",
+                        "symptom",
+                        "measurement",
+                        "general",
+                    ],
+                },
+                "minItems": 1,
+                "maxItems": 5,
+                "uniqueItems": True,
+            },
+            "as_of_utc": {"type": "string", "minLength": 1},
+        },
+        required=("topics",),
+    ),
+    "lookup_approved_drug_info": {
+        **_object_schema(
+            {
+                "item_seq": {"type": "string", "minLength": 1},
+                "item_name": {"type": "string", "minLength": 1},
+                "requested_sections": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "efficacy",
+                            "usage",
+                            "warnings",
+                            "precautions",
+                            "interactions",
+                            "adverse_reactions",
+                            "storage",
+                        ],
+                    },
+                    "minItems": 1,
+                    "maxItems": 7,
+                    "uniqueItems": True,
+                },
+            },
+            required=("requested_sections",),
+        ),
+        "oneOf": [
+            {"required": ["item_seq"], "not": {"required": ["item_name"]}},
+            {"required": ["item_name"], "not": {"required": ["item_seq"]}},
+        ],
+    },
+    "search_approved_evidence": _object_schema(
+        {
+            "query": {"type": "string", "minLength": 1, "maxLength": 300},
+            "topics": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "drug",
+                        "meal",
+                        "hydration",
+                        "activity",
+                        "symptom",
+                        "daily_care",
+                    ],
+                },
+                "minItems": 1,
+                "maxItems": 3,
+                "uniqueItems": True,
+            },
+            "clinical_scope": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1, "maxLength": 80},
+                "minItems": 1,
+                "maxItems": 10,
+                "uniqueItems": True,
+            },
+            "top_k": {"type": "integer", "minimum": 1, "maximum": 5},
+        },
+        required=("query", "topics"),
+    ),
+    "open_evidence_spans": _object_schema(
+        {
+            "evidence_span_ids": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": True,
+            },
+            "include_adjacent_context": {"type": "boolean"},
+        },
+        required=("evidence_span_ids",),
+    ),
+}
+
+
 def _tool_descriptions(names: Sequence[str]) -> list[dict[str, Any]]:
     return [
         {
@@ -369,6 +537,7 @@ def _tool_descriptions(names: Sequence[str]) -> list[dict[str, Any]]:
             "owner_role": TOOL_OWNER.get(name),
             "read_only": True,
             "patient_scope": "host_injected_not_an_argument",
+            "arguments_schema": TOOL_ARGUMENT_SCHEMAS[name],
         }
         for name in sorted(set(names))
     ]
@@ -944,7 +1113,26 @@ def run_model_episode(
         "question": episode.get("question"),
         "record_candidates_and_details": details,
         "active_clinician_instructions": _instruction_rows(tool_results),
-        "rule": "Use only these confirmed records and preserve exact source fields.",
+        "required_field_mapping": {
+            "care_entry_id": "copy care_entry_id exactly",
+            "entry_version": "copy entry_version exactly",
+            "occurred_at": "copy occurred_at exactly",
+            "fact_type": "copy top-level entry_type exactly; never use a structured_facts key",
+            "fact": (
+                "literal summary of supplied record fields; for medication_intake include "
+                "medication_display_name and intake_status without identifying the real-world drug"
+            ),
+            "polarity": (
+                "for medication_intake: taken=positive, unknown=unknown, all other "
+                "intake_status=negative; otherwise use positive or negative only when explicit"
+            ),
+            "certainty": "confirmed",
+        },
+        "rule": (
+            "Use only these confirmed records and preserve exact source fields. Keep every "
+            "direct match as a record fact even when drug identity is unconfirmed; do not "
+            "convert its display label into a verified drug identity."
+        ),
     }
     a2, errors = invoker.invoke("A2", a2_context)
     if a2 is None:
@@ -1603,6 +1791,7 @@ __all__ = [
     "PROMPT_VERSION",
     "Qwen35Nf4Backend",
     "ROLE_SCHEMAS",
+    "TOOL_ARGUMENT_SCHEMAS",
     "ReplayRoleBackend",
     "RoleModelBackend",
     "run_model_episode",

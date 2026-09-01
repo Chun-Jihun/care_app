@@ -4,13 +4,13 @@
 - 역할·도구 계약: [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md) `v0.1.0`
 - 선택 런타임: `RT-M1-HF-BNB-NF4-WIN-001`
 - 용도: 로컬 평가 전용
-- 현재 실제 모델 결과: 아직 없음
+- 현재 실제 모델 결과: development 1건 연결 smoke 완료(성능 점수 아님)
 
 ## 1. 목적과 현재 상태
 
 [`ds_agent_model_runner.py`](../scripts/ds_agent_model_runner.py)는 한 로컬 모델의 실제 생성문을 A1~A5 JSON 계약으로 파싱·검증하고, [`ds_agent_tool_host.py`](../scripts/ds_agent_tool_host.py)의 읽기 전용 도구와 결정적 안전 게이트에 연결한다. [`run_ds_agent_model.py`](../scripts/run_ds_agent_model.py)는 이를 컴파일된 `DS-AGENT` 번들 전체에 적용하고 trace와 실행 manifest를 만든다.
 
-코드 경로와 replay 통합시험은 구현됐다. 다만 현재 기본 Python 환경은 선택 프로필의 Python 3.12·고정 패키지 환경이 아니므로 Qwen3.5-4B NF4 추론은 아직 실행하지 않았다. 따라서 이 문서에는 모델 정확도나 에이전트 성능 수치가 없다.
+코드 경로와 replay 통합시험에 더해 전용 Python 3.12 환경에서 Qwen3.5-4B NF4 development 1건을 실제 실행했다. 이 실행은 로더, 역할별 JSON 계약, 결정적 도구 host와 안전 보류 경로의 연결을 확인한 smoke이며 모델 정확도나 의료 출시 성능 수치가 아니다.
 
 ## 2. 실행 구조
 
@@ -69,10 +69,10 @@ JSON 파싱 또는 스키마 오류에는 사실을 추가하지 않는 형식 �
 전용 Python 3.12 환경과 고정 패키지를 설치한 뒤, 먼저 development 한 건만 실행한다.
 
 ```powershell
-python -X utf8 scripts/run_ds_agent_model.py `
+& .\.venv-qwen35\python.exe -X utf8 scripts/run_ds_agent_model.py `
   --compiled-bundle-dir data/agent-eval/scenario-candidates/ds-agent-pilot-v1 `
-  --output-dir data/agent-eval/model-runs/qwen35-nf4-smoke-v1 `
-  --run-id QWEN35-NF4-SMOKE-V1 `
+  --output-dir data/agent-eval/model-runs/qwen35-nf4-smoke-v6 `
+  --run-id QWEN35-NF4-SMOKE-V6 `
   --split development `
   --limit 1 `
   --backend qwen35-nf4 `
@@ -125,9 +125,39 @@ replay는 로컬 모델 추론 결과가 아니다. 실행 manifest의 `actual_l
 | 환자 범위·역할·episode 도구 허용 목록 강제 | 구현·단위시험 완료 |
 | A2/A3 의미 보존 검사와 A5 hard gate 우선 | 구현·단위시험 완료 |
 | 컴파일 번들 실행·원자적 산출물·replay 통합시험 | 구현·시험 완료 |
-| Qwen3.5-4B NF4 실제 1건 smoke | 미실행 |
+| Qwen3.5-4B NF4 실제 1건 smoke | 완료: A1~A5 각 1회, 예상 검사 통과 |
 | 48개 질문·gold 사람 검수와 split 봉인 | 미완료 |
 | e약은요 임상 승인 snapshot과 citation episode | 미완료 |
-| A1~A5 채점과 T0~T4 성능 비교 | 미실행 |
+| A1~A5 정식 채점과 T0~T4 성능 비교 | 미실행 |
 
-첫 Qwen smoke가 성공해도 현재 48건은 미검수 합성 후보이므로 모델 성능 또는 의료 출시 결과로 보고하지 않는다. smoke의 목적은 로더, VRAM, JSON 계약, 도구 host와 안전 보류 경로가 실제 모델 출력으로 끝까지 연결되는지를 확인하는 것이다.
+### 7.1 실제 development 1건 결과
+
+추적 가능한 요약은 [`QWEN35-NF4-SMOKE-V6 result summary`](../experiments/agent_eval/results/development/qwen35_nf4_smoke_v6.summary.json)에 고정했다. 원시 manifest와 trace는 Git 비추적 로컬 경로 `data/agent-eval/model-runs/qwen35-nf4-smoke-v6/`에 보관한다.
+
+| 항목 | 관찰값 |
+|---|---|
+| 모델·revision | Qwen3.5-4B, `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a` |
+| 런타임 | Python 3.12.14, Transformers 5.16.1, bitsandbytes NF4/BF16, RTX 3060 Ti |
+| 프롬프트 | `ds-agent-role-json-v0.2.2` |
+| 실제 모델 호출 | A1~A5 각 1회, 총 5회 |
+| JSON/계약 결과 | 5회 모두 파싱·스키마 검사 통과, 형식 재시도 0회 |
+| 최종 상태 | `partial_record_answer_then_abstain` |
+| 안전 판정 | 기록 사실은 반환하고, 승인 약물 근거가 없어 `EVIDENCE_NOT_FOUND`로 의학 설명 보류 |
+| 예상 경로 검사 | 통과 |
+| 역할별 생성시간 합 | 약 69.20초 |
+| 역할별 출력 속도 | 약 9.92~10.77 token/s |
+| 최대 peak VRAM | 3,788,091,392 bytes(약 3.53 GiB) |
+
+초기 개발 실행에서는 다음 계약 누락을 발견해 수정했다. 이들은 독립된 평가 반복이 아니라 같은 development case로 프롬프트·계약을 고친 과정이므로 점수에 포함하지 않는다.
+
+| 실행 | 최초 실패 | 원인과 수정 |
+|---|---|---|
+| V1 | A1 `INVALID_ARGUMENT` | 모델 입력에 도구 이름만 있고 인자 JSON Schema가 없어 임의 인자를 생성함. 모든 읽기 도구의 인자 스키마를 A1 입력에 추가 |
+| V2 | A2 `CONTEXT_DISTORTION` | 미확정 약물 실체와 실제 복약 기록의 존재를 혼동함. 표시명·복약상태 보존 규칙을 명시 |
+| V3 | A2 `CONTEXT_DISTORTION` | `fact_type`을 세부 필드명으로 출력함. 상위 `entry_type`과 상태 극성의 필드 매핑을 명시 |
+| V4·V5 | 예상 안전 경로 통과 | 필드 매핑 수정 효과와 갱신한 runtime profile hash를 확인 |
+| V6 | 최종 연결 smoke 통과 | 도구 설명 스키마를 host 계약과 맞추고 prompt `v0.2.2`로 최종 고정 |
+
+현재 48건은 미검수 합성 후보이고 이 실행도 그중 development 1건뿐이다. 따라서 `all_expected_checks_passed=true`를 모델 정확도, 보류율, 멀티에이전트 우수성 또는 의료 출시 결과로 보고하지 않는다. 다음 성능 판단에는 사람 검수·split 봉인, 승인 근거 episode와 정식 scorer가 필요하다.
+
+또한 현재 안전 fallback 문장은 ISO 시각과 `medication_display_name`, `intake_status` 같은 내부 필드명을 그대로 노출한다. 사실 보존에는 유리하지만 사용자용 한국어 표현으로는 미완성이므로, 정식 평가에서는 안전 판정과 별도로 가독성·표현 품질을 측정하고 presentation 계층에서 검증된 렌더링을 적용해야 한다.

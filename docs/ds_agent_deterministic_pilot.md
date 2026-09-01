@@ -198,7 +198,7 @@ python -m unittest tests.test_ds_agent_tool_host
 1. 48개 질문·도구·인자·최종 상태를 사람이 검수하고 seal 형식과 승인자를 구현한다.
 2. e약은요 품목을 임상 검수해 실제 `approved_snapshot`을 만든 뒤, 품목코드와 근거 span이 연결된 grounded·conflict·not-found episode를 추가한다.
 3. 고위험 규칙, timeout, 잘못된 도구, 범위 공격과 prompt injection을 포함하는 negative episode를 확장한다.
-4. 구현된 [`A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)와 [`RT-M1-HF-BNB-NF4-WIN-001`](../experiments/agent_eval/manifests/runtime_profiles.json) 전용 환경으로 Qwen3.5-4B 1건 오프라인 smoke를 실행하고 모델 revision·lock·runtime profile hash·prompt 버전·VRAM을 확인한다.
+4. 완료한 Qwen3.5-4B development 1건 연결 smoke의 model revision·lock·runtime profile hash·prompt 버전·VRAM을 보존하고, 이후 실행은 검수·봉인된 split과 별도 run ID를 사용한다.
 5. 같은 48개 검수 episode에서 T0 결정적 기준선, T1 단일 제한형, T2/T3 역할 분리 구성을 비교한다.
 6. 도구 선택·인자 exact match, 기록 사실 보존, retrieval, 보류와 A5 잘못된 승인율을 별도로 채점한다.
 7. 확률적 설정은 반복 실행해 `pass^1`, `pass^k`, 신뢰구간과 최초 실패 원인을 보고한다.

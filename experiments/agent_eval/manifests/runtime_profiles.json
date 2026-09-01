@@ -5,7 +5,7 @@
     {
       "id": "RT-M1-HF-BNB-NF4-WIN-001",
       "decision_status": "accepted_for_initial_desktop_evaluation",
-      "execution_status": "not_installed_or_smoke_tested",
+      "execution_status": "development_smoke_passed_not_performance_scored",
       "scope": [
         "A1_to_A5_component_smoke",
         "DS_AGENT_T1_to_T3_text_topology_evaluation"

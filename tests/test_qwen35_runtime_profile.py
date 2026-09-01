@@ -60,6 +60,10 @@ class Qwen35RuntimeProfileTests(unittest.TestCase):
     def test_profile_fails_closed_and_does_not_claim_mobile_validation(self) -> None:
         policy = self.profile["policy"]
 
+        self.assertEqual(
+            self.profile["execution_status"],
+            "development_smoke_passed_not_performance_scored",
+        )
         self.assertTrue(policy["local_files_only"])
         self.assertFalse(policy["network_access"])
         self.assertFalse(policy["trust_remote_code"])

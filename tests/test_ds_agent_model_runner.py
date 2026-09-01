@@ -11,6 +11,7 @@ from scripts.ds_agent_model_runner import (
     ModelGeneration,
     ModelRunnerError,
     ReplayRoleBackend,
+    TOOL_ARGUMENT_SCHEMAS,
     run_model_episode,
 )
 from scripts.ds_agent_tool_host import InMemoryPilotRepository, verify_trace_chain
@@ -384,6 +385,33 @@ class DsAgentModelRunnerTests(unittest.TestCase):
         )
 
         self.assertEqual([call["role_id"] for call in backend.calls], ["A1", "A2", "A3", "A4", "A5"])
+        a1_payload = json.loads(backend.calls[0]["messages"][1]["content"])
+        search_tool = next(
+            value
+            for value in a1_payload["context"]["allowed_tools"]
+            if value["name"] == "search_care_entries"
+        )
+        self.assertEqual(
+            search_tool["arguments_schema"]["required"],
+            ["entry_types", "from_utc", "to_utc"],
+        )
+        self.assertEqual(
+            TOOL_ARGUMENT_SCHEMAS["get_care_entry_details"]["required"],
+            ["care_entry_ids", "required_fields"],
+        )
+        self.assertEqual(
+            len(TOOL_ARGUMENT_SCHEMAS["lookup_approved_drug_info"]["oneOf"]),
+            2,
+        )
+        self.assertIn(
+            "unconfirmed drug identity does not erase",
+            backend.calls[1]["messages"][0]["content"],
+        )
+        a2_payload = json.loads(backend.calls[1]["messages"][1]["content"])
+        self.assertIn(
+            "copy top-level entry_type exactly",
+            a2_payload["context"]["required_field_mapping"]["fact_type"],
+        )
         self.assertEqual(
             summary["actual_tool_sequence"],
             ["search_care_entries", "get_care_entry_details"],

@@ -7,7 +7,7 @@
 3. [고정 실행 프로필](#3-고정-실행-프로필)
 4. [선정 이유](#4-선정-이유)
 5. [채택하지 않은 대안](#5-채택하지-않은-대안)
-6. [설치와 실행 전 확인](#6-설치와-실행-전-확인)
+6. [설치와 실행 확인](#6-설치와-실행-확인)
 7. [양자화 승인 게이트](#7-양자화-승인-게이트)
 8. [모바일 배포와의 경계](#8-모바일-배포와의-경계)
 9. [근거 자료](#9-근거-자료)
@@ -36,7 +36,7 @@
 
 이것은 **첫 데스크톱 실험 런타임의 확정**이다. Qwen3.5-4B를 최종 제품 모델로 채택하거나 NF4의 의료 품질을 승인했다는 뜻은 아니다.
 
-이 프로필을 읽어 model lock·패키지·GPU 조건을 검사하고 A1~A5 JSON 계약에 연결하는 backend는 [`DS-AGENT A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)에 구현했다. 아직 전용 Python 3.12 환경에서 실제 추론 smoke를 실행하지 않았으므로 `execution_status=not_installed_or_smoke_tested`는 유지한다.
+이 프로필을 읽어 model lock·패키지·GPU 조건을 검사하고 A1~A5 JSON 계약에 연결하는 backend는 [`DS-AGENT A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)에 구현했다. 전용 Python 3.12 환경의 실제 development 1건 smoke까지 통과했으며, 기계 판독 상태는 `execution_status=development_smoke_passed_not_performance_scored`다.
 
 ## 2. 적용 범위
 
@@ -69,7 +69,7 @@
 | bitsandbytes | `0.50.2` |
 | Pillow | `12.3.0` |
 
-현재 기본 Python 3.14 환경이나 MedAgentBench 환경을 재사용하지 않는다. `.venv-qwen35`처럼 별도의 Python 3.12 환경을 사용하고, 실제 설치 후 `pip freeze`, Python·CUDA·드라이버·GPU 정보와 wheel 해시를 실행 manifest에 추가한다.
+기본 Python 3.14 환경이나 MedAgentBench 환경을 재사용하지 않는다. 실제 실행에는 저장소 안의 전용 Conda prefix `.venv-qwen35`와 Python 3.12.14를 사용했다. 실행 manifest에는 고정 핵심 패키지, Python·CUDA·드라이버·GPU, 모델·runtime profile hash를 남기고, 전체 설치 패키지는 [`pip-freeze snapshot`](../experiments/agent_eval/manifests/qwen35_nf4_python312.pip-freeze.txt)으로 고정했다. 설치 wheel 자체의 해시는 후속 재현성 보강 항목이다.
 
 ### 3.2 양자화 설정
 
@@ -129,18 +129,17 @@ LongHealth는 4,096 token으로 잘라 점수를 내지 않는다. VRAM peak와 
 | llama.cpp + GGUF | 모바일 후보에는 유력하지만 변환·커널 차이가 첫 토폴로지 실험에 추가 변수가 됨 | 목표 Android 장비를 정한 뒤 Q5_K_M→Q4_K_M 순으로 별도 검증 |
 | 임의 커뮤니티 4-bit 파일 | 원본 revision, 변환 도구·설정과 해시 추적이 불충분할 수 있음 | 전체 provenance와 해시가 확인될 때 새 프로필로 등록 |
 
-## 6. 설치와 실행 전 확인
+## 6. 설치와 실행 확인
 
-아래 명령은 **확정된 설치 절차**이며 아직 이 문서 작성 시점에는 실행하지 않았다.
+이 PC에는 `py -3.12`로 등록된 Python이 없어 다음 Conda prefix 방식으로 전용 환경을 생성하고 고정 패키지를 설치했다.
 
 ```powershell
-py -3.12 -m venv .venv-qwen35
-.\.venv-qwen35\Scripts\python.exe -m pip install --upgrade pip
-.\.venv-qwen35\Scripts\python.exe -m pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cu126
-.\.venv-qwen35\Scripts\python.exe -m pip install transformers==5.16.1 accelerate==1.14.0 bitsandbytes==0.50.2 pillow==12.3.0
+conda create --prefix .\.venv-qwen35 python=3.12 pip -y
+& .\.venv-qwen35\python.exe -m pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cu126
+& .\.venv-qwen35\python.exe -m pip install transformers==5.16.1 accelerate==1.14.0 bitsandbytes==0.50.2 pillow==12.3.0
 ```
 
-설치 뒤 다음을 모두 확인해야 `execution_status`를 `smoke_passed`로 바꿀 수 있다.
+`QWEN35-NF4-SMOKE-V6`에서 다음을 확인해 development smoke 상태를 통과로 변경했다.
 
 1. Python·패키지 버전이 프로필과 정확히 일치한다.
 2. `models.lock.json` 검증이 통과한다.
@@ -149,6 +148,8 @@ py -3.12 -m venv .venv-qwen35
 5. 네트워크를 차단한 상태에서 1개 request를 끝까지 생성한다.
 6. peak VRAM, 입력·출력 token, 초당 token, wall time을 trace에 남긴다.
 7. 출력 JSON schema 위반과 비정상 종료가 없고, 원문 prompt·환자정보가 외부 로그에 남지 않는다.
+
+실행 결과는 [`development result summary`](../experiments/agent_eval/results/development/qwen35_nf4_smoke_v6.summary.json)에 고정하고, 원시 산출물은 Git 비추적 로컬 경로에 분리했다. A1~A5 총 5회 생성이 모두 계약을 통과했고, 최대 peak VRAM은 약 3.53 GiB였다. 승인 약물 근거가 없는 합성 case였기 때문에 기록만 반환하고 의학 설명은 `EVIDENCE_NOT_FOUND`로 보류했다. 이는 연결 smoke 결과이며 양자화 품질 또는 의료 성능 승인이 아니다.
 
 ## 7. 양자화 승인 게이트
 

@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0",
+  "run_id": "QWEN35-NF4-SMOKE-V6",
+  "executed_at": "2026-09-02",
+  "result_kind": "development_connectivity_smoke_not_performance_score",
+  "data_classification": "synthetic_evaluation_only",
+  "source": {
+    "dataset_id": "DS-AGENT-CANDIDATE-077AD3FB8465C32F",
+    "review_status": "compiler_generated_unreviewed",
+    "evaluation_eligible": false,
+    "episode_count": 1
+  },
+  "runtime": {
+    "environment_path": ".venv-qwen35",
+    "python": "3.12.14",
+    "pip_freeze_path": "experiments/agent_eval/manifests/qwen35_nf4_python312.pip-freeze.txt",
+    "pip_freeze_sha256": "f3feb264881a8c3d7d2967a2b62e8133e80da652598610375da71f55962af4f1",
+    "runtime_profile_id": "RT-M1-HF-BNB-NF4-WIN-001",
+    "runtime_profile_sha256": "98da8a0d913aa104dd11b4cacb61bc91188108eddbb2a2cc35353a87acda411f",
+    "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "model_lock_sha256": "468c32a76e07c53e333bd1adc28bd3dfc9e04bdcd47eb29d9ba38790a4333358",
+    "quantization": "bitsandbytes_load_time_nf4_bfloat16_compute",
+    "prompt_version": "ds-agent-role-json-v0.2.2",
+    "network_access": false,
+    "local_files_only": true,
+    "actual_local_model_invoked": true
+  },
+  "result": {
+    "role_call_counts": {
+      "A1": 1,
+      "A2": 1,
+      "A3": 1,
+      "A4": 1,
+      "A5": 1
+    },
+    "all_role_calls_schema_valid": true,
+    "format_repair_count": 0,
+    "actual_tool_sequence": [
+      "search_care_entries",
+      "get_care_entry_details"
+    ],
+    "final_status": "partial_record_answer_then_abstain",
+    "effective_verifier_decision": "abstain",
+    "failure_codes": [
+      "EVIDENCE_NOT_FOUND"
+    ],
+    "all_expected_checks_passed": true,
+    "model_performance_result": false,
+    "medical_release_gate_result": false,
+    "evaluation_eligible": false
+  },
+  "usage": {
+    "total_generation_wall_time_ms": 69201.756,
+    "peak_vram_bytes": 3788091392,
+    "role_calls": [
+      {
+        "role_id": "A1",
+        "input_tokens": 651,
+        "output_tokens": 289,
+        "generation_wall_time_ms": 27482.345,
+        "output_tokens_per_second": 10.515842
+      },
+      {
+        "role_id": "A2",
+        "input_tokens": 762,
+        "output_tokens": 223,
+        "generation_wall_time_ms": 20706.804,
+        "output_tokens_per_second": 10.769407
+      },
+      {
+        "role_id": "A3",
+        "input_tokens": 505,
+        "output_tokens": 77,
+        "generation_wall_time_ms": 7394.068,
+        "output_tokens_per_second": 10.413753
+      },
+      {
+        "role_id": "A4",
+        "input_tokens": 709,
+        "output_tokens": 99,
+        "generation_wall_time_ms": 9485.153,
+        "output_tokens_per_second": 10.437365
+      },
+      {
+        "role_id": "A5",
+        "input_tokens": 609,
+        "output_tokens": 41,
+        "generation_wall_time_ms": 4133.386,
+        "output_tokens_per_second": 9.919229
+      }
+    ]
+  },
+  "local_raw_artifacts": {
+    "path": "data/agent-eval/model-runs/qwen35-nf4-smoke-v6",
+    "tracked_by_git": false,
+    "manifest_bytes": 3313,
+    "manifest_sha256": "b2fdb390385d47a7f59cfde8c52d432395b0000f2e67a69a4874c1fb6bc227d0",
+    "all_declared_output_hashes_verified": true,
+    "trace_chain_verified": true,
+    "trace_event_count": 18
+  },
+  "limitations": [
+    "One compiler-generated unreviewed development episode cannot estimate model performance.",
+    "The episode contained no approved knowledge snapshot, so it tested safe abstention rather than grounded medical answering.",
+    "The deterministic fallback preserves facts but still exposes internal field labels and requires presentation-quality evaluation.",
+    "This desktop NF4 result is not evidence for Android deployment or quantization approval."
+  ]
+}

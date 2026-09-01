@@ -23,6 +23,7 @@ try:
     from scripts.ds_agent_model_runner import (
         EXECUTION_MODE,
         ModelRunnerError,
+        PROMPT_VERSION,
         Qwen35Nf4Backend,
         ReplayRoleBackend,
         RoleModelBackend,
@@ -54,6 +55,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from ds_agent_model_runner import (  # type: ignore
         EXECUTION_MODE,
         ModelRunnerError,
+        PROMPT_VERSION,
         Qwen35Nf4Backend,
         ReplayRoleBackend,
         RoleModelBackend,
@@ -294,6 +296,7 @@ def run_model_bundle(
         },
         "backend": backend_metadata,
         "contract_version": CONTRACT_VERSION,
+        "prompt_version": PROMPT_VERSION,
         "trace_schema_version": TRACE_SCHEMA_VERSION,
         "source_bundle": {
             "dataset_id": source_manifest.get("dataset_id"),
