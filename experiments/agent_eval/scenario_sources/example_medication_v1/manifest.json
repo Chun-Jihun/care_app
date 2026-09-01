@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "source_id": "PROJECT-SYNTHETIC-MEDICATION-V1",
+  "source_title": "프로젝트 합성 복약 간병기록 예제",
+  "source_url": "urn:care-app:scenario-source:example-medication-v1",
+  "source_revision": "v1",
+  "source_kind": "synthetic",
+  "privacy": {
+    "direct_identifiers_present": false,
+    "patient_keys_pseudonymous": true,
+    "free_text_excluded": true
+  },
+  "usage": {
+    "evaluation_only": true,
+    "do_not_train": true,
+    "mobile_bundle": false
+  },
+  "license": {
+    "status": "project_owned_synthetic"
+  },
+  "outputs": [
+    {
+      "file": "medication_events.jsonl",
+      "bytes": 826,
+      "sha256": "8e6ce486e32d079098771b3fe8cc1308151a2d9a082d7f22d4080e7463f6950c",
+      "record_count": 2
+    }
+  ]
+}

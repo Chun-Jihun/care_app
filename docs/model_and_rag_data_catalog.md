@@ -198,6 +198,8 @@ discovered
 
 외부 API가 갱신되어도 운영 인덱스에 자동 반영하지 않는다. 새 응답은 격리된 staging에 받고 변경 비교, 권리 확인, 의료 검수와 회귀시험을 통과한 뒤 새 승인 스냅샷으로 승격한다.
 
+e약은요의 실제 `staged → approved` 검수 패킷, 결정 형식, 승격 명령과 런타임 활성화 전 추가 게이트는 [`e약은요 staged → approved 검수·승격 절차`](./mfds_easy_drug_approval_workflow.md)를 따른다. 승격 도구는 실제 약사·의사의 검수나 자격 확인을 대신하지 않으며, `approved_snapshot`을 생성한 뒤에도 검색 인덱싱과 의료 회귀시험 전까지 `runtime_rag_eligible=false`를 유지한다.
+
 ## 9. 첫 데이터 구축 우선순위
 
 첫 에이전트 실험의 다운로드 범위와 순서는 [`로컬 간병 에이전트 구성 및 성능평가 계획`](./agent_architecture_and_evaluation_plan.md#12-실험-준비와-다운로드-계획)을 우선 적용한다. 공개 AgentBench·BFCL·ToolBench 점수를 재현하기 위한 데이터는 초기 간병 도메인 실험의 선행조건이 아니다.
