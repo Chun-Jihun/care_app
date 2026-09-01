@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "decided_at": "2026-09-02",
+  "profiles": [
+    {
+      "id": "RT-M1-HF-BNB-NF4-WIN-001",
+      "decision_status": "accepted_for_initial_desktop_evaluation",
+      "execution_status": "not_installed_or_smoke_tested",
+      "scope": [
+        "A1_to_A5_component_smoke",
+        "DS_AGENT_T1_to_T3_text_topology_evaluation"
+      ],
+      "model": {
+        "asset_id": "M1",
+        "repository_id": "Qwen/Qwen3.5-4B",
+        "local_path": "models/qwen3.5_4b",
+        "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/models.lock.json",
+        "model_lock_sha256": "468c32a76e07c53e333bd1adc28bd3dfc9e04bdcd47eb29d9ba38790a4333358",
+        "config_sha256": "ddc63e1c717afa86c865bb5e01313d89d72bb53b97ad4a8a03ba8510c0621670"
+      },
+      "target_hardware": {
+        "gpu": "NVIDIA GeForce RTX 3060 Ti",
+        "vram_mib": 8192,
+        "compute_capability": "8.6",
+        "observed_driver": "610.88"
+      },
+      "runtime": {
+        "os": "windows_x86_64",
+        "python": "3.12",
+        "engine": "transformers_in_process",
+        "device": "cuda:0",
+        "device_map": {
+          "": "cuda:0"
+        },
+        "attention_implementation": "sdpa",
+        "batch_size": 1,
+        "packages": {
+          "torch": "2.12.1+cu126",
+          "torchvision": "0.27.1+cu126",
+          "transformers": "5.16.1",
+          "accelerate": "1.14.0",
+          "bitsandbytes": "0.50.2",
+          "pillow": "12.3.0"
+        }
+      },
+      "quantization": {
+        "stage": "load_time",
+        "loader": "BitsAndBytesConfig",
+        "weight_bits": 4,
+        "quant_type": "nf4",
+        "compute_dtype": "bfloat16",
+        "storage_dtype": "uint8",
+        "double_quant": false,
+        "serialized_quantized_artifact": false,
+        "identity_rule": "model_lock_sha256_plus_runtime_profile_sha256"
+      },
+      "generation": {
+        "mode": "non_thinking",
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "smoke": {
+          "do_sample": false,
+          "max_input_tokens": 4096,
+          "max_new_tokens": 512
+        },
+        "primary_scored": {
+          "do_sample": false,
+          "max_input_tokens": 4096,
+          "max_new_tokens": 512
+        },
+        "supplier_recommended_secondary": {
+          "do_sample": true,
+          "temperature": 0.7,
+          "top_p": 0.8,
+          "top_k": 20,
+          "min_p": 0.0,
+          "repetition_penalty": 1.0,
+          "max_input_tokens": 4096,
+          "max_new_tokens": 512,
+          "seed_set": [1701, 1702, 1703, 1704, 1705]
+        },
+        "longhealth_context_limit": "measure_before_scoring"
+      },
+      "policy": {
+        "local_files_only": true,
+        "network_access": false,
+        "trust_remote_code": false,
+        "cpu_or_disk_offload": false,
+        "automatic_precision_fallback": false,
+        "patient_data_allowed": false,
+        "evaluation_data_only": true
+      },
+      "acceptance": {
+        "environment_version_match_required": true,
+        "model_lock_verification_required": true,
+        "cuda_bfloat16_support_required": true,
+        "all_parameters_on_cuda_required": true,
+        "offline_smoke_required": true,
+        "peak_vram_measurement_required": true,
+        "quantization_regression_required_before_product_adoption": true,
+        "medical_hard_gates_must_not_regress": true
+      },
+      "mobile_deployment": {
+        "status": "not_selected_requires_separate_device_validation",
+        "reason": "This profile is a Windows evaluation runtime. Android llama.cpp/GGUF compatibility, target-device memory, latency and medical regression are separate gates."
+      }
+    }
+  ]
+}

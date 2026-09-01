@@ -362,7 +362,7 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 구분 | 상태 | 해석 |
 |---|---|---|
 | 공개 모델·논문 점수 | 프로젝트 결과에서 제외 | 후보·라이선스 탐색 외에는 성능 판단에 사용하지 않음 |
-| M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash 고정 완료, 추론 미실행 | 약 9.3GB 원본은 RTX 3060 Ti 8GB에 그대로 적재하기 어렵고 현재 실행 환경에 `torch/transformers/accelerate`가 없어, 추적 가능한 양자화와 런타임 고정 전에는 성능 결과가 없음 |
+| M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash와 첫 데스크톱 runtime·NF4 설정 고정 완료, 추론 미실행 | `RT-M1-HF-BNB-NF4-WIN-001`은 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16으로 고정됐다. 전용 환경 설치·backend 연결·오프라인 smoke 전이므로 성능 결과는 없음 |
 | 공개 구성요소 평가 데이터 | source adapter 전체 변환 및 runner·grader core 구현, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA 110,599건을 A1~A5/KO case로 정규화했다. 전체 렌더링 검증에서 109,544건이 정상 처리됐고 BFCL 공식 상태형 runtime이 필요한 1,055건만 명시적으로 제외됐다. case 사람 검수·봉인과 모델 성능 결과는 아직 없음 |
 | 프로젝트 `DS-AGENT` 결과 | 48개 합성 기반 파일럿·결정적 host·trace smoke 완료, 모델 성능 실험 미실행 | 기록 답변 24건과 승인 지식 없음 부분답변·보류 24건의 gold 도구 경로·hard gate가 48/48 일치했다. 이는 미검수 oracle fixture 기반 검증이며 승인 근거·모델 출력·임상 출시 성능이 아님 |
 | 목표 모바일 장비 성능 | 미실행 | Android 목표 장비와 로컬 런타임 미확정 |
@@ -408,7 +408,7 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 
 | 단계 | 모델 | 다운로드 여부 | 첫 용도 | 준비할 파일·정보 |
 |---|---|---|---|---|
-| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본 다운로드·manifest 고정 완료, 양자화·추론 미실행** | T1~T3에서 동일 모델을 사용한 구조 비교 | 원본 revision·파일 SHA-256은 고정됨. 8GB GPU용 로컬 runtime·양자화 설정과 변환 산출물 hash를 추가해야 함 |
+| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본·manifest와 데스크톱 load-time NF4 프로필 고정 완료, 추론 미실행** | T1~T3에서 동일 모델을 사용한 구조 비교 | [`RT-M1-HF-BNB-NF4-WIN-001`](./qwen35_local_runtime_decision.md) 사용. 별도 양자화 weight가 아니라 원본 lock+runtime profile로 실행을 식별하며, 환경 설치·backend 연결·smoke가 남음 |
 | M2 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | M1 실험 뒤 | 범용 4B 기준선과 모델 세대 효과 | M1과 같은 manifest 항목 |
 | M3 | [MedGemma 1.5 4B](https://huggingface.co/google/medgemma-1.5-4b-it) | T0~T3 뒤 선택 | A4 근거 제한 설명의 의료 특화 비교 | 이용조건 동의 기록, 공식 원본·tokenizer·config, revision·해시 |
 | M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | 도구 선택 오류가 확인될 때만 | A1 코디네이터의 도구 호출 특화 비교 | 정확히 `2511` 리비전, 커스텀 코드 보안 검토, 해시 |
@@ -473,7 +473,7 @@ experiments/agent_eval/results/
 
 다음 사항을 확인한 뒤 실제 다운로드를 시작한다.
 
-1. 첫 실행 런타임이 Qwen3.5-4B 원본과 목표 양자화를 지원하는지
+1. 고정한 `RT-M1-HF-BNB-NF4-WIN-001` 환경을 설치하고 Qwen3.5-4B load-time NF4 오프라인 smoke가 통과하는지
 2. 모델 원본·양자화 파일과 평가 trace를 보관할 디스크 공간
 3. Hugging Face 및 MedGemma 등 각 이용조건에 동의할 주체
 4. e약은요·DUR API 활용신청과 원본 응답 보관 조건
@@ -488,7 +488,7 @@ experiments/agent_eval/results/
 2. **최소 자료 준비:** M1 원본과 D0~D2를 준비하고 revision·해시·이용조건 manifest를 작성한다.
 3. **역할·도구 계약 고정:** 첫 텍스트 실험에 필요한 A1~A5 입력·출력 JSON 스키마, 읽기 도구 허용 목록과 종료조건을 작성한다.
 4. **`DS-AGENT` 파일럿 구축:** 승인 지식 없이 기록 조회·안전 보류를 검증하는 합성 48개와 결정적 host·trace smoke는 구현됐다. 다음으로 질문·도구 label을 사람이 검수하고 승인 근거 episode를 추가·봉인한다.
-5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader와 DS-AGENT용 가짜 기록 저장소·결정적 도구 host·A1~A5 fixture trace 수집기는 구현됐다. 다음으로 실제 로컬 모델 출력 runner, 승인 문서 저장소와 근거·citation scorer를 연결한다.
+5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader와 DS-AGENT용 가짜 기록 저장소·결정적 도구 host·A1~A5 fixture trace 수집기는 구현됐다. 다음으로 `RT-M1-HF-BNB-NF4-WIN-001` 로더, 실제 로컬 모델 출력, 승인 문서 저장소와 근거·citation scorer를 연결한다.
 6. **T0·T1 기준선 실행:** 결정적 구성과 단일 제한형 에이전트를 비교한다.
 7. **T2·T3 역할 분리 실험:** 같은 M1 모델을 사용해 토폴로지 효과만 분리한다.
 8. **추가 다운로드 결정:** 오류 분포를 보고 M2~M4 중 필요한 모델만 준비한다.
@@ -516,3 +516,4 @@ experiments/agent_eval/results/
 7. [의약품안전사용서비스(DUR) 품목정보 OpenAPI](https://www.data.go.kr/data/15059486/openapi.do) — D3 구조화 규칙 데이터 후보
 8. [SLM·VLM·RAG 검증 계획](./slm_rag_validation_plan.md) — 전체 hard gate, 데이터와 실행 절차
 9. [모델·RAG 데이터 카탈로그](./model_and_rag_data_catalog.md) — 데이터별 출처, 권리와 채택 상태
+10. [Qwen3.5-4B 로컬 추론 런타임·양자화 결정](./qwen35_local_runtime_decision.md) — 첫 데스크톱 실험의 고정 환경과 모바일 검증 경계
