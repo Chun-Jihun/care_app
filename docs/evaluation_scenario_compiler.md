@@ -42,9 +42,11 @@ flowchart LR
     KB[approved e약은요 snapshot] --> CHECK{승인·권리·임상·hash 검사}
     SRC --> COMP[scenario compiler]
     CHECK -- 통과 --> COMP
-    CHECK -- 없음 --> RECORD[기록 검색 episode만 생성]
+    CHECK -- 없음·기본 --> RECORD[기록 검색 episode만 생성]
+    CHECK -- 없음·파일럿 opt-in --> ABSTAIN[기록 조회 뒤 승인 지식 없음 보류 episode]
     COMP --> SPLIT[환자 그룹 단위<br/>development / validation / frozen-test]
     RECORD --> SPLIT
+    ABSTAIN --> SPLIT
     SPLIT --> CAND[compiler_generated_unreviewed]
     CAND --> REVIEW[도구 라벨 검수 + 임상 근거 적용 검수]
     REVIEW --> SEALED[평가용 sealed DS-AGENT]
@@ -143,8 +145,9 @@ flowchart LR
 | `record_and_drug_info` | 승인 근거 있음 | 기록 검색·상세 조회 → 품목코드 조회 → 정확한 근거 span 열기 → 주장별 근거 답변 |
 | `record_and_drug_info` | 식별 미확정 | 기록 사실만 부분 답변하고 약 설명은 `DRUG_IDENTITY_UNCONFIRMED`로 보류 |
 | `record_and_drug_info` | 승인 효능 근거 없음 | 품목 조회 결과를 임의 보충하지 않고 `EVIDENCE_NOT_FOUND`로 보류 |
+| `record_and_drug_info` | 승인 snapshot 자체가 없음·파일럿 opt-in | 약물 도구를 호출하지 않고 기록 사실만 부분 답변한 뒤 `APPROVED_KNOWLEDGE_UNAVAILABLE`로 보류 |
 
-승인 snapshot을 전달하지 않으면 `medication_record_lookup`만 생성한다. 따라서 현재 상태에서도 A1·A2 기록 도구 실험 후보는 만들 수 있지만 A3·A4 의료 근거 실험을 실행했다고 보고할 수는 없다.
+승인 snapshot을 전달하지 않는 기본 동작은 `medication_record_lookup`만 생성한다. 결정적 호스트의 근거 없음 경로를 시험할 때에만 `--include-no-knowledge-abstention`을 명시하면 세 번째 유형을 추가한다. 이 episode에는 약물 조회나 근거 span gold 호출이 없고, 의료 내용을 생성하지 않는다. 따라서 이 옵션으로 A3 retrieval 또는 A4 의료 답변 성능을 실행했다고 보고할 수는 없다.
 
 ## 6. 분할과 오염 방지
 
@@ -213,15 +216,20 @@ python -X utf8 scripts/compile_agent_evaluation_scenarios.py `
 
 기존 출력은 덮어쓰지 않는다. source, 계약, 승인 snapshot 또는 split 설정을 바꾸면 새로운 출력 ID·경로를 사용한다.
 
+### 8.3 승인 지식 없음 보류 host 파일럿
+
+40~60개 결정적 host·trace 기반을 재현하는 명령과 결과 해석은 [`DS-AGENT 결정적 도구 호스트·trace 파일럿`](./ds_agent_deterministic_pilot.md)을 따른다. 이 경로는 `--include-no-knowledge-abstention`을 명시하며 모델 성능·의료 출시 결과가 아니다.
+
 ## 9. 현재 한계와 다음 작업
 
-컴파일러 core, 합성 입력 예제, 공개 벤치마크 구성요소용 source adapter와 [`공개 case 역할별 하네스`](./role_component_evaluation_harness.md)는 구현됐지만 실제 `DS-AGENT` 계약 E2E에는 다음이 아직 남아 있다.
+컴파일러 core, 48개 합성 파일럿, 가짜 read-only repository, 결정적 도구 host, A1~A5 fixture 인계와 해시 체인 trace 수집은 구현됐다. 단, 현재 host 실행은 compiler gold 호출을 재생한 기반 검증이며 실제 모델 E2E 성능이 아니다. 남은 작업은 다음과 같다.
 
 1. 공개 기록을 DS-AGENT용 구조화 간병 event로 추출·비식별화하고 사람이 검수하는 별도 event adapter
 2. 공개 기록 속 약물과 MFDS `item_seq`의 사람 검수 mapping 파일
 3. 질문·도구·인자 gold label 및 근거 적용 범위를 승인하는 episode review·seal 도구
 4. 위험, 근거 충돌, 도구 timeout, 환자 격리용 scenario recipe 확장
-5. compiled fixture를 읽는 가짜 repository와 결정적 도구 host
-6. `DS-AGENT` T0~T3 실행기, A1~A5 인계·도구 trace 수집기와 프로젝트 hard gate 채점기
+5. 실제 로컬 모델 출력을 사용하는 T1~T3 runner와 역할별 prompt·model manifest 연결
+6. 승인 근거가 연결된 episode의 A3 retrieval·A4 주장–근거·A5 citation hard gate 채점
+7. 반복 추론, `pass^k`, latency·memory와 최초 실패 원인을 묶는 실험 report
 
 LongHealth adapter는 A2용 질문·정답·원문 locator를 생성하고 이름·생년월일·원문 본문을 출력 case에서 제외한다. 하지만 이를 간병 gold record로 자동 변환하지는 않는다. 자유서술 자동 추출 결과는 별도 검수 없이는 DS-AGENT 정답이 될 수 없기 때문이다.

@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "source_id": "PROJECT-SYNTHETIC-DS-AGENT-PILOT-V1",
+  "source_title": "DS-AGENT 결정적 도구 호스트 합성 파일럿",
+  "source_url": "urn:care-app:scenario-source:ds-agent-pilot-v1",
+  "source_revision": "v1",
+  "source_kind": "synthetic",
+  "privacy": {
+    "direct_identifiers_present": false,
+    "patient_keys_pseudonymous": true,
+    "free_text_excluded": true
+  },
+  "usage": {
+    "evaluation_only": true,
+    "do_not_train": true,
+    "mobile_bundle": false
+  },
+  "license": {
+    "status": "project_owned_synthetic"
+  },
+  "limitations": [
+    "약 이름과 환자 키는 모두 합성 값이다.",
+    "승인 의학 지식 없이 기록 조회와 근거 부족 보류 경로만 검증한다.",
+    "사람의 라벨 검수 전에는 모델 성능 또는 의료 출시 근거로 사용할 수 없다."
+  ],
+  "outputs": [
+    {
+      "file": "medication_events.jsonl",
+      "bytes": 9890,
+      "sha256": "2770e008321530e64068f37fd130a1d308cb04bf3ab56a30b616589ecfb7d8cf",
+      "record_count": 24
+    }
+  ]
+}

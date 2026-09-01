@@ -535,8 +535,12 @@ def _status_phrases(status: str) -> tuple[str, str, str]:
     if status == "missed":
         return "복용하지 못했다고", "복용하지 못함", "복용하지 못함"
     if status == "refused":
-        return "복용을 거부했다고", "복용을 거부함", "복용 거부"
-    return "복용 여부가 확인되지 않았다고", "복용 여부를 확인하지 못함", "복용 여부 미확인"
+        return "복용을 거부했다고", "복용을 거부함", "복용을 거부함"
+    return (
+        "복용 여부가 확인되지 않았다고",
+        "복용 여부를 확인하지 못함",
+        "복용 여부를 확인하지 못함",
+    )
 
 
 def _reason_text(reason_code: str | None) -> str | None:
@@ -666,6 +670,7 @@ def _compile_records_and_episodes(
     approved_manifest: Mapping[str, Any] | None,
     approved_products: Mapping[str, Mapping[str, Any]],
     evidence_by_item: Mapping[str, Sequence[Mapping[str, Any]]],
+    include_no_knowledge_abstention: bool,
 ) -> tuple[
     dict[str, list[dict[str, Any]]],
     dict[str, list[dict[str, Any]]],
@@ -808,7 +813,7 @@ def _compile_records_and_episodes(
         )
         episodes[split].append(record_episode)
 
-        if approved_manifest is None:
+        if approved_manifest is None and not include_no_knowledge_abstention:
             continue
         info_question = (
             f"어제 {bucket_ko}에 {question_status} 기록한 {name}은 어떤 약이야?"
@@ -827,13 +832,13 @@ def _compile_records_and_episodes(
         info_episode["task_type"] = "record_and_evidence_lookup"
         evidence = (
             list(evidence_by_item.get(confirmed_item_seq, []))
-            if confirmed_item_seq
+            if approved_manifest is not None and confirmed_item_seq
             else []
         )
         evidence_ids = [str(span["span_id"]) for span in evidence]
         gold_calls = list(record_calls)
         available_tools = ["search_care_entries", "get_care_entry_details"]
-        if confirmed_item_seq:
+        if approved_manifest is not None and confirmed_item_seq:
             available_tools.append("lookup_approved_drug_info")
             gold_calls.append(
                 {
@@ -872,11 +877,14 @@ def _compile_records_and_episodes(
         else:
             allowed_sequences = [[call["tool_name"] for call in gold_calls]]
             should_abstain = True
-            abstention_reason = (
-                "DRUG_IDENTITY_UNCONFIRMED"
-                if confirmed_item_seq is None
-                else "EVIDENCE_NOT_FOUND"
-            )
+            if approved_manifest is None:
+                abstention_reason = "APPROVED_KNOWLEDGE_UNAVAILABLE"
+            else:
+                abstention_reason = (
+                    "DRUG_IDENTITY_UNCONFIRMED"
+                    if confirmed_item_seq is None
+                    else "EVIDENCE_NOT_FOUND"
+                )
             expected_status = "partial_record_answer_then_abstain"
         info_episode.update(
             {
@@ -962,6 +970,7 @@ def compile_scenarios(
     contract_path: Path,
     *,
     approved_snapshot_dir: Path | None = None,
+    include_no_knowledge_abstention: bool = False,
     split_seed: str = "ds-agent-v1",
     development_percent: int = 60,
     validation_percent: int = 20,
@@ -1011,6 +1020,7 @@ def compile_scenarios(
         approved_manifest,
         approved_products,
         evidence_by_item,
+        include_no_knowledge_abstention,
     )
     files: dict[str, bytes] = {}
     outputs: list[dict[str, Any]] = []
@@ -1039,6 +1049,12 @@ def compile_scenarios(
         for episode in values
         if episode["should_abstain"]
     )
+    no_knowledge_abstention_count = sum(
+        1
+        for values in episodes.values()
+        for episode in values
+        if episode.get("abstention_reason") == "APPROVED_KNOWLEDGE_UNAVAILABLE"
+    )
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "dataset_id": _stable_id(
@@ -1056,6 +1072,7 @@ def compile_scenarios(
             "network_access": False,
             "medical_content_generated": False,
             "fuzzy_drug_matching": False,
+            "include_no_knowledge_abstention": include_no_knowledge_abstention,
         },
         "contract": {
             "version": CONTRACT_VERSION,
@@ -1080,7 +1097,9 @@ def compile_scenarios(
             if approved_path
             else None,
             "approved_manifest_sha256": approved_manifest_hash,
-            "medical_episodes_compiled": medical_episode_count > 0,
+            "medical_question_episodes_compiled": medical_episode_count > 0,
+            "approved_evidence_episodes_compiled": approved_manifest is not None
+            and medical_episode_count > 0,
         },
         "split_policy": {
             "algorithm": "sha256_mod_100_by_source_and_patient_group",
@@ -1102,6 +1121,7 @@ def compile_scenarios(
             "record_only_episode_count": record_episode_count,
             "medical_episode_count": medical_episode_count,
             "abstention_episode_count": abstention_count,
+            "no_knowledge_abstention_episode_count": no_knowledge_abstention_count,
             "split_episode_counts": {
                 split: len(episodes[split]) for split in SPLITS
             },
@@ -1137,6 +1157,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
     parser.add_argument("--approved-snapshot-dir", type=Path)
+    parser.add_argument(
+        "--include-no-knowledge-abstention",
+        action="store_true",
+        help=(
+            "승인 snapshot이 없을 때 기록 확인 뒤 의료 설명을 보류해야 하는 "
+            "파일럿 episode도 생성합니다."
+        ),
+    )
     parser.add_argument("--split-seed", default="ds-agent-v1")
     parser.add_argument("--development-percent", type=int, default=60)
     parser.add_argument("--validation-percent", type=int, default=20)
@@ -1161,6 +1189,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if args.approved_snapshot_dir
                 else None
             ),
+            include_no_knowledge_abstention=args.include_no_knowledge_abstention,
             split_seed=args.split_seed,
             development_percent=args.development_percent,
             validation_percent=args.validation_percent,

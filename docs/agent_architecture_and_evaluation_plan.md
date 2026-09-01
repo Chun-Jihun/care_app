@@ -364,13 +364,13 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 공개 모델·논문 점수 | 프로젝트 결과에서 제외 | 후보·라이선스 탐색 외에는 성능 판단에 사용하지 않음 |
 | M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash 고정 완료, 추론 미실행 | 약 9.3GB 원본은 RTX 3060 Ti 8GB에 그대로 적재하기 어렵고 현재 실행 환경에 `torch/transformers/accelerate`가 없어, 추적 가능한 양자화와 런타임 고정 전에는 성능 결과가 없음 |
 | 공개 구성요소 평가 데이터 | source adapter 전체 변환 및 runner·grader core 구현, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA 110,599건을 A1~A5/KO case로 정규화했다. 전체 렌더링 검증에서 109,544건이 정상 처리됐고 BFCL 공식 상태형 runtime이 필요한 1,055건만 명시적으로 제외됐다. case 사람 검수·봉인과 모델 성능 결과는 아직 없음 |
-| 프로젝트 `DS-AGENT` 결과 | 후보 compiler 구현, 성능 실험 미실행 | 구조화·비식별 복약 event를 미검수 episode 후보로 변환할 수 있으나 승인 근거·라벨 검수·실행 하네스가 아직 없음 |
+| 프로젝트 `DS-AGENT` 결과 | 48개 합성 기반 파일럿·결정적 host·trace smoke 완료, 모델 성능 실험 미실행 | 기록 답변 24건과 승인 지식 없음 부분답변·보류 24건의 gold 도구 경로·hard gate가 48/48 일치했다. 이는 미검수 oracle fixture 기반 검증이며 승인 근거·모델 출력·임상 출시 성능이 아님 |
 | 목표 모바일 장비 성능 | 미실행 | Android 목표 장비와 로컬 런타임 미확정 |
 | 최종 에이전트 수·모델 배치 | 미확정 | T0~T4 비교 후 가장 단순한 통과 구성을 채택 |
 
 실험을 실행하기 전에는 “멀티에이전트 성능이 좋다”, “Qwen3.5-4B가 최종 모델이다” 또는 “의료 모델이 더 정확하다”라고 결론내리지 않는다.
 
-공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md), 역할별 요청·로컬 실행·채점과 결과 해석 경계는 [`역할별 구성요소 평가 하네스`](./role_component_evaluation_harness.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. source adapter와 `DS-AGENT` 후보 출력은 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다. 공개 구성요소 점수도 실제 프로젝트 도구 계약 E2E 또는 의료 출시 hard gate 결과로 승격하지 않는다.
+공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md), 역할별 요청·로컬 실행·채점과 결과 해석 경계는 [`역할별 구성요소 평가 하네스`](./role_component_evaluation_harness.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. 현재 결정적 host·trace 기반과 48개 oracle fixture 실행 범위는 [`DS-AGENT 결정적 도구 호스트·trace 파일럿`](./ds_agent_deterministic_pilot.md)에 기록한다. source adapter와 `DS-AGENT` 후보 출력은 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다. 공개 구성요소 점수와 oracle fixture 결과를 실제 모델 E2E 또는 의료 출시 hard gate 결과로 승격하지 않는다.
 
 ### 11.2 실행별 결과표
 
@@ -429,7 +429,7 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 단계 | 데이터 | 획득 방식 | 첫 실험 용도 | 지금 필요한가? |
 |---|---|---|---|---|
 | D0 | 합성 간병기록·가상 환자 상태 | 요구사항과 데이터 스키마를 이용해 프로젝트에서 직접 작성 | 환자 격리, 복약 누락, 부정·수치·시각 보존, 다단계 도구 사용 | **필수, 외부 다운로드 없음** |
-| D1 | `DS-AGENT` 파일럿 40~60개 | D0와 승인 근거를 연결해 프로젝트에서 직접 라벨링 | T0~T3 태스크 성공, 도구·인자, 인계와 보류 비교 | **필수, 외부 다운로드 없음** |
+| D1 | `DS-AGENT` 파일럿 40~60개 | D0와 승인 근거를 연결해 프로젝트에서 직접 라벨링 | T0~T3 태스크 성공, 도구·인자, 인계와 보류 비교 | **합성 48개·host/trace smoke 완료. 사람 라벨 검수와 승인 근거 연결 미완료** |
 | D2 | 식약처 [의약품개요정보(e약은요) OpenAPI](https://www.data.go.kr/data/15075057/openapi.do) 원본 스냅샷 | API 원본 JSON과 수집 메타데이터 저장 후 `raw → staged → review → approved` 게이트 적용 | 실제 승인 후보 문장 기반 약의 일반 효능·주의사항 RAG | **전체 raw 수집·staged·review catalog 완료, `awaiting_selection`; 승인 snapshot 없음** |
 | D3 | 식약처 [DUR 품목정보 OpenAPI](https://www.data.go.kr/data/15059486/openapi.do) 소규모 스냅샷 | API 활용신청 후 원본 JSON 저장 | 생성 답변이 아닌 구조화 규칙·조회 경로 검증 | D2 뒤 선택 |
 | D4 | 식품영양성분DB·질환별 공식 자료 | 첫 복약 실험 종료 후 별도 승인 | 음식·활동 에이전트 확장 | 지금 받지 않음 |
@@ -487,8 +487,8 @@ experiments/agent_eval/results/
 1. **실험계획 사전 등록:** H1~H4, 도구 계약, 데이터 split, hard gate, 비교 지표와 반복 횟수를 고정한다.
 2. **최소 자료 준비:** M1 원본과 D0~D2를 준비하고 revision·해시·이용조건 manifest를 작성한다.
 3. **역할·도구 계약 고정:** 첫 텍스트 실험에 필요한 A1~A5 입력·출력 JSON 스키마, 읽기 도구 허용 목록과 종료조건을 작성한다.
-4. **`DS-AGENT` 파일럿 구축:** 합성 기록과 승인 근거로 40~60개를 만들고 라벨·채점 기준을 검수한다.
-5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader core는 구현됐다. 다음으로 검수·봉인된 `DS-AGENT`를 읽는 가짜 로컬 기록·승인 문서 저장소, 결정적 도구 호스트와 A1~A5 전체 trace 수집기를 만든다.
+4. **`DS-AGENT` 파일럿 구축:** 승인 지식 없이 기록 조회·안전 보류를 검증하는 합성 48개와 결정적 host·trace smoke는 구현됐다. 다음으로 질문·도구 label을 사람이 검수하고 승인 근거 episode를 추가·봉인한다.
+5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader와 DS-AGENT용 가짜 기록 저장소·결정적 도구 host·A1~A5 fixture trace 수집기는 구현됐다. 다음으로 실제 로컬 모델 출력 runner, 승인 문서 저장소와 근거·citation scorer를 연결한다.
 6. **T0·T1 기준선 실행:** 결정적 구성과 단일 제한형 에이전트를 비교한다.
 7. **T2·T3 역할 분리 실험:** 같은 M1 모델을 사용해 토폴로지 효과만 분리한다.
 8. **추가 다운로드 결정:** 오류 분포를 보고 M2~M4 중 필요한 모델만 준비한다.

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://care-app.local/schemas/ds-agent-trace-0.1.0.json",
+  "title": "DS-AGENT deterministic trace event",
+  "description": "One append-only event from the deterministic DS-AGENT pilot host. event_sha256 is calculated over every field except event_sha256 using canonical, key-sorted UTF-8 JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "trace_schema_version",
+    "contract_version",
+    "trace_id",
+    "run_id",
+    "item_id",
+    "split",
+    "event_id",
+    "sequence",
+    "event_type",
+    "role_id",
+    "payload",
+    "previous_event_sha256",
+    "event_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "trace_schema_version": { "const": "0.1.0" },
+    "contract_version": { "const": "0.1.0" },
+    "trace_id": { "type": "string", "pattern": "^TRACE-[0-9a-f]{20}$" },
+    "run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "item_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "split": { "enum": ["development", "validation", "frozen-test"] },
+    "event_id": { "type": "string", "pattern": "^TRACE-[0-9a-f]{20}-E[0-9]{4}$" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "event_type": {
+      "enum": [
+        "trace_started",
+        "safety_gate",
+        "role_input",
+        "role_output",
+        "tool_request",
+        "tool_result",
+        "verifier_decision",
+        "trace_completed"
+      ]
+    },
+    "role_id": { "enum": ["HOST", "SAFETY", "A1", "A2", "A3", "A4", "A5"] },
+    "payload": { "type": "object" },
+    "previous_event_sha256": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      ]
+    },
+    "event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

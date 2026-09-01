@@ -318,6 +318,76 @@ class EvaluationScenarioCompilerTests(unittest.TestCase):
                     _contract(unsafe_root),
                 )
 
+    def test_can_compile_no_knowledge_abstention_pilot_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output = compile_scenarios(
+                root,
+                _write_source_bundle(root),
+                root / "compiled",
+                _contract(root),
+                include_no_knowledge_abstention=True,
+            )
+
+            manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+            episodes = _read_split_records(output, "episodes.jsonl")
+            abstentions = [
+                episode
+                for episode in episodes
+                if episode["scenario_kind"] == "record_and_drug_info"
+            ]
+
+            self.assertEqual(len(episodes), 6)
+            self.assertEqual(len(abstentions), 3)
+            self.assertTrue(all(episode["should_abstain"] for episode in abstentions))
+            self.assertTrue(
+                all(
+                    episode["abstention_reason"]
+                    == "APPROVED_KNOWLEDGE_UNAVAILABLE"
+                    for episode in abstentions
+                )
+            )
+            self.assertTrue(
+                all(
+                    "lookup_approved_drug_info" not in episode["available_tools"]
+                    for episode in abstentions
+                )
+            )
+            self.assertFalse(manifest["knowledge"]["included"])
+            self.assertTrue(
+                manifest["knowledge"]["medical_question_episodes_compiled"]
+            )
+            self.assertFalse(
+                manifest["knowledge"]["approved_evidence_episodes_compiled"]
+            )
+            self.assertEqual(manifest["summary"]["record_only_episode_count"], 3)
+            self.assertEqual(manifest["summary"]["medical_episode_count"], 3)
+            self.assertEqual(
+                manifest["summary"]["no_knowledge_abstention_episode_count"], 3
+            )
+
+    def test_gold_record_query_terms_exist_in_the_confirmed_record(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output = compile_scenarios(
+                root,
+                _write_source_bundle(root),
+                root / "compiled",
+                _contract(root),
+            )
+
+            entries = {
+                entry["care_entry_id"]: entry
+                for entry in _read_split_records(output, "care_entries.jsonl")
+            }
+            for episode in _read_split_records(output, "episodes.jsonl"):
+                search_call = episode["gold_tool_calls"][0]
+                searchable = json.dumps(
+                    entries[episode["expected_record_ids"][0]], ensure_ascii=False
+                )
+                for term in search_call["arguments"].get("query_terms", []):
+                    self.assertIn(term, searchable)
+
     def test_tampered_approved_evidence_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
