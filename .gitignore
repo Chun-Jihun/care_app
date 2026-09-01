@@ -45,3 +45,6 @@ Thumbs.db
 # data folders
 /data/*
 !/data/.gitkeep
+
+#medagentbench
+/medagentbench/*
