@@ -45,6 +45,7 @@ class Qwen35RuntimeProfileTests(unittest.TestCase):
         self.assertEqual(runtime["os"], "windows_x86_64")
         self.assertEqual(runtime["python"], "3.12")
         self.assertEqual(runtime["engine"], "transformers_in_process")
+        self.assertEqual(runtime["linear_attention_kernel"], "pytorch_reference")
         self.assertEqual(runtime["packages"]["torch"], "2.12.1+cu126")
         self.assertEqual(runtime["packages"]["transformers"], "5.16.1")
         self.assertEqual(runtime["packages"]["accelerate"], "1.14.0")

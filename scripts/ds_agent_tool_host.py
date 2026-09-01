@@ -266,6 +266,12 @@ def _redact_trace_value(value: Any, *, key: str | None = None) -> Any:
     return deepcopy(value)
 
 
+def redact_trace_payload(value: Any) -> Any:
+    """Return a trace-safe copy with host-controlled scope values removed."""
+
+    return _redact_trace_value(value)
+
+
 class TraceRecorder:
     """Append-only in-memory trace with a SHA-256 event chain."""
 
@@ -420,12 +426,21 @@ class DeterministicToolHost:
         reference_time: str,
         knowledge_snapshot_id: str | None,
         trace: TraceRecorder,
+        allowed_tools: Sequence[str] | None = None,
     ) -> None:
         self.repository = repository
         self._selected_patient_id = selected_patient_id
         self._visible_record_ids = frozenset(visible_record_ids)
         self.reference_time = _parse_timestamp(reference_time, "reference_time")
         self.knowledge_snapshot_id = knowledge_snapshot_id
+        requested_tools = set(allowed_tools) if allowed_tools is not None else set(TOOL_BUDGETS)
+        unknown_tools = requested_tools.difference(TOOL_BUDGETS)
+        if unknown_tools:
+            raise HostContractError(
+                f"unknown tools in episode capability set: {', '.join(sorted(unknown_tools))}",
+                error_code="TOOL_NOT_ALLOWED",
+            )
+        self._allowed_tools = frozenset(requested_tools)
         self.trace = trace
         self._total_calls = 0
         self._execution_attempts = 0
@@ -482,6 +497,10 @@ class DeterministicToolHost:
         self._local_call_ids.add(local_call_id)
         if not isinstance(tool_name, str) or tool_name not in TOOL_BUDGETS:
             raise HostContractError("unknown tool", error_code="TOOL_NOT_ALLOWED")
+        if tool_name not in self._allowed_tools:
+            raise HostContractError(
+                "tool is not enabled for this episode", error_code="TOOL_NOT_ALLOWED"
+            )
         if not isinstance(arguments, Mapping):
             raise HostContractError("arguments must be an object")
         if _contains_scope_override(arguments):
@@ -1132,5 +1151,6 @@ __all__ = [
     "TRACE_SCHEMA_VERSION",
     "TraceRecorder",
     "deterministic_verify_answer",
+    "redact_trace_payload",
     "verify_trace_chain",
 ]

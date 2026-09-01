@@ -89,7 +89,7 @@ flowchart LR
 - 인터넷이나 e약은요 최신 API를 호출하지 않는다.
 - A5 결정적 검사가 금지 의료행동, 범위 위반, 무근거 의료 주장과 기록 ID 왜곡을 차단한다.
 
-현재 in-memory 승인 지식 어댑터와 실제 `approved_products.jsonl`·`approved_evidence_spans.jsonl` 필드 변환은 계약 수준으로 구현했다. 그러나 파일럿 runner `v0.1.0`은 승인 snapshot 로딩과 citation 채점이 아직 없으므로 `knowledge.included=true` bundle을 명시적으로 거부한다. 실제 e약은요 `approved_snapshot`도 아직 없기 때문에 이번 실행에는 제품·근거 span을 주입하지 않았다.
+현재 in-memory 승인 지식 어댑터와 실제 `approved_products.jsonl`·`approved_evidence_spans.jsonl` 필드 변환은 계약 수준으로 구현했다. 이 문서의 oracle 파일럿 runner `v0.1.0`은 승인 snapshot 로딩과 citation 채점을 하지 않으므로 `knowledge.included=true` bundle을 명시적으로 거부한다. 별도의 [`A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)는 컴파일 시 고정된 승인 snapshot을 다시 검증해 로딩할 수 있지만, 실제 e약은요 `approved_snapshot`이 아직 없어 승인 근거 실행은 미완료다.
 
 ## 4. trace 스키마와 무결성
 
@@ -198,7 +198,7 @@ python -m unittest tests.test_ds_agent_tool_host
 1. 48개 질문·도구·인자·최종 상태를 사람이 검수하고 seal 형식과 승인자를 구현한다.
 2. e약은요 품목을 임상 검수해 실제 `approved_snapshot`을 만든 뒤, 품목코드와 근거 span이 연결된 grounded·conflict·not-found episode를 추가한다.
 3. 고위험 규칙, timeout, 잘못된 도구, 범위 공격과 prompt injection을 포함하는 negative episode를 확장한다.
-4. 실제 Qwen3.5-4B backend에 [`RT-M1-HF-BNB-NF4-WIN-001`](../experiments/agent_eval/manifests/runtime_profiles.json)을 적용해 A1~A5 역할 출력에 연결하고 모델 ID·revision·hash·runtime profile hash·prompt 버전을 trace에 기록한다.
+4. 구현된 [`A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)와 [`RT-M1-HF-BNB-NF4-WIN-001`](../experiments/agent_eval/manifests/runtime_profiles.json) 전용 환경으로 Qwen3.5-4B 1건 오프라인 smoke를 실행하고 모델 revision·lock·runtime profile hash·prompt 버전·VRAM을 확인한다.
 5. 같은 48개 검수 episode에서 T0 결정적 기준선, T1 단일 제한형, T2/T3 역할 분리 구성을 비교한다.
 6. 도구 선택·인자 exact match, 기록 사실 보존, retrieval, 보류와 A5 잘못된 승인율을 별도로 채점한다.
 7. 확률적 설정은 반복 실행해 `pass^1`, `pass^k`, 신뢰구간과 최초 실패 원인을 보고한다.

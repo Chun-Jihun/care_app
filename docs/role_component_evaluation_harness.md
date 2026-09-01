@@ -146,7 +146,7 @@ python -X utf8 scripts/run_role_evaluation.py `
 
 첫 로컬 실행은 [`RT-M1-HF-BNB-NF4-WIN-001`](../experiments/agent_eval/manifests/runtime_profiles.json)로 고정했다. Windows·Python 3.12·Transformers 5.16.1·bitsandbytes 0.50.2에서 원본 M1을 load-time NF4, BF16 compute, double quant 비활성으로 연다. 자세한 결정과 설치 절차는 [`Qwen3.5-4B 로컬 추론 런타임·양자화 결정`](./qwen35_local_runtime_decision.md)을 따른다.
 
-현재 `transformers` backend는 아직 이 profile을 읽거나 `BitsAndBytesConfig`를 주입하지 않으므로 M1 실행 명령을 활성화하지 않는다. 다음 구현에서는 profile ID를 필수 입력으로 받고, 모델을 네트워크 없이 `local_files_only`로 열며, 버전 불일치·BF16 미지원·CPU/disk offload·OOM에서 자동 다운로드나 fallback 없이 중단해야 한다.
+공개 구성요소용 `run_role_evaluation.py`에는 아직 이 profile을 적용하는 `transformers` backend가 없다. 다만 프로젝트 전용 [`DS-AGENT A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)에는 profile ID를 필수로 검증하고, `BitsAndBytesConfig` NF4를 주입하며, 모델을 `local_files_only`로 여는 fail-closed backend를 구현했다. 버전 불일치·model lock 불일치·BF16 미지원·CPU/disk offload에서는 자동 다운로드나 fallback 없이 중단한다. 이 backend를 공개 구성요소 하네스에도 재사용할지는 첫 DS-AGENT smoke 뒤 결정한다.
 
 이미 다른 로컬 엔진으로 생성한 원문 JSON은 `replay` backend로 manifest와 채점 흐름에 연결할 수 있다.
 
@@ -169,14 +169,14 @@ python -X utf8 scripts/grade_role_evaluation.py `
 - A1, A2, A3, A4, A5 두 원천과 KO 요청을 각각 2건씩 실제 bundle로 렌더링했다.
 - MIRAGE BioASQ 2건을 로컬 `pubmed/bm25` cache로 실행해 2건 모두 JSON 응답을 만들었다.
 - A3 점수화는 두 건 모두 `RETRIEVAL_ID_MAPPING_MISSING`으로 보류됐다. 이는 모델 성능 실패가 아니라 cache chunk ID와 PMID 사이의 추적 mapping이 없기 때문이다.
-- Qwen3.5-4B 원본 파일은 약 9.3GB이고 목표 GPU는 RTX 3060 Ti 8GB다. 첫 환경과 load-time 양자화는 `RT-M1-HF-BNB-NF4-WIN-001`로 고정했지만 현재 기본 환경에는 패키지가 없고 backend도 profile을 아직 적용하지 않는다. 따라서 모델 성능 수치는 아직 없으며 전용 환경·로더·오프라인 smoke 전에는 실행했다고 기록하지 않는다.
-- 저장소 전체 단위시험 77개가 통과했다. 하네스 시험은 역할별 누출 방지, 마스킹, JSON Schema, 해시 연결, 캐시 지연 로딩, 각 채점 경계와 runtime profile 불변조건을 검사한다.
+- Qwen3.5-4B 원본 파일은 약 9.3GB이고 목표 GPU는 RTX 3060 Ti 8GB다. 첫 환경과 load-time 양자화는 `RT-M1-HF-BNB-NF4-WIN-001`로 고정했고 DS-AGENT용 backend도 구현했지만, 현재 기본 환경에는 고정 패키지가 없다. 따라서 모델 성능 수치는 아직 없으며 전용 환경·오프라인 smoke 전에는 실행했다고 기록하지 않는다.
+- 저장소 전체 회귀시험 수는 코드 변경 때마다 다시 집계한다. 하네스 시험은 역할별 누출 방지, 마스킹, JSON Schema, 해시 연결, 캐시 지연 로딩, 각 채점 경계와 runtime profile 불변조건을 검사한다.
 
 ## 7. 다음 실험 순서
 
 1. source adapter 샘플과 gold를 사람이 검수하고 평가 bundle 버전을 봉인한다.
 2. MIRAGE PubMed chunk→PMID mapping의 공식 생성 경로 또는 corpus metadata를 확보해 A3 채점을 활성화한다.
 3. BFCL 단일 턴 투영을 먼저 실행하고, 다중 턴은 upstream 공식 runtime·checker를 별도 backend로 연결한다.
-4. `RT-M1-HF-BNB-NF4-WIN-001` 전용 환경과 profile 기반 backend를 구현한 뒤 작은 오프라인 smoke set을 실행한다.
+4. `RT-M1-HF-BNB-NF4-WIN-001` 전용 환경을 설치하고 구현된 DS-AGENT profile backend로 작은 오프라인 smoke set을 실행한다.
 5. A4 독립 rubric 판정 절차와 판정자 일치도를 정한 뒤 생성 지표를 계산한다.
 6. 공개 구성요소 결과로 실행 경로를 검증한 후, 검수·봉인된 `DS-AGENT`와 결정적 도구 호스트로 A1~A5 실제 계약 E2E·T0~T4 실험을 수행한다.

@@ -35,6 +35,7 @@
           "": "cuda:0"
         },
         "attention_implementation": "sdpa",
+        "linear_attention_kernel": "pytorch_reference",
         "batch_size": 1,
         "packages": {
           "torch": "2.12.1+cu126",

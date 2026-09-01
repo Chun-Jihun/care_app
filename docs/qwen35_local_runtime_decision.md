@@ -28,12 +28,15 @@
 | 연산·저장 dtype | BF16 compute, UINT8 quant storage |
 | double quant | 사용하지 않음 |
 | attention | PyTorch SDPA |
+| linear-attention kernel | Transformers PyTorch reference; `fla`·`causal_conv1d` 미사용 |
 | 실행 경계 | batch 1, CPU·disk offload와 정밀도 자동 fallback 금지, 로컬 파일만 사용 |
 | 기본 생성 모드 | non-thinking. 공통 결정적 1차 점수 뒤 고정 seed 5개의 공식 non-thinking sampling 2차 점수 수행 |
 
 기계 판독 가능한 원본은 [`runtime_profiles.json`](../experiments/agent_eval/manifests/runtime_profiles.json)의 `RT-M1-HF-BNB-NF4-WIN-001`이다. 문서와 JSON이 다르면 JSON을 실행 입력으로 사용하되 차이를 결함으로 처리한다.
 
 이것은 **첫 데스크톱 실험 런타임의 확정**이다. Qwen3.5-4B를 최종 제품 모델로 채택하거나 NF4의 의료 품질을 승인했다는 뜻은 아니다.
+
+이 프로필을 읽어 model lock·패키지·GPU 조건을 검사하고 A1~A5 JSON 계약에 연결하는 backend는 [`DS-AGENT A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)에 구현했다. 아직 전용 Python 3.12 환경에서 실제 추론 smoke를 실행하지 않았으므로 `execution_status=not_installed_or_smoke_tested`는 유지한다.
 
 ## 2. 적용 범위
 
@@ -91,6 +94,8 @@ double quant는 약간의 메모리를 더 줄일 수 있지만 4B·8GB·batch 1
 - `local_files_only=true`
 - `trust_remote_code=false`
 - `device_map={"": "cuda:0"}`
+- Qwen3.5 모델 클래스는 `Qwen3_5ForConditionalGeneration`으로 고정
+- 선택 프로필에 없는 `fla`·`causal_conv1d`가 설치되어 있으면 kernel 조건이 달라지므로 중단
 - CPU·disk offload 금지
 - BF16 미지원, 패키지 버전 불일치 또는 CUDA OOM이면 중단
 - 실행 중 외부 네트워크 접근 금지

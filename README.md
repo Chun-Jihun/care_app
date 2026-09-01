@@ -12,7 +12,8 @@
 - 7개 공개 평가 원천의 source adapter와 `DS-AGENT` 후보용 Evaluation Scenario Compiler core를 구현한 상태
 - 공개 case를 A1~A5/KO 구성요소 요청으로 렌더링하고 로컬 실행·채점하는 하네스 core를 구현한 상태. 이는 프로젝트 `DS-AGENT` E2E 결과나 의료 출시 평가가 아님
 - 합성 48개 `DS-AGENT` oracle fixture, 결정적 읽기 전용 도구 host와 SHA-256 체인 trace를 구현·smoke 실행한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
-- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정했으며, 전용 환경 설치와 모델 smoke는 아직 실행하지 않은 상태
+- 실제 모델 출력을 A1~A5 JSON 계약, 결정적 도구 host와 A5 hard gate에 연결하는 DS-AGENT bundle runner를 구현·replay 통합시험한 상태
+- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고 로더까지 구현했으며, 전용 환경 설치와 실제 모델 smoke는 아직 실행하지 않은 상태
 - e약은요 전체 raw snapshot을 staged·review catalog로 변환했으며, 임상 검수 품목 선정 전인 `awaiting_selection` 상태
 - 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
@@ -44,14 +45,15 @@
 | 12 | [A1~A5 역할별 구성요소 평가 하네스](./docs/role_component_evaluation_harness.md) | 공개 case의 역할별 렌더링, 로컬 backend, 결정적 채점과 공식·E2E 결과의 경계 |
 | 13 | [Evaluation Scenario Compiler](./docs/evaluation_scenario_compiler.md) | 구조화·비식별 간병 event와 승인 약물 근거를 DS-AGENT 후보 episode로 변환하는 규칙 |
 | 14 | [DS-AGENT 결정적 도구 호스트·trace 파일럿](./docs/ds_agent_deterministic_pilot.md) | 48개 합성 기반, 역할·범위·예산 강제 host, trace 스키마와 현재 smoke 결과의 해석 경계 |
+| 15 | [DS-AGENT A1~A5 로컬 모델 runner](./docs/ds_agent_model_runner.md) | 실제 모델 JSON을 역할 계약·도구 host·hard gate에 연결하는 실행 경로와 재현 명령 |
 
 ## 현재 최우선 작업
 
 모바일 앱 skeleton보다 먼저 다음 에이전트 연구를 수행한다.
 
 1. 고정한 A1~A5 계약 `v0.1.0`을 기준으로 실험 가설·데이터 split·hard gate와 반복 횟수를 사전 등록한다. OCR·VLM인 A6 계약은 텍스트 구조 실험 뒤 별도로 고정한다.
-2. [`RT-M1-HF-BNB-NF4-WIN-001`](./docs/qwen35_local_runtime_decision.md) 전용 Python 3.12 환경을 설치하고, 선택한 NF4 설정을 하네스 backend에 연결해 오프라인 smoke를 수행한다.
-3. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)와 [`결정적 도구 호스트·trace 파일럿`](./docs/ds_agent_deterministic_pilot.md)이 만든 48개 합성 기반을 사람이 검수·봉인하고 승인 근거 episode와 실제 로컬 모델 runner를 연결한다.
+2. [`RT-M1-HF-BNB-NF4-WIN-001`](./docs/qwen35_local_runtime_decision.md) 전용 Python 3.12 환경을 설치하고, 구현된 [`DS-AGENT 로컬 모델 runner`](./docs/ds_agent_model_runner.md)로 오프라인 1건 smoke를 수행한다.
+3. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)와 [`결정적 도구 호스트·trace 파일럿`](./docs/ds_agent_deterministic_pilot.md)이 만든 48개 합성 기반을 사람이 검수·봉인하고 승인 근거 episode를 추가한다.
 4. 결정적 템플릿, 단일 제한형 에이전트, 역할 분리 구성과 역할별 특화 모델을 동일 조건에서 비교한다.
 5. 안전 hard gate를 통과한 구성만 반복 신뢰성, 한국어, 지연시간과 메모리로 비교하고 실패 원인을 대조실험으로 분리한다.
 
