@@ -76,6 +76,13 @@ class ModelComparisonRuntimeProfileTests(unittest.TestCase):
             "not_selected_requires_separate_device_validation",
         )
 
+    def test_sanitized_output_examples_cover_each_model(self) -> None:
+        examples = self.inputs["output_examples"]
+
+        self.assertEqual({example["model_id"] for example in examples}, {"M1", "M2", "M3", "M4", "M5"})
+        self.assertTrue(all(example["source_case_id"] for example in examples))
+        self.assertTrue(all(example["fidelity"] for example in examples))
+
 
 if __name__ == "__main__":
     unittest.main()

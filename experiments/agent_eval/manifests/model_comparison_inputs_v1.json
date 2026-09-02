@@ -70,6 +70,48 @@
     ],
     "meaning": "Selects only a desktop automated-development candidate for the current A1/A4 contract. It cannot select a medical or mobile-release model."
   },
+  "output_examples": [
+    {
+      "model_id": "M1",
+      "scope": "DS-AGENT T1 / A1→최종 출력",
+      "source_case_id": "DS-AGENT-1C949005B87075AD",
+      "fidelity": "selected_fields_from_validated_trace",
+      "example": "search_care_entries(query_terms=['17','평가용 기록약'], 18:00~06:00) → 기록 CE-SYN-... 참조 → '19:00에 taken으로 확인, 승인 근거가 없어 의학적 설명은 보류'",
+      "interpretation": "관련 기록과 복용 사실은 답하고, 약의 의학적 설명은 승인 근거가 없어 보류했다."
+    },
+    {
+      "model_id": "M2",
+      "scope": "DS-AGENT T1 / A1→최종 출력",
+      "source_case_id": "DS-AGENT-1C949005B87075AD",
+      "fidelity": "selected_fields_from_validated_trace",
+      "example": "search_care_entries(query_terms=['evaluation use','evaluation purpose','evaluation drug']) → 한국어 합성 기록을 찾지 못함 → '안전하게 확인할 수 있는 정보가 부족해 답변을 제공하지 않습니다'",
+      "interpretation": "JSON과 보류 행동은 유효했지만 검색어가 원문 표현과 맞지 않아 기대 기록을 놓쳤다."
+    },
+    {
+      "model_id": "M3",
+      "scope": "HealthBench component projection / A4",
+      "source_case_id": "CASE-48BB95180EA27475D94E",
+      "fidelity": "redacted_structural_excerpt_from_raw_protocol_output",
+      "example": "{'answer':'…','introduction':'…','how_talk_therapy_might_help_…':[...], ...} (2,048-token에서 종료)",
+      "interpretation": "의료 내용은 생성했지만 요구한 정확한 A4 JSON 하나가 아니라 자체 섹션을 계속 추가해 파싱에 실패했다. 의료 내용은 안전상 예시에서 생략했다."
+    },
+    {
+      "model_id": "M4",
+      "scope": "BFCL component projection / A1",
+      "source_case_id": "CASE-71C7CB497ED95402A591",
+      "fidelity": "redacted_structural_excerpt_from_raw_protocol_output",
+      "example": "<think> 요청·도구·response_schema를 반복 분석 ... </think> 이후에도 유효한 {'tool_calls': [...]} 객체 없음",
+      "interpretation": "문제와 스키마를 분석했지만 수리 출력도 추론 반복에 머물러 필수 tool_calls 계약을 만들지 못했다."
+    },
+    {
+      "model_id": "M5",
+      "scope": "DS-AGENT T1 / A1",
+      "source_case_id": "DS-AGENT-1C949005B87075AD",
+      "fidelity": "shape_reconstructed_from_validation_log_raw_text_not_persisted",
+      "example": "{'status':'plan_ready','tool_requests':[{'tool_name':'search_care_entries', ...}]} — out_of_scope_reason와 reason_code 누락",
+      "interpretation": "초기 출력과 1회 수리에서 같은 필수 필드를 누락해 도구 실행 전 fail-closed 처리됐다."
+    }
+  ],
   "limitations": [
     "The DS-AGENT source is compiler_generated_unreviewed and evaluation_eligible=false.",
     "The eight-case screen is a staged engineering screen, not a benchmark score.",

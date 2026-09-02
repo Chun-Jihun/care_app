@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 
-SCRIPT_VERSION = "0.1.0"
+SCRIPT_VERSION = "0.3.0"
 
 
 class ModelComparisonReportError(RuntimeError):
@@ -251,6 +251,35 @@ def _rank_key(run: Mapping[str, Any]) -> tuple[float, float, float, float, int, 
 
 
 def _markdown(report: Mapping[str, Any]) -> str:
+    screening_by_model = {run["model_id"]: run for run in report["screening_runs"]}
+    protocol_by_model: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+    for check in report["protocol_checks"]:
+        protocol_by_model[str(check["model_id"])].append(check)
+
+    def performance_summary(model_id: str) -> str:
+        parts: list[str] = []
+        run = screening_by_model.get(model_id)
+        if run is not None:
+            checks = run["contract_checks"]
+            parts.append(
+                "T1 8건: 전체 {all:.1%}, 기록 {records:.1%}, 도구 {tools:.1%}, "
+                "상태 {status:.1%}, 평균 {latency:.1f}s, p95 {p95:.1f}s, VRAM {vram:.2f}GiB".format(
+                    all=checks["all_expected_checks_passed"]["rate"],
+                    records=checks["expected_records_referenced"]["rate"],
+                    tools=checks["allowed_tool_sequence_match"]["rate"],
+                    status=checks["expected_final_status_match"]["rate"],
+                    latency=run["runtime"]["mean_generation_wall_time_per_episode_ms"] / 1000,
+                    p95=run["runtime"]["p95_generation_wall_time_per_episode_ms"] / 1000,
+                    vram=run["runtime"]["peak_vram_bytes"] / (1024**3),
+                )
+            )
+        for check in protocol_by_model.get(model_id, []):
+            parts.append(
+                f"{check['role']} probe: 유효 {check['valid_contract_rate']:.0%}, "
+                f"수리 {check['format_repair_count']}회, {check['total_latency_ms'] / 1000:.1f}s"
+            )
+        return "<br>".join(parts) if parts else "실행 없음"
+
     lines = [
         "# 로컬 모델 비교 실험 V1",
         "",
@@ -262,11 +291,47 @@ def _markdown(report: Mapping[str, Any]) -> str:
         "다만 8개 미검수 합성 사례 중 모든 계약을 통과한 비율도 100%가 아니므로 의료용 모델로 선정하지 않는다.",
         "정확도·근거 충실도를 속도·메모리보다 우선한다는 요구사항에 따라, 더 빠르거나 작은 후보보다 계약 통과율과 기록 참조율이 높은 후보를 먼저 선택했다.",
         "",
+        "## 지표를 보기 전에 알아야 할 용어",
+        "",
+        "이 보고서의 `성능`은 환자에게 의료 조언을 얼마나 잘하는지가 아니라, 합성 간병기록을 대상으로 정해진 에이전트 계약을 얼마나 정확히 수행했는지를 뜻한다.",
+        "",
+    ]
+    for section in report["glossary_sections"]:
+        lines.extend(
+            [
+                f"### {section['title']}",
+                "",
+                "| 용어 | 뜻 | 이 실험에서의 예 |",
+                "|---|---|---|",
+            ]
+        )
+        for entry in section["entries"]:
+            lines.append(f"| {entry['term']} | {entry['definition']} | {entry['example']} |")
+        lines.append("")
+    lines.extend(
+        [
+        "## 성능지표를 읽는 방법",
+        "",
+        "| 지표 | 계산·판정 방식 | 실제 계산 예 | 좋은 방향 | 해석 한계 |",
+        "|---|---|---|---|---|",
+        ]
+    )
+    for metric in report["metric_definitions"]:
+        lines.append(
+            f"| {metric['name']} | {metric['definition']} | {metric['example']} | "
+            f"{metric['direction']} | {metric['not_measured']} |"
+        )
+    lines.extend(
+        [
+        "",
+        "`근거 ID`는 이번 8건에서 정답 집합이 비어 있어 세 모델 모두 자동으로 통과했다. 따라서 100%라는 값은 근거 충실도 성능이 아니며 모델 선정 표에서 제외했다.",
+        "",
         "## 동일 DS-AGENT 8건 선별 결과",
         "",
         "| 모델 | 전체 계약 | 기록 ID | 도구 순서 | 최종 상태 | 수리 | 평균 지연/건 | 최대 VRAM |",
         "|---|---:|---:|---:|---:|---:|---:|---:|",
-    ]
+        ]
+    )
     for run in report["screening_runs"]:
         checks = run["contract_checks"]
         lines.append(
@@ -288,6 +353,32 @@ def _markdown(report: Mapping[str, Any]) -> str:
             f"| {check['label']} | {check['role']} | {status} | {check['format_repair_count']} | "
             f"{check['total_latency_ms'] / 1000:.1f}s | 계약 호환성 확인 1건 |"
         )
+    lines.extend(
+        [
+            "",
+            "`protocol probe 유효`는 JSON 파싱과 역할 스키마 통과만 뜻한다. 답변의 의학적 정확성이나 공식 BFCL·HealthBench 점수가 아니다.",
+            "",
+            "## 모델별 성능과 대표 출력 예시",
+            "",
+            "| 모델 | 측정된 성능 | 실제 출력 예시(축약) | 해석 |",
+            "|---|---|---|---|",
+        ]
+    )
+    labels = {run["model_id"]: run["label"] for run in report["screening_runs"]}
+    labels.update({check["model_id"]: check["label"] for check in report["protocol_checks"]})
+    for example in report["output_examples"]:
+        rendered_example = str(example["example"]).replace("|", "\\|")
+        lines.append(
+            f"| {labels.get(example['model_id'], example['model_id'])}<br>`{example['scope']}` | "
+            f"{performance_summary(str(example['model_id']))} | `{rendered_example}` | "
+            f"{example['interpretation']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "예시는 결과 원문의 필요한 필드만 선택하거나 의료 내용을 제거한 구조적 축약이다. M5는 개인정보 최소화 정책에 따라 원문을 저장하지 않았으므로 검증 오류에서 재구성한 형태이며 원문 인용이 아니다.",
+        ]
+    )
     lines.extend(["", "## 관찰된 실패 원인", ""])
     for run in report["screening_runs"]:
         tool_status = ", ".join(
@@ -366,6 +457,296 @@ def generate(root: Path, input_path: Path, output_dir: Path) -> Path:
     if any(check["model_lock_sha256"] != actual_model_lock_hash for check in protocol_checks):
         raise ModelComparisonReportError("protocol check model lock hash does not match the locked file")
     winner = max(screening_runs, key=_rank_key)
+    output_examples = inputs.get("output_examples")
+    if not isinstance(output_examples, list) or {
+        str(value.get("model_id")) for value in output_examples if isinstance(value, Mapping)
+    } != {"M1", "M2", "M3", "M4", "M5"}:
+        raise ModelComparisonReportError("one output example is required for each model")
+    metric_definitions = [
+        {
+            "id": "all_expected_checks_passed_rate",
+            "name": "전체 계약 통과율",
+            "definition": "최종 상태·허용 도구 순서·기대 기록 ID·기대 근거 ID의 네 검사가 모두 참인 episode 수 ÷ 8",
+            "meaning": "현재 DS-AGENT 계약을 끝까지 일관되게 수행한 비율",
+            "example": "Qwen3.5는 8건 중 5건 통과: 5 ÷ 8 = 62.5%",
+            "direction": "높을수록 좋음. 단, 의료 hard gate 통과를 대신하지 않음",
+            "not_measured": "의학적 정확도·사용자 유용성·공식 benchmark 점수",
+        },
+        {
+            "id": "expected_records_referenced_rate",
+            "name": "기록 참조율",
+            "definition": "정답의 모든 care_entry_id가 최종 referenced_records에 포함된 episode 수 ÷ 8",
+            "meaning": "질문과 관련된 로컬 기록을 찾아 최종 출력까지 보존했는지",
+            "example": "Qwen3.5는 기대 기록을 5건에서 보존: 5 ÷ 8 = 62.5%",
+            "direction": "높을수록 좋음",
+            "not_measured": "요약 문장의 의미·시각·수치가 모두 정확한지",
+        },
+        {
+            "id": "allowed_tool_sequence_match_rate",
+            "name": "도구 순서 일치율",
+            "definition": "실제 도구 이름 순서가 허용된 호출 순서 중 하나와 정확히 같은 episode 수 ÷ 8",
+            "meaning": "필요한 검색→상세조회 흐름을 지켰는지",
+            "example": "Qwen3는 1건만 허용 순서와 일치: 1 ÷ 8 = 12.5%",
+            "direction": "높을수록 좋음",
+            "not_measured": "검색 인자의 모든 값이나 검색어 품질",
+        },
+        {
+            "id": "expected_final_status_match_rate",
+            "name": "최종 상태 일치율",
+            "definition": "record_answer·partial…abstain·abstain 상태가 기대 상태와 같은 episode 수 ÷ 8",
+            "meaning": "답변·부분답변·보류의 라우팅이 맞았는지",
+            "example": "Qwen3.5는 5건 일치: 5 ÷ 8 = 62.5%",
+            "direction": "높을수록 좋음",
+            "not_measured": "사용자에게 표시된 문장 자체의 품질",
+        },
+        {
+            "id": "expected_evidence_cited_rate",
+            "name": "근거 ID 충족률",
+            "definition": "기대 evidence_span_id 집합이 실제 citation 집합에 포함된 episode 수 ÷ 8",
+            "meaning": "승인 근거가 있는 case에서 요구 근거를 빠뜨리지 않았는지",
+            "example": "이번 8건은 기대 집합이 ∅라서 ∅ ⊆ 실제 집합이 항상 참: 8 ÷ 8 = 100%",
+            "direction": "이번 실행에서는 비교 방향 없음",
+            "not_measured": "이번 8건은 기대 근거가 비어 있어 근거 성능 비교에 사용할 수 없음",
+        },
+        {
+            "id": "format_repair_count",
+            "name": "형식 수리 횟수",
+            "definition": "첫 JSON 파싱·스키마 검사가 실패해 허용된 1회 재생성을 사용한 호출 수",
+            "meaning": "현재 역할 JSON 계약을 한 번에 따르는 안정성",
+            "example": "EXAONE은 8개 episode마다 A1을 한 번씩 수리: 총 8회",
+            "direction": "낮을수록 좋고 0회가 가장 안정적",
+            "not_measured": "수리된 내용의 의학적 정확성",
+        },
+        {
+            "id": "latency",
+            "name": "평균·p95 지연",
+            "definition": "episode의 A1+A4 생성시간 합계 평균과 8건 중 nearest-rank 95백분위",
+            "meaning": "이 PC에서 느끼는 순차 생성 비용과 느린 꼬리 사례",
+            "example": "Qwen3.5 평균 39.8초, p95 42.0초. N=8에서는 nearest-rank p95가 사실상 가장 느린 1건",
+            "direction": "품질·안전조건을 만족한 후보 사이에서 낮을수록 좋음",
+            "not_measured": "모델 로드시간·모바일 지연·동시 처리량",
+        },
+        {
+            "id": "peak_vram",
+            "name": "최대 VRAM",
+            "definition": "NF4 실행 중 torch가 관찰한 모델 호출 최대 GPU 메모리",
+            "meaning": "RTX 3060 Ti 8GB에서의 상대적 실행 메모리",
+            "example": "EXAONE 최대 1.54GiB, Qwen3.5 최대 3.53GiB",
+            "direction": "품질·안전조건을 만족한 후보 사이에서 낮을수록 좋음",
+            "not_measured": "Android RAM·앱 전체 메모리·모델 저장용량",
+        },
+        {
+            "id": "protocol_valid_contract_rate",
+            "name": "protocol JSON 유효율",
+            "definition": "역할별 1건에서 출력이 JSON으로 파싱되고 해당 response schema를 통과한 비율",
+            "meaning": "긴 출력 예산에서도 현재 A1/A4 인터페이스에 연결 가능한지",
+            "example": "MedGemma A4는 1건 실패: 0 ÷ 1 = 0%. Qwen3.5 A4는 수리 후 1 ÷ 1 = 100%",
+            "direction": "높을수록 좋지만 N=1이므로 통과·실패 신호로만 사용",
+            "not_measured": "답변 정답률·공식 BFCL/HealthBench 점수·의료 안전성",
+        },
+    ]
+    glossary_sections = [
+        {
+            "title": "1. 실험 단위와 데이터",
+            "entries": [
+                {
+                    "term": "후보 모델",
+                    "definition": "같은 역할과 조건에서 비교하는 로컬 언어모델이다. 모델마다 크기·학습 목적·chat template가 다르다.",
+                    "example": "Qwen3.5-4B, Qwen3-4B, MedGemma, Nanbeige, EXAONE",
+                },
+                {
+                    "term": "로컬 추론",
+                    "definition": "질문과 기록을 외부 모델 API로 보내지 않고 이 PC의 GPU에서 모델 출력을 생성하는 실행 방식이다.",
+                    "example": "모든 비교 실행은 network_access=false로 수행",
+                },
+                {
+                    "term": "case / episode",
+                    "definition": "질문 하나, 가상 환자 범위, 조회 가능한 기록, 허용 도구, 기대 결과를 묶은 평가 1건이다. 이 보고서에서는 두 단어를 같은 평가 단위로 사용한다.",
+                    "example": "‘어제 저녁에 복용한 약 기록을 찾아 설명하라’가 episode 1건",
+                },
+                {
+                    "term": "DS-AGENT",
+                    "definition": "간병 앱의 기록 검색→상세조회→답변 또는 보류 흐름을 시험하기 위해 프로젝트가 자동 생성한 평가 episode 묶음이다.",
+                    "example": "이번 비교는 development episode 중 정렬된 첫 8건 사용",
+                },
+                {
+                    "term": "development split",
+                    "definition": "개발 중 오류를 찾고 프롬프트·코드를 개선하는 데 사용하는 분할이다. 최종 성능을 주장하는 동결 시험 세트가 아니다.",
+                    "example": "동일 8건 결과는 후보 선별용 개발 진단",
+                },
+                {
+                    "term": "compiler_generated_unreviewed",
+                    "definition": "프로그램이 원천 데이터를 조합해 만들었고 사람이 문항과 정답을 검수하지 않았다는 상태다.",
+                    "example": "이번 DS-AGENT 8건 모두 evaluation_eligible=false",
+                },
+                {
+                    "term": "gold / oracle / 기대값",
+                    "definition": "채점기가 정답으로 비교하는 기대 도구 순서·기록 ID·최종 상태다. 현재는 scenario compiler가 만든 자동 기대값이다.",
+                    "example": "기대 기록 ID CE-SYN-…가 최종 출력에 남았는지 검사",
+                },
+                {
+                    "term": "N",
+                    "definition": "해당 비율이나 통계를 계산한 평가 건수다. N이 작으면 한 건이 전체 비율에 크게 영향을 준다.",
+                    "example": "T1은 N=8이라 1건이 12.5%p, protocol probe는 N=1",
+                },
+            ],
+        },
+        {
+            "title": "2. 에이전트·역할·도구",
+            "entries": [
+                {
+                    "term": "에이전트",
+                    "definition": "모델이 정해진 역할 정책과 도구 명세를 받아 다음 행동이나 구조화된 답변을 만드는 실행 구성요소다. 모델 자체와 동일한 뜻은 아니다.",
+                    "example": "같은 Qwen 모델도 A1 정책으로 실행하면 코디네이터 역할을 수행",
+                },
+                {
+                    "term": "A1 코디네이터",
+                    "definition": "질문의 의도를 파악하고 어떤 읽기 도구가 필요한지 JSON으로 계획한다. DB를 직접 읽거나 의료 결론을 만들지는 않는다.",
+                    "example": "search_care_entries의 시간 범위와 query_terms 생성",
+                },
+                {
+                    "term": "A2 기록 맥락 분석",
+                    "definition": "도구가 반환한 기록에서 관련 사건·시간·상태를 원본 기록 ID와 함께 정리한다.",
+                    "example": "‘19:00, 복용함’과 care_entry_id를 함께 보존",
+                },
+                {
+                    "term": "A3 승인 근거 조사",
+                    "definition": "승인된 지식 스냅샷에서 답변을 뒷받침할 근거 구간을 찾는다. 인터넷을 임의 검색해 근거로 추가하지 않는다.",
+                    "example": "승인 근거가 없으면 no_evidence 반환",
+                },
+                {
+                    "term": "A4 답변 작성",
+                    "definition": "확인된 기록과 승인 근거 안에서만 쉬운 설명·관찰 항목·한계를 구조화해 작성한다.",
+                    "example": "기록 사실은 말하되 약의 효능 근거가 없으면 그 부분은 보류",
+                },
+                {
+                    "term": "A5 검증기",
+                    "definition": "A4의 주장과 실제 근거·정책을 대조해 통과, 보류 전환 또는 제한된 재작성을 결정한다. 새 의료사실을 추가하지 않는다.",
+                    "example": "EVIDENCE_NOT_FOUND이면 승인된 보류 템플릿으로 전환",
+                },
+                {
+                    "term": "도구 / tool call",
+                    "definition": "모델이 직접 DB에 접근하는 대신 이름과 인자를 JSON으로 요청하는 허용된 읽기 기능이다.",
+                    "example": "search_care_entries, get_care_entry_details",
+                },
+                {
+                    "term": "결정적 도구 호스트",
+                    "definition": "동일한 요청에는 동일한 결과를 반환하며 환자 범위·인자·호출 예산을 코드로 강제하는 실행기다.",
+                    "example": "다른 환자 ID나 허용되지 않은 인자는 LLM 판단과 무관하게 거부",
+                },
+                {
+                    "term": "T1 토폴로지",
+                    "definition": "A1과 A4만 같은 후보 모델로 생성하고 A2·A3·A5는 결정적 코드로 처리한 단일 정책 proxy 구성이다.",
+                    "example": "모델당 episode 기본 2회 호출: 도구 전 A1, 도구 후 A4",
+                },
+            ],
+        },
+        {
+            "title": "3. 출력·근거·안전",
+            "entries": [
+                {
+                    "term": "JSON 계약 / response schema",
+                    "definition": "각 역할이 반드시 포함할 필드·자료형·허용값을 정한 기계 검증 규칙이다. 문장이 그럴듯해도 계약을 어기면 실행할 수 없다.",
+                    "example": "A1 tool_request에는 tool_name, arguments, reason_code가 필요",
+                },
+                {
+                    "term": "care_entry_id / 기록 ID",
+                    "definition": "간병일기의 특정 원본 기록을 가리키는 식별자다. 답변 문장을 원본 기록으로 역추적하는 데 사용한다.",
+                    "example": "CE-SYN-10C…는 특정 복약 기록 1건을 지칭",
+                },
+                {
+                    "term": "evidence_span_id / 근거 ID",
+                    "definition": "승인 문서 안에서 주장을 직접 뒷받침하는 특정 문장·구간의 식별자다. 문서 제목만 표시하는 것보다 좁은 단위다.",
+                    "example": "의학적 핵심 주장마다 evidence_span_id 연결 필요",
+                },
+                {
+                    "term": "citation / 인용",
+                    "definition": "답변의 주장과 evidence_span_id를 연결한 출처 레코드다. 기록 ID와 달리 의료 문서 근거를 가리킨다.",
+                    "example": "약의 일반 효능 주장→승인 문서의 근거 문장",
+                },
+                {
+                    "term": "최종 상태",
+                    "definition": "파이프라인이 사용자에게 어느 수준까지 답할 수 있는지를 나타내는 결과 분류다.",
+                    "example": "record_answer, partial_record_answer_then_abstain, abstain",
+                },
+                {
+                    "term": "record_answer",
+                    "definition": "필요한 기록을 찾아 기록 사실에 관한 답변을 제공한 상태다. 그 자체로 의료 설명까지 승인됐다는 뜻은 아니다.",
+                    "example": "‘어제 19:00에 복용 기록이 있다’",
+                },
+                {
+                    "term": "partial_record_answer_then_abstain",
+                    "definition": "확인된 기록 사실은 알려주지만 승인 근거가 필요한 의료 설명 부분은 보류한 상태다.",
+                    "example": "복용 여부는 확인, 약 효능 설명은 근거 부족으로 보류",
+                },
+                {
+                    "term": "abstain / 답변 보류",
+                    "definition": "필요한 기록·근거가 없거나 계약을 충족하지 못해 추측하지 않고 답변하지 않는 안전 행동이다. 무조건 많이 보류한다고 좋은 것은 아니다.",
+                    "example": "관련 기록을 못 찾으면 ‘확인할 정보가 부족하다’고 종료",
+                },
+                {
+                    "term": "형식 수리 / format repair",
+                    "definition": "첫 모델 출력이 JSON 파싱이나 schema 검증에 실패했을 때 오류 목록을 주고 딱 한 번 다시 생성하는 절차다.",
+                    "example": "EXAONE은 누락 필드를 고치도록 요청했지만 같은 오류 반복",
+                },
+                {
+                    "term": "fail-closed",
+                    "definition": "출력이 불완전하거나 검증에 실패하면 임의로 실행·답변하지 않고 차단 또는 보류하는 원칙이다.",
+                    "example": "유효하지 않은 A1 도구 요청은 DB 도구에 전달하지 않음",
+                },
+                {
+                    "term": "protocol probe",
+                    "definition": "현재 역할 인터페이스와 연결 가능한지만 빠르게 보는 1건 시험이다. 2,048 출력 token과 1회 수리를 허용했다.",
+                    "example": "MedGemma A4 1건, Nanbeige A1 1건",
+                },
+                {
+                    "term": "component projection",
+                    "definition": "공개 benchmark case를 프로젝트의 A1 또는 A4 JSON 요청 형식으로 변환한 것이다. 공식 benchmark 전체 프로토콜과 점수가 아니다.",
+                    "example": "BFCL case→A1, HealthBench case→A4",
+                },
+            ],
+        },
+        {
+            "title": "4. 실행 성능과 통계",
+            "entries": [
+                {
+                    "term": "통과율",
+                    "definition": "조건을 통과한 건수 ÷ 평가한 전체 건수다. 표본 수 N을 함께 보지 않으면 오해하기 쉽다.",
+                    "example": "5/8=62.5%, 1/1=100%는 신뢰도가 같지 않음",
+                },
+                {
+                    "term": "평균 지연시간",
+                    "definition": "각 episode에서 모델 생성에 걸린 시간을 합산한 뒤 episode 수로 나눈 값이다.",
+                    "example": "T1은 보통 A1 생성시간+A4 생성시간",
+                },
+                {
+                    "term": "p95 지연시간",
+                    "definition": "실행의 약 95%가 이 시간 안에 끝난다는 꼬리 지연 지표다. 여기서는 nearest-rank 방식을 사용한다.",
+                    "example": "N=8이면 ceil(0.95×8)=8이므로 정렬한 가장 느린 값과 같음",
+                },
+                {
+                    "term": "VRAM",
+                    "definition": "GPU가 모델 가중치와 추론 중간값을 저장하는 메모리다. 수치가 작을수록 같은 GPU에서 실행하기 쉽다.",
+                    "example": "RTX 3060 Ti 8GB에서 관찰한 최대값",
+                },
+                {
+                    "term": "NF4 4비트 양자화",
+                    "definition": "원본 가중치를 실행 시 4비트 NormalFloat 형식으로 압축해 VRAM을 줄이는 방식이다. 원본 정밀도와 결과가 완전히 같다고 가정할 수 없다.",
+                    "example": "다섯 모델 모두 bitsandbytes NF4, BF16 compute로 비교",
+                },
+                {
+                    "term": "input/output token",
+                    "definition": "모델이 읽거나 생성한 텍스트 조각 수다. 글자 수와 같지 않으며 모델 tokenizer마다 분할 방식이 다르다.",
+                    "example": "출력 token 상한 512, protocol probe는 2,048",
+                },
+                {
+                    "term": "0%와 N/A",
+                    "definition": "0%는 실제로 실행했지만 통과하지 못했다는 뜻이고, N/A는 해당 실험을 실행하지 않아 값이 없다는 뜻이다.",
+                    "example": "MedGemma의 T1은 N/A, A4 protocol은 0/1",
+                },
+            ],
+        },
+    ]
     report: dict[str, Any] = {
         "schema_version": "1.0",
         "reporter": {"script": "scripts/report_model_comparison.py", "version": SCRIPT_VERSION},
@@ -386,6 +767,9 @@ def generate(root: Path, input_path: Path, output_dir: Path) -> Path:
         },
         "screening_runs": screening_runs,
         "protocol_checks": protocol_checks,
+        "metric_definitions": metric_definitions,
+        "glossary_sections": glossary_sections,
+        "output_examples": output_examples,
         "technical_conclusion": {
             "model_id": winner["model_id"],
             "label": winner["label"],
