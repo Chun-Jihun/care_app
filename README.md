@@ -10,11 +10,12 @@
 - 로컬 SLM·VLM·RAG와 데이터 검증 계획을 수립한 상태
 - 첫 텍스트 실험의 A1~A5 역할·읽기 도구 계약 `v0.1.0`을 고정한 상태
 - 7개 공개 평가 원천의 source adapter와 `DS-AGENT` 후보용 Evaluation Scenario Compiler core를 구현한 상태
-- 공개 case를 A1~A5/KO 구성요소 요청으로 렌더링하고 로컬 실행·채점하는 하네스 core를 구현한 상태. 이는 프로젝트 `DS-AGENT` E2E 결과나 의료 출시 평가가 아님
+- 공개 case를 A1~A5/KO 구성요소 요청으로 렌더링하고 Qwen3.5-4B NF4로 원천별 2건 연결 smoke·채점을 수행한 상태. 이는 공식 benchmark나 프로젝트 의료 출시 평가가 아님
 - 합성 48개 `DS-AGENT` oracle fixture, 결정적 읽기 전용 도구 host와 SHA-256 체인 trace를 구현·smoke 실행한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
 - 실제 모델 출력을 A1~A5 JSON 계약, 결정적 도구 host와 A5 hard gate에 연결하는 DS-AGENT bundle runner를 구현·replay 통합시험한 상태
-- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고, 전용 환경과 실제 development 1건 연결 smoke까지 완료한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
+- 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고, T1~T3 각각 48건 자동 개발 진단과 통합 보고서까지 완료한 상태. 어떤 생성 토폴로지도 전체 계약을 통과하지 못했으며 의료 사용 모델은 선택하지 않음
 - e약은요 전체 raw snapshot을 staged·review catalog로 변환했으며, 임상 검수 품목 선정 전인 `awaiting_selection` 상태
+- 현재 사람·임상 검수 자원을 확보하지 못한 것으로 가정하므로 자동 결과는 개발 진단으로만 사용하고, 승인 지식·의료 답변·의료 출시 게이트는 차단한 상태
 - 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
 - 애플리케이션 구현 전 단계이며 안전 실패 시나리오와 시험을 먼저 확정해야 함
 
@@ -46,18 +47,20 @@
 | 13 | [Evaluation Scenario Compiler](./docs/evaluation_scenario_compiler.md) | 구조화·비식별 간병 event와 승인 약물 근거를 DS-AGENT 후보 episode로 변환하는 규칙 |
 | 14 | [DS-AGENT 결정적 도구 호스트·trace 파일럿](./docs/ds_agent_deterministic_pilot.md) | 48개 합성 기반, 역할·범위·예산 강제 host, trace 스키마와 현재 smoke 결과의 해석 경계 |
 | 15 | [DS-AGENT A1~A5 로컬 모델 runner](./docs/ds_agent_model_runner.md) | 실제 모델 JSON을 역할 계약·도구 host·hard gate에 연결하는 실행 경로와 재현 명령 |
+| 16 | [사람 검수 없는 자동화 개발 트랙](./docs/no_human_review_development_plan.md) | 자동화로 계속할 수 있는 실험, 차단되는 의료 주장과 모바일 기록 중심 전환 기준 |
+| 17 | [자동화 에이전트 평가 결과](./experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md) | T0~T3 실제 실행, 공개 구성요소 연결 smoke와 비출시 결론 |
 
 ## 현재 최우선 작업
 
-모바일 앱 skeleton보다 먼저 다음 에이전트 연구를 수행한다.
+자동화 에이전트 선행 연구의 1차 중단 기준을 충족했으므로 이제 모바일 기록 중심 skeleton과 암호화 저장 구현이 최우선이다.
 
-1. 고정한 A1~A5 계약 `v0.1.0`을 기준으로 실험 가설·데이터 split·hard gate와 반복 횟수를 사전 등록한다. OCR·VLM인 A6 계약은 텍스트 구조 실험 뒤 별도로 고정한다.
-2. 구현된 [`공개 평가 원천 Source Adapter`](./docs/evaluation_source_adapters.md)와 [`역할별 구성요소 평가 하네스`](./docs/role_component_evaluation_harness.md)로 공개 구성요소 실행 경로를 검증한다. 별도로 [`Evaluation Scenario Compiler`](./docs/evaluation_scenario_compiler.md)와 [`결정적 도구 호스트·trace 파일럿`](./docs/ds_agent_deterministic_pilot.md)이 만든 48개 합성 기반을 사람이 검수·봉인하고 승인 근거 episode를 추가한다.
-3. 검수·봉인된 development set에서 A1~A5 정식 scorer를 연결하고 현재 1건 smoke와 분리된 첫 기준선을 실행한다.
-4. 결정적 템플릿, 단일 제한형 에이전트, 역할 분리 구성과 역할별 특화 모델을 동일 조건에서 비교한다.
-5. 안전 hard gate를 통과한 구성만 반복 신뢰성, 한국어, 지연시간과 메모리로 비교하고 실패 원인을 대조실험으로 분리한다.
+1. 모바일 기술스택과 최소 Android 목표 장비를 확정한다.
+2. `domain / application / infrastructure / presentation` 경계의 skeleton을 만든다.
+3. SQLite 암호화·migration 방식을 확정하고 환자 선택정보와 간병기록을 분리한 CRUD·재시작 통합시험을 구현한다.
+4. 식사·복약·증상·활동·첨부파일/OCR 순으로 확장한다.
+5. 승인 snapshot과 임상 검수가 없으므로 생성형 의료 Q&A와 임상 위험 규칙은 비활성 feature gate 뒤에 둔다.
 
-공개 AgentBench·BFCL·ToolBench 점수는 후보 선정 참고값이며 프로젝트 성능이 아니다. 실제 Qwen3.5-4B development 1건으로 A1~A5 연결 smoke는 통과했지만, 미검수 합성 case 1건이므로 에이전트 성능 결과로 간주하지 않는다.
+자동 결과에서 T1은 기대 상태 72.9%, 기록 참조 50.0%로 가장 나은 생성형 구성이었지만 전체 계약을 통과하지 못한 개발 기준선일 뿐이다. T3는 호출과 지연이 늘고 A2·A3의 생성 실패면이 추가됐다. 공개 AgentBench·BFCL·ToolBench 점수와 이번 2건 구성요소 smoke는 후보·연결 진단 자료이며 프로젝트 의료 성능이 아니다.
 
 ## 초기 MVP 범위
 
@@ -90,7 +93,7 @@
 |---|---|---|
 | 애플리케이션 | 로컬 우선, 오프라인 기록과 조회 | 플랫폼 미정 |
 | 저장소 | 환자별 분리, 암호화 DB·사진 저장소·수정 이력 | 제품·암호화 방식 미정 |
-| 텍스트·멀티모달 모델 | Qwen3.5-4B, MedGemma 1.5 4B와 한국어·저사양 후보 비교 | Qwen3.5-4B 데스크톱 NF4 프로필·전용 환경·1건 연결 smoke 완료, 정식 평가 전 |
+| 텍스트·멀티모달 모델 | Qwen3.5-4B, MedGemma 1.5 4B와 한국어·저사양 후보 비교 | Qwen3.5-4B 데스크톱 NF4 T1~T3 자동 개발 진단 완료, 비통과 T1을 개선 기준선으로만 유지. 제품·의료 모델 미선정 |
 | OCR | 범용 VLM, 한국어 VLM, 전용 OCR+필드 파서와 수동 입력 기준선 비교 | 평가 전 |
 | RAG | 승인 스냅샷 기반 혼합 검색과 재순위화 | 임베딩·재순위 모델 미정 |
 | 안전 | LLM보다 먼저 실행하는 구조화 규칙 엔진 | 규칙 승인자·첫 질환 범위 미정 |
@@ -104,3 +107,5 @@
 - 대화기록의 기본 보관값과 선택 가능한 보유기간
 - 안전 규칙의 작성·승인 책임과 의료기관 연락 문구
 - 지식베이스 관리 도구와 진료용 내보내기 형식
+
+현재 임상 검수자를 확보하지 못하면 첫 질환 콘텐츠 팩, 승인 지식베이스, 의료 Q&A와 임상 위험 규칙의 제품 활성화는 결정이 아니라 **차단 항목**으로 유지한다.

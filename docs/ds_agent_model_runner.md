@@ -1,16 +1,17 @@
 # DS-AGENT A1~A5 로컬 모델 runner
 
-- 구현 버전: `v0.1.0`
+- 역할 실행기: [`ds_agent_model_runner.py`](../scripts/ds_agent_model_runner.py) `v0.2.1`
+- bundle 실행기: [`run_ds_agent_model.py`](../scripts/run_ds_agent_model.py) `v0.3.0`
 - 역할·도구 계약: [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md) `v0.1.0`
 - 선택 런타임: `RT-M1-HF-BNB-NF4-WIN-001`
 - 용도: 로컬 평가 전용
-- 현재 실제 모델 결과: development 1건 연결 smoke 완료(성능 점수 아님)
+- 현재 실제 모델 결과: T1~T3 각 48건 자동 개발 진단 완료(의료·공식 성능 점수 아님)
 
 ## 1. 목적과 현재 상태
 
 [`ds_agent_model_runner.py`](../scripts/ds_agent_model_runner.py)는 한 로컬 모델의 실제 생성문을 A1~A5 JSON 계약으로 파싱·검증하고, [`ds_agent_tool_host.py`](../scripts/ds_agent_tool_host.py)의 읽기 전용 도구와 결정적 안전 게이트에 연결한다. [`run_ds_agent_model.py`](../scripts/run_ds_agent_model.py)는 이를 컴파일된 `DS-AGENT` 번들 전체에 적용하고 trace와 실행 manifest를 만든다.
 
-코드 경로와 replay 통합시험에 더해 전용 Python 3.12 환경에서 Qwen3.5-4B NF4 development 1건을 실제 실행했다. 이 실행은 로더, 역할별 JSON 계약, 결정적 도구 host와 안전 보류 경로의 연결을 확인한 smoke이며 모델 정확도나 의료 출시 성능 수치가 아니다.
+코드 경로와 replay 통합시험에 더해 전용 Python 3.12 환경에서 Qwen3.5-4B NF4를 development 28건, validation 14건, frozen-test 6건에 실제 실행했다. T1~T3 모두 같은 모델·runtime·생성 조건과 48개 fixture를 사용했고, T0는 gold 도구 호출을 재생한 결정적 oracle 대조군이다. 결과는 계약과 실행 경로를 진단하기 위한 자동 개발 자료이며 모델 정확도나 의료 출시 성능 수치가 아니다.
 
 ## 2. 실행 구조
 
@@ -66,7 +67,7 @@ JSON 파싱 또는 스키마 오류에는 사실을 추가하지 않는 형식 �
 
 ## 5. 실행 방법
 
-전용 Python 3.12 환경과 고정 패키지를 설치한 뒤, 먼저 development 한 건만 실행한다.
+전용 Python 3.12 환경과 고정 패키지를 설치한 뒤 split별로 실행한다. 장시간 실행은 episode별 checkpoint를 남기며 같은 run ID, 입력·소스 hash와 topology에서 `--resume`으로만 재개한다.
 
 ```powershell
 & .\.venv-qwen35\python.exe -X utf8 scripts/run_ds_agent_model.py `
@@ -75,11 +76,28 @@ JSON 파싱 또는 스키마 오류에는 사실을 추가하지 않는 형식 �
   --run-id QWEN35-NF4-SMOKE-V6 `
   --split development `
   --limit 1 `
+  --topology T3 `
   --backend qwen35-nf4 `
   --runtime-profile experiments/agent_eval/manifests/runtime_profiles.json `
   --runtime-profile-id RT-M1-HF-BNB-NF4-WIN-001 `
   --generation-profile smoke
 ```
+
+```powershell
+& .\.venv-qwen35\python.exe -X utf8 scripts/run_ds_agent_model.py `
+  --compiled-bundle-dir data/agent-eval/scenario-candidates/ds-agent-pilot-v1 `
+  --output-dir data/agent-eval/model-runs/qwen35-t1-development-v1 `
+  --checkpoint-dir data/agent-eval/checkpoints/qwen35-t1-development-v1 `
+  --run-id QWEN35-T1-DEVELOPMENT-V1 `
+  --split development `
+  --topology T1 `
+  --backend qwen35-nf4 `
+  --runtime-profile experiments/agent_eval/manifests/runtime_profiles.json `
+  --runtime-profile-id RT-M1-HF-BNB-NF4-WIN-001 `
+  --generation-profile primary
+```
+
+중단된 동일 실행에는 위 명령 끝에 `--resume`을 추가한다. 이미 존재하는 최종 출력 디렉터리는 덮어쓰지 않는다.
 
 기존 실행의 역할별 원문 JSON을 파서·host·trace 회귀시험에 다시 넣을 때만 replay backend를 사용한다.
 
@@ -125,10 +143,13 @@ replay는 로컬 모델 추론 결과가 아니다. 실행 manifest의 `actual_l
 | 환자 범위·역할·episode 도구 허용 목록 강제 | 구현·단위시험 완료 |
 | A2/A3 의미 보존 검사와 A5 hard gate 우선 | 구현·단위시험 완료 |
 | 컴파일 번들 실행·원자적 산출물·replay 통합시험 | 구현·시험 완료 |
-| Qwen3.5-4B NF4 실제 1건 smoke | 완료: A1~A5 각 1회, 예상 검사 통과 |
-| 48개 질문·gold 사람 검수와 split 봉인 | 미완료 |
-| e약은요 임상 승인 snapshot과 citation episode | 미완료 |
-| A1~A5 정식 채점과 T0~T4 성능 비교 | 미실행 |
+| Qwen3.5-4B NF4 실제 1건 smoke | 완료: A1~A5 연결과 예상 안전 경로 확인 |
+| Qwen3.5-4B NF4 T1~T3 각 48건 | 완료: development 28·validation 14·frozen-test 6 |
+| episode checkpoint·동일 입력 resume | 구현·통합시험 완료 |
+| 48개 질문의 사람 검수와 공식 split 봉인 | 현재 자원 제약으로 수행하지 않음. `evaluation_eligible=false` 유지 |
+| e약은요 임상 승인 snapshot과 의료 citation episode | 임상 검수자 부재로 차단 |
+| A1~A5 자동 개발 채점과 T0~T3 비교 | 완료: 어떤 생성 토폴로지도 모든 자동 계약을 통과하지 못함 |
+| 의료 E2E 정식 채점과 출시 판정 | 사람·임상 검수 전까지 판정 불가 |
 
 ### 7.1 실제 development 1건 결과
 
@@ -158,6 +179,19 @@ replay는 로컬 모델 추론 결과가 아니다. 실행 manifest의 `actual_l
 | V4·V5 | 예상 안전 경로 통과 | 필드 매핑 수정 효과와 갱신한 runtime profile hash를 확인 |
 | V6 | 최종 연결 smoke 통과 | 도구 설명 스키마를 host 계약과 맞추고 prompt `v0.2.2`로 최종 고정 |
 
-현재 48건은 미검수 합성 후보이고 이 실행도 그중 development 1건뿐이다. 따라서 `all_expected_checks_passed=true`를 모델 정확도, 보류율, 멀티에이전트 우수성 또는 의료 출시 결과로 보고하지 않는다. 다음 성능 판단에는 사람 검수·split 봉인, 승인 근거 episode와 정식 scorer가 필요하다.
+현재 48건은 미검수 합성 후보이고 이 실행도 그중 development 1건뿐이다. 사람 검수 자원이 없으므로 이후 48건 실행도 자동 계약·실행 진단으로만 보고한다. `all_expected_checks_passed=true`를 모델 정확도, 멀티에이전트 우수성 또는 의료 출시 결과로 해석하지 않으며 모든 결과에 `evaluation_eligible=false`, `medical_release_gate_result=false`를 유지한다.
 
 또한 현재 안전 fallback 문장은 ISO 시각과 `medication_display_name`, `intake_status` 같은 내부 필드명을 그대로 노출한다. 사실 보존에는 유리하지만 사용자용 한국어 표현으로는 미완성이므로, 정식 평가에서는 안전 판정과 별도로 가독성·표현 품질을 측정하고 presentation 계층에서 검증된 렌더링을 적용해야 한다.
+
+### 7.2 T0~T3 전체 자동 개발 진단
+
+최종 기계 판독 결과와 입력 hash는 [`자동화 에이전트 평가 보고서`](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)와 그 디렉터리의 `manifest.json`에 고정했다.
+
+| 토폴로지 | 기대 상태 일치 | 도구 순서 | 기록 참조 | 호출/episode | 평균 생성시간 | peak VRAM |
+|---|---:|---:|---:|---:|---:|---:|
+| T0 | 100.0% | 100.0% | 100.0% | 0.00 | 해당 없음 | 해당 없음 |
+| T1 | 72.9% | 50.0% | 50.0% | 2.00 | 38.24초 | 3,788,477,440 bytes |
+| T2 | 62.5% | 29.2% | 29.2% | 2.00 | 38.01초 | 3,770,459,648 bytes |
+| T3 | 12.5% | 29.2% | 27.1% | 4.73 | 58.25초 | 3,799,397,888 bytes |
+
+T0는 gold 요청을 실행하므로 100%가 모델 성능을 뜻하지 않는다. T1~T3의 A1 요청 exact match는 모두 0%였고, 검색 인자의 날짜·검색어 차이로 T1 24건, T2·T3 각 34건의 첫 기록 검색이 빈 결과를 반환했다. T3는 모델이 A2·A3도 생성하면서 기록 누락/왜곡과 근거 계약 실패가 추가되고 호출·지연도 증가했다. 따라서 현재 결론은 `T1=best_observed_nonpassing_development_baseline`이며, 어느 토폴로지도 의료 사용 대상으로 선택하지 않는다.

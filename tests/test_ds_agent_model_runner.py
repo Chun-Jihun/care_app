@@ -422,6 +422,159 @@ class DsAgentModelRunnerTests(unittest.TestCase):
         self.assertTrue(all(call["status"] == "ok" for call in model_calls))
         verify_trace_chain(events)
 
+    def test_t1_and_t2_use_only_a1_a4_model_calls(self) -> None:
+        for topology_id in ("T1", "T2"):
+            with self.subTest(topology_id=topology_id):
+                backend = ScriptedBackend(
+                    {
+                        "A1": [_dump(_a1())],
+                        "A4": [_dump(_a4())],
+                    }
+                )
+                events, summary, _, model_calls = run_model_episode(
+                    run_id=f"RUN-{topology_id}",
+                    split="development",
+                    episode=_episode(),
+                    state=_state(),
+                    repository=_repository(),
+                    backend=backend,
+                    topology_id=topology_id,
+                )
+
+                self.assertEqual(
+                    [call["role_id"] for call in backend.calls], ["A1", "A4"]
+                )
+                self.assertEqual(summary["topology_id"], topology_id)
+                self.assertEqual(summary["actual_final_status"], "record_answer")
+                self.assertEqual(len(model_calls), 2)
+                if topology_id == "T1":
+                    self.assertEqual(
+                        backend.calls[0]["messages"][0]["content"],
+                        backend.calls[1]["messages"][0]["content"],
+                    )
+                verify_trace_chain(events)
+
+    def test_checkpoint_resume_reuses_verified_episode_without_model_call(self) -> None:
+        root = Path.cwd().resolve()
+        bundle = root / "data/agent-eval/scenario-candidates/ds-agent-pilot-v1"
+        episodes = [
+            json.loads(line)
+            for line in (bundle / "development/episodes.jsonl").read_text(
+                encoding="utf-8"
+            ).splitlines()
+            if line.strip()
+        ]
+        episode = min(episodes, key=lambda value: str(value["item_id"]))
+        states = {
+            value["initial_state_id"]: value
+            for value in (
+                json.loads(line)
+                for line in (bundle / "development/states.jsonl").read_text(
+                    encoding="utf-8"
+                ).splitlines()
+                if line.strip()
+            )
+        }
+        entries = {
+            value["care_entry_id"]: value
+            for value in (
+                json.loads(line)
+                for line in (bundle / "development/care_entries.jsonl").read_text(
+                    encoding="utf-8"
+                ).splitlines()
+                if line.strip()
+            )
+        }
+        entry = entries[states[episode["initial_state_id"]]["visible_record_ids"][0]]
+        facts = entry["structured_facts"]
+        status = facts["intake_status"]
+        a1 = {
+            "status": "plan_ready",
+            "intent": (
+                "medication_record_and_general_info"
+                if episode["scenario_kind"] == "record_and_drug_info"
+                else "medication_record_lookup"
+            ),
+            "subtasks": ["record_context"],
+            "tool_requests": [
+                {
+                    "local_call_id": "call_1",
+                    "tool_name": call["tool_name"],
+                    "arguments": call["arguments"],
+                    "reason_code": call["reason_code"],
+                }
+                for call in episode["gold_tool_calls"]
+                if call["tool_name"] == "search_care_entries"
+            ],
+            "clarification_questions": [],
+            "completion_conditions": ["record_context_resolved"],
+            "out_of_scope_reason": None,
+        }
+        medical = episode["scenario_kind"] == "record_and_drug_info"
+        a4 = {
+            "answer_mode": "partial" if medical else "grounded",
+            "short_answer": "Confirmed record only.",
+            "safe_actions": [],
+            "observe": [],
+            "contact_guidance": [],
+            "questions_for_clinician": [],
+            "limitations": ["Approved evidence is unavailable."] if medical else [],
+            "claims": [
+                {
+                    "claim_id": "CL-RECORD-001",
+                    "claim_type": "record_summary",
+                    "text": f"{facts['medication_display_name']}: {status}",
+                    "importance": "core",
+                    "evidence_span_ids": [],
+                    "care_entry_ids": [entry["care_entry_id"]],
+                    "clinician_instruction_ids": [],
+                }
+            ],
+        }
+        rows = [
+            {
+                "item_id": episode["item_id"],
+                "role_id": role_id,
+                "call_index": 1,
+                "raw_text": _dump(value),
+            }
+            for role_id, value in {"A1": a1, "A4": a4}.items()
+        ]
+        backend = ReplayRoleBackend(rows, source_sha256="resume-test")
+
+        with tempfile.TemporaryDirectory(dir=root) as temp_name:
+            base = Path(temp_name)
+            checkpoint = base / "checkpoint"
+            run_model_bundle(
+                root,
+                bundle,
+                base / "first",
+                run_id="RUN-RESUME-TEST",
+                backend=backend,
+                split="development",
+                limit=1,
+                topology_id="T2",
+                checkpoint_dir=checkpoint,
+            )
+            run_model_bundle(
+                root,
+                bundle,
+                base / "second",
+                run_id="RUN-RESUME-TEST",
+                backend=backend,
+                split="development",
+                limit=1,
+                topology_id="T2",
+                checkpoint_dir=checkpoint,
+                resume=True,
+            )
+            manifest = json.loads(
+                (base / "second/manifest.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(manifest["resumed_episode_count"], 1)
+        self.assertEqual(manifest["topology"]["id"], "T2")
+
     def test_scope_override_is_redacted_and_blocks_without_later_roles(self) -> None:
         bad_arguments = {
             "entry_types": ["medication_intake"],
@@ -449,6 +602,37 @@ class DsAgentModelRunnerTests(unittest.TestCase):
         self.assertIn("SCOPE_OVERRIDE_ATTEMPT", summary["failure_codes"])
         self.assertEqual([call["role_id"] for call in backend.calls], ["A1"])
         verify_trace_chain(events)
+
+    def test_a2_cannot_drop_a_confirmed_detail_row(self) -> None:
+        backend = ScriptedBackend(
+            {
+                "A1": [_dump(_a1())],
+                "A2": [
+                    _dump(
+                        {
+                            "status": "no_relevant_record",
+                            "relevant_records": [],
+                            "observed_changes": [],
+                            "missing_context": [],
+                            "source_record_ids": [],
+                        }
+                    )
+                ],
+            }
+        )
+
+        _, summary, _, _ = run_model_episode(
+            run_id="RUN-A2-OMISSION-BLOCK",
+            split="development",
+            episode=_episode(),
+            state=_state(),
+            repository=_repository(),
+            backend=backend,
+        )
+
+        self.assertEqual(summary["actual_final_status"], "block")
+        self.assertIn("CONTEXT_DISTORTION", summary["failure_codes"])
+        self.assertEqual([call["role_id"] for call in backend.calls], ["A1", "A2"])
 
     def test_tool_not_enabled_for_episode_is_rejected(self) -> None:
         request = _a1()

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "ds_agent_report_dir": "data/agent-eval/reports/t0-t3-full-v2",
+  "components": [
+    {
+      "id": "A1_BFCL_SMOKE",
+      "role": "A1",
+      "source": "BFCL",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/a1-bfcl-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/a1-bfcl-scores-v2"
+    },
+    {
+      "id": "A2_LONGHEALTH_SMOKE",
+      "role": "A2",
+      "source": "LongHealth",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/a2-longhealth-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/a2-longhealth-scores-v2"
+    },
+    {
+      "id": "A3_MIRAGE_CACHE_SMOKE",
+      "role": "A3",
+      "source": "MIRAGE BioASQ PubMed BM25 cache",
+      "response_dir": "data/agent-eval/role-runs/smoke/a3-mirage-pubmed-bm25-responses-v0.1",
+      "score_dir": "data/agent-eval/role-runs/smoke/a3-mirage-pubmed-bm25-scores-v0.1"
+    },
+    {
+      "id": "A4_HEALTHBENCH_SMOKE",
+      "role": "A4",
+      "source": "HealthBench",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/a4-healthbench-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/a4-healthbench-scores-v2"
+    },
+    {
+      "id": "A5_HEALTHBENCH_META_SMOKE",
+      "role": "A5",
+      "source": "HealthBench Meta",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/a5-healthbench-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/a5-healthbench-scores-v2"
+    },
+    {
+      "id": "A5_RAGTRUTH_SMOKE",
+      "role": "A5",
+      "source": "RAGTruth",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/a5-ragtruth-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/a5-ragtruth-scores-v2"
+    },
+    {
+      "id": "KO_KORMEDMCQA_SMOKE",
+      "role": "KO",
+      "source": "KorMedMCQA",
+      "response_dir": "data/agent-eval/role-runs/qwen35-nf4/ko-kormedmcqa-smoke-v2",
+      "score_dir": "data/agent-eval/role-runs/qwen35-nf4/ko-kormedmcqa-scores-v2"
+    }
+  ]
+}

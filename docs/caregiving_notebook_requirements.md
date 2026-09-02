@@ -19,7 +19,7 @@
 10. [최종 제품 정의](#10-최종-제품-정의)
 11. [참고자료](#11-참고자료)
 
-관련 문서는 [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md), [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md), [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`mfds_easy_drug_approval_workflow.md`](./mfds_easy_drug_approval_workflow.md), [`evaluation_source_adapters.md`](./evaluation_source_adapters.md), [`role_component_evaluation_harness.md`](./role_component_evaluation_harness.md), [`evaluation_scenario_compiler.md`](./evaluation_scenario_compiler.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략·실험 문서보다 우선하는 제품 요구사항 원본이다.
+관련 문서는 [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md), [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md), [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md), [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md), [`mfds_easy_drug_approval_workflow.md`](./mfds_easy_drug_approval_workflow.md), [`evaluation_source_adapters.md`](./evaluation_source_adapters.md), [`role_component_evaluation_harness.md`](./role_component_evaluation_harness.md), [`evaluation_scenario_compiler.md`](./evaluation_scenario_compiler.md), [`no_human_review_development_plan.md`](./no_human_review_development_plan.md), [`caregiving_notebook_use_case_design.md`](./caregiving_notebook_use_case_design.md), [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)와 [`competitive_landscape_and_product_strategy.md`](./competitive_landscape_and_product_strategy.md)를 참조한다. 이 문서가 관련 설계·검증·전략·실험 문서보다 우선하는 제품 요구사항 원본이다.
 
 ## 1. 프로젝트 개요
 
@@ -621,6 +621,20 @@ RAG를 적용해도 환각이 자동으로 사라지는 것은 아니다. 검색
 - 보호자 대상 핵심 업무의 사용성 테스트 완료율 90% 이상
 
 위 수치는 초기 출시를 위한 제안 기준이며 테스트 세트의 구성과 임상 검수 절차를 함께 명시해야 한다. 특히 `오류 0건`은 준비된 출시 평가 세트에서의 필수 통과조건이지 실제 환경에서 절대적인 무오류를 보장한다는 의미가 아니다.
+
+### 8.4 현재 사람 검수 자원 제약
+
+2026-09-02 현재 프로젝트는 평가 case의 사람 검수, 임상 검수와 가족간병인 사용성 평가를 수행할 자원을 확보하지 못한 상태로 본다. 이 제약은 앞의 의료 안전·승인 요구사항을 면제하지 않으며, 다음과 같이 개발 범위와 결과 해석을 제한한다.
+
+- 공개 benchmark의 원래 gold, 결정적 계약 검사, 합성 fixture와 자동화된 보안·성능 시험은 개발 진단 목적으로 계속 사용할 수 있다.
+- 자동 생성한 `DS-AGENT` case는 `compiler_generated_unreviewed`, `evaluation_eligible=false`를 유지한다. 결과는 계약 준수·실행 경로·실패 유형 진단으로만 보고하고 프로젝트 의료 정확도나 출시 성능으로 표현하지 않는다.
+- LLM-as-a-Judge와 다른 모델의 합의는 사람 또는 임상 검수를 대체하지 않으며 `approved`, `clinically_validated`, `medical_release_gate_passed` 상태를 만들 수 없다.
+- e약은요 `staged` 자료와 다른 의료 원천은 임상 검수 전까지 운영 RAG, 의료 답변 생성, 모바일 지식 번들에 넣지 않는다. `staged → approved` 승격은 차단 상태로 유지한다.
+- 임상 검수 없이 계속 개발할 수 있는 제품 범위는 로컬 기록·조회·수정·삭제, 사용자 확인형 OCR 초안, 결정적 일정·인계·원본 연결, 개인정보·무결성·백업 시험과 의료 답변을 보류하는 안전 경로다.
+- 의료 근거 설명, 환자별 음식·활동 안내, 고위험 규칙의 임상 출시 판정과 의료 성능 KPI는 적절한 검수 자원이 확보될 때까지 출시 범위에서 제외한다.
+- 사람 검수 없이 수행한 자동 실험만으로 모델이나 에이전트 토폴로지를 의료 기능의 최종 제품 구성으로 채택하지 않는다.
+
+현재 제약에서 수행할 수 있는 구체적인 작업과 중단 기준은 [`사람 검수 없는 자동화 개발 트랙`](./no_human_review_development_plan.md)을 따른다.
 
 ## 9. 권장 개발 우선순위
 

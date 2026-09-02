@@ -222,14 +222,13 @@ python -X utf8 scripts/compile_agent_evaluation_scenarios.py `
 
 ## 9. 현재 한계와 다음 작업
 
-컴파일러 core, 48개 합성 파일럿, 가짜 read-only repository, 결정적 도구 host, A1~A5 fixture 인계와 해시 체인 trace 수집은 구현됐다. 단, 현재 host 실행은 compiler gold 호출을 재생한 기반 검증이며 실제 모델 E2E 성능이 아니다. 남은 작업은 다음과 같다.
+컴파일러 core, 48개 합성 파일럿, 가짜 read-only repository, 결정적 도구 host, A1~A5 fixture 인계와 해시 체인 trace 수집은 구현됐다. 현재 사람 검수 자원이 없으므로 출력은 계속 `compiler_generated_unreviewed`, `evaluation_eligible=false`이며 실제 모델 E2E 의료 성능이 아니다. 남은 자동화 작업은 다음과 같다.
 
-1. 공개 기록을 DS-AGENT용 구조화 간병 event로 추출·비식별화하고 사람이 검수하는 별도 event adapter
-2. 공개 기록 속 약물과 MFDS `item_seq`의 사람 검수 mapping 파일
-3. 질문·도구·인자 gold label 및 근거 적용 범위를 승인하는 episode review·seal 도구
-4. 위험, 근거 충돌, 도구 timeout, 환자 격리용 scenario recipe 확장
-5. 실제 로컬 모델 출력을 사용하는 T1~T3 runner와 역할별 prompt·model manifest 연결
-6. 승인 근거가 연결된 episode의 A3 retrieval·A4 주장–근거·A5 citation hard gate 채점
-7. 반복 추론, `pass^k`, latency·memory와 최초 실패 원인을 묶는 실험 report
+1. 위험 기술 시험, 근거 없음, 도구 timeout, 환자 격리와 prompt injection용 scenario recipe 확장
+2. 실제 로컬 모델 48건 반복 추론, `pass^k`, latency·memory와 최초 실패 원인을 묶는 자동 report
+3. T0~T3 토폴로지 입력을 같은 compiler fixture와 manifest로 렌더링
+4. 합성 비의료 evidence로 A3 retrieval·A4 주장–근거·A5 citation 코드 경로 검사
 
-LongHealth adapter는 A2용 질문·정답·원문 locator를 생성하고 이름·생년월일·원문 본문을 출력 case에서 제외한다. 하지만 이를 간병 gold record로 자동 변환하지는 않는다. 자유서술 자동 추출 결과는 별도 검수 없이는 DS-AGENT 정답이 될 수 없기 때문이다.
+공개 기록의 자동 event 추출, 약물→MFDS mapping과 episode gold 승인은 사람 검수 없이는 정답 데이터가 될 수 없으므로 현재 작업 목록에서 제외한다. 이 기능의 스키마를 구현하더라도 산출물을 `reviewed` 또는 `approved`로 바꾸지 않는다.
+
+LongHealth adapter는 A2용 질문·정답·원문 locator를 생성하고 이름·생년월일·원문 본문을 출력 case에서 제외한다. 이를 간병 gold record로 자동 변환하지 않으며, 현재 검수 자원 제약에서는 향후에도 공개 구성요소 원래 gold 평가로만 사용한다.

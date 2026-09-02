@@ -1,6 +1,6 @@
 # A1~A5 역할별 구성요소 평가 하네스
 
-- 구현: [`role_evaluation_harness.py`](../scripts/role_evaluation_harness.py) `v0.1.0`
+- 구현: [`role_evaluation_harness.py`](../scripts/role_evaluation_harness.py) `v0.2.0`
 - 계약 기준: [`A1~A5 역할·도구 사용 규약`](./agent_role_and_tool_contracts.md) `v0.1.0`
 - 범위: 공개 평가 case의 역할별 렌더링, 로컬 실행, 결정적 채점
 - 제외: 프로젝트 `DS-AGENT` E2E 결과, 의료 출시 hard gate, 파인튜닝, 모바일 번들
@@ -36,7 +36,7 @@ source adapter가 만든 `cases.jsonl`을 모델에 그대로 넣으면 정답 �
 }
 ```
 
-공개 문항을 A1~A5의 운영 출력 스키마로 억지 변환하지 않는다. 예를 들어 LongHealth의 선택형 정답을 A2의 `RecordContextPack`이라고 부르거나 HealthBench의 일반 의료 응답을 승인 근거가 연결된 A4 `GroundedAnswer`라고 부르면 평가 의미가 달라진다. 실제 계약 E2E 평가는 검수·봉인된 `DS-AGENT`와 결정적 도구 호스트에서 별도로 수행한다.
+공개 문항을 A1~A5의 운영 출력 스키마로 억지 변환하지 않는다. 예를 들어 LongHealth의 선택형 정답을 A2의 `RecordContextPack`이라고 부르거나 HealthBench의 일반 의료 응답을 승인 근거가 연결된 A4 `GroundedAnswer`라고 부르면 평가 의미가 달라진다. 실제 계약 E2E 의료 평가는 검수·봉인된 `DS-AGENT`가 생길 때만 수행한다. 현재는 미검수 `DS-AGENT`와 결정적 도구 host를 자동 개발 진단에만 사용한다.
 
 ## 2. 처리 구조
 
@@ -146,7 +146,17 @@ python -X utf8 scripts/run_role_evaluation.py `
 
 첫 로컬 실행은 [`RT-M1-HF-BNB-NF4-WIN-001`](../experiments/agent_eval/manifests/runtime_profiles.json)로 고정했다. Windows·Python 3.12·Transformers 5.16.1·bitsandbytes 0.50.2에서 원본 M1을 load-time NF4, BF16 compute, double quant 비활성으로 연다. 자세한 결정과 설치 절차는 [`Qwen3.5-4B 로컬 추론 런타임·양자화 결정`](./qwen35_local_runtime_decision.md)을 따른다.
 
-공개 구성요소용 `run_role_evaluation.py`에는 아직 이 profile을 적용하는 `transformers` backend가 없다. 다만 프로젝트 전용 [`DS-AGENT A1~A5 로컬 모델 runner`](./ds_agent_model_runner.md)에는 profile ID를 필수로 검증하고, `BitsAndBytesConfig` NF4를 주입하며, 모델을 `local_files_only`로 여는 fail-closed backend를 구현했다. 버전 불일치·model lock 불일치·BF16 미지원·CPU/disk offload에서는 자동 다운로드나 fallback 없이 중단한다. 이 backend를 공개 구성요소 하네스에도 재사용할지는 첫 DS-AGENT smoke 뒤 결정한다.
+공개 구성요소용 `run_role_evaluation.py`도 DS-AGENT의 `Qwen35Nf4Backend`를 재사용한다. `qwen35-nf4` backend는 profile ID, model lock, 패키지·GPU 조건을 똑같이 fail-closed 검증하고 자동 다운로드나 정밀도 fallback을 허용하지 않는다. 원시 생성문이 JSON 또는 응답 스키마를 위반하면 사실·정답·라벨·도구 호출을 추가하지 않는 형식 수정 프롬프트를 최대 한 번 적용하고, 최초 시도와 수정 횟수를 usage에 남긴다.
+
+```powershell
+& .\.venv-qwen35\python.exe -X utf8 scripts/run_role_evaluation.py `
+  --request-bundle <request-bundle> `
+  --output-dir <new-response-bundle> `
+  qwen35-nf4 `
+  --runtime-profile experiments/agent_eval/manifests/runtime_profiles.json `
+  --runtime-profile-id RT-M1-HF-BNB-NF4-WIN-001 `
+  --generation-profile primary
+```
 
 이미 다른 로컬 엔진으로 생성한 원문 JSON은 `replay` backend로 manifest와 채점 흐름에 연결할 수 있다.
 
@@ -169,14 +179,22 @@ python -X utf8 scripts/grade_role_evaluation.py `
 - A1, A2, A3, A4, A5 두 원천과 KO 요청을 각각 2건씩 실제 bundle로 렌더링했다.
 - MIRAGE BioASQ 2건을 로컬 `pubmed/bm25` cache로 실행해 2건 모두 JSON 응답을 만들었다.
 - A3 점수화는 두 건 모두 `RETRIEVAL_ID_MAPPING_MISSING`으로 보류됐다. 이는 모델 성능 실패가 아니라 cache chunk ID와 PMID 사이의 추적 mapping이 없기 때문이다.
-- Qwen3.5-4B 전용 Python 3.12 환경과 `RT-M1-HF-BNB-NF4-WIN-001` load-time NF4 backend로 DS-AGENT development 1건 연결 smoke를 통과했다. 이는 공개 구성요소 점수나 모델 성능 수치가 아니며, 이 하네스의 Transformers backend와 검수 case 정식 실행은 아직 남아 있다.
+- Qwen3.5-4B 전용 Python 3.12 환경과 `RT-M1-HF-BNB-NF4-WIN-001` backend를 이 하네스에 연결해 A1·A2·A4·A5·KO를 원천별 2건씩 실행했다.
+- A1 BFCL은 2/2 응답과 채점을 완료했고 도구·인자 exact match가 각각 50%였다. 두 응답 모두 1회 형식 수정을 사용했다.
+- A2 LongHealth는 두 요청 모두 4,096 token 입력 예산을 넘어 fail-closed됐고, 유효 응답이나 점수는 없다.
+- A4 HealthBench는 2/2 JSON 응답을 만들었으나 독립 rubric 판정이 없어 점수화하지 않았다.
+- A5 HealthBench Meta는 2건에서 verifier accuracy 50%, false approval 50%, false block 0%였다.
+- A5 RAGTruth는 1/2건만 형식 수정 뒤 유효했고, 유효 1건의 탐지·span 지표는 100%였다. 표본·coverage 부족으로 성능 수치로 사용하지 않는다.
+- KO KorMedMCQA는 2건에서 answer accuracy 50%였다.
+- 모든 결과는 `official_benchmark_result=false`, `project_end_to_end_result=false`, `medical_release_gate_result=false`다. 원천당 2건인 연결 smoke이므로 공개 benchmark 또는 제품 성능으로 보고하지 않는다.
 - 저장소 전체 회귀시험 수는 코드 변경 때마다 다시 집계한다. 하네스 시험은 역할별 누출 방지, 마스킹, JSON Schema, 해시 연결, 캐시 지연 로딩, 각 채점 경계와 runtime profile 불변조건을 검사한다.
 
 ## 7. 다음 실험 순서
 
-1. source adapter 샘플과 gold를 사람이 검수하고 평가 bundle 버전을 봉인한다.
-2. MIRAGE PubMed chunk→PMID mapping의 공식 생성 경로 또는 corpus metadata를 확보해 A3 채점을 활성화한다.
-3. BFCL 단일 턴 투영을 먼저 실행하고, 다중 턴은 upstream 공식 runtime·checker를 별도 backend로 연결한다.
-4. DS-AGENT에서 검증된 profile backend를 공개 구성요소 하네스에 재사용할지 결정하고 작은 검수 smoke set을 실행한다.
-5. A4 독립 rubric 판정 절차와 판정자 일치도를 정한 뒤 생성 지표를 계산한다.
-6. 공개 구성요소 결과로 실행 경로를 검증한 후, 검수·봉인된 `DS-AGENT`와 결정적 도구 호스트로 A1~A5 실제 계약 E2E·T0~T4 실험을 수행한다.
+자동화 선행 연구의 연결 확인은 완료됐다. 다음 항목은 모바일 skeleton 이후 필요할 때 확장한다.
+
+1. MIRAGE PubMed chunk→PMID mapping의 공식 생성 경로 또는 corpus metadata를 확보해 A3 채점을 활성화한다.
+2. LongHealth를 임의 절단하지 않는 결정적 chunking 또는 장문 runtime profile을 설계한다.
+3. BFCL 다중 턴은 upstream 공식 runtime·checker를 별도 backend로 연결한다.
+4. HealthBench A4는 독립 판정이 없으면 계속 미채점으로 두며 LLM 합의로 의료 hard gate를 대신하지 않는다.
+5. 형식 수정 의존도가 높은 역할은 출력 제약 방식과 프롬프트를 개선한 뒤 고정 smoke를 재실행한다.

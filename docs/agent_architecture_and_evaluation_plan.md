@@ -247,6 +247,8 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 
 의학적 hard gate의 최종 라벨은 임상 검수자가 판정한다. LLM-as-a-Judge는 실패 후보를 분류하는 보조수단으로만 사용하고 단독 출시 판정자로 사용하지 않는다.
 
+현재 임상 검수 자원이 없으므로 이 지표들은 자동화 개발 proxy와 최종 의료 hard gate로 분리한다. 자동 검사는 제공 span 밖 문자열·수치, 금지 행동, ID 누락과 합성 oracle 불일치를 탐지할 수 있지만 `medical_release_gate_result=true`를 만들지 않는다.
+
 ### 8.4 모바일 운영 지표
 
 - 모델별 파일 크기와 전체 설치 증가량
@@ -362,21 +364,28 @@ T0~T4는 동일한 사용자 질문, 환자 상태, 승인 지식 스냅샷, 도
 | 구분 | 상태 | 해석 |
 |---|---|---|
 | 공개 모델·논문 점수 | 프로젝트 결과에서 제외 | 후보·라이선스 탐색 외에는 성능 판단에 사용하지 않음 |
-| M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash, 첫 데스크톱 runtime·NF4 설정·DS-AGENT backend와 development 1건 연결 smoke 완료 | `RT-M1-HF-BNB-NF4-WIN-001` 전용 Python 3.12 환경에서 A1~A5 각 1회가 계약을 통과하고 근거 없음 안전 보류에 도달했다. 미검수 합성 1건이므로 성능 결과는 아님 |
-| 공개 구성요소 평가 데이터 | source adapter 전체 변환 및 runner·grader core 구현, 모델 평가 미실행 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA 110,599건을 A1~A5/KO case로 정규화했다. 전체 렌더링 검증에서 109,544건이 정상 처리됐고 BFCL 공식 상태형 runtime이 필요한 1,055건만 명시적으로 제외됐다. case 사람 검수·봉인과 모델 성능 결과는 아직 없음 |
-| 프로젝트 `DS-AGENT` 결과 | 48개 합성 기반 결정적 host·trace smoke, replay 통합시험과 Qwen development 1건 연결 smoke 완료, 모델 성능 실험 미실행 | gold 도구 경로·hard gate 48/48 일치와 실제 모델 1건의 예상 안전 경로 통과를 확인했다. 모두 미검수 oracle fixture 기반이며 정식 scorer 결과나 임상 출시 성능이 아님 |
+| M1 Qwen3.5-4B 자산 | 공식 원본·revision·파일 hash, 데스크톱 runtime·NF4 설정, DS-AGENT와 공개 구성요소 backend 실행 완료 | `RT-M1-HF-BNB-NF4-WIN-001` 전용 Python 3.12 환경에서 T1~T3 각 48건과 공개 원천별 2건 연결 smoke를 실행했다. 제품·의료 모델 선정이 아님 |
+| 공개 구성요소 평가 데이터 | source adapter 전체 변환, runner·grader와 원천별 2건 연결 smoke 완료 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA 110,599건을 정규화했다. 현재 결과는 backend 연결 확인이며 공식 benchmark나 프로젝트 의료 E2E 점수가 아님 |
+| 프로젝트 `DS-AGENT` 결과 | T0~T3 각 48건 실행·자동 report·trace 원인 분류 완료 | T0 oracle은 48/48 일치했다. 생성형 T1~T3는 모두 전체 계약을 통과하지 못했고 T1을 `best_observed_nonpassing_development_baseline`으로만 보존했다 |
 | 목표 모바일 장비 성능 | 미실행 | Android 목표 장비와 로컬 런타임 미확정 |
-| 최종 에이전트 수·모델 배치 | 미확정 | T0~T4 비교 후 가장 단순한 통과 구성을 채택 |
+| 최종 에이전트 수·모델 배치 | 의료 사용 구성 미선정 | 현재는 결정적 A2·A3·A5와 T1 개선 경로가 타당하며, 생성형 구성은 feature gate 뒤에 둠 |
 
 development 연결 smoke만으로 “멀티에이전트 성능이 좋다”, “Qwen3.5-4B가 최종 모델이다” 또는 “의료 모델이 더 정확하다”라고 결론내리지 않는다.
 
-공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md), 역할별 요청·로컬 실행·채점과 결과 해석 경계는 [`역할별 구성요소 평가 하네스`](./role_component_evaluation_harness.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. 현재 결정적 host·trace 기반과 48개 oracle fixture 실행 범위는 [`DS-AGENT 결정적 도구 호스트·trace 파일럿`](./ds_agent_deterministic_pilot.md)에 기록한다. source adapter와 `DS-AGENT` 후보 출력은 사람의 라벨·근거 검수 전까지 `evaluation_eligible=false`다. 공개 구성요소 점수와 oracle fixture 결과를 실제 모델 E2E 또는 의료 출시 hard gate 결과로 승격하지 않는다.
+공개 벤치마크 정규화 형식과 평가 가능한 범위는 [`공개 평가 원천 Source Adapter`](./evaluation_source_adapters.md), 역할별 요청·로컬 실행·채점과 결과 해석 경계는 [`역할별 구성요소 평가 하네스`](./role_component_evaluation_harness.md)를 따른다. `DS-AGENT` 후보 생성기의 입력·출력, 비식별·품목 연결·split 경계와 실행 방법은 [`Evaluation Scenario Compiler`](./evaluation_scenario_compiler.md)를 따른다. 현재 결정적 host·trace 기반과 48개 oracle fixture 실행 범위는 [`DS-AGENT 결정적 도구 호스트·trace 파일럿`](./ds_agent_deterministic_pilot.md)에 기록한다. 현재 사람 검수 자원이 없으므로 source adapter와 `DS-AGENT` 후보 출력은 계속 `evaluation_eligible=false`다. 공개 구성요소 점수와 oracle fixture 결과를 실제 모델 E2E 또는 의료 출시 hard gate 결과로 승격하지 않는다.
 
 ### 11.2 실행별 결과표
 
-| Run ID | 토폴로지 | 역할별 모델 | hard gate | Task success | pass^k | Tool/Args | 근거·보류 | p95/RAM | 주요 실패 원인 |
-|---|---|---|---|---:|---:|---:|---:|---:|---|
-| 예: RUN-001 | T1 | A1/A4=후보 모델 | PASS/FAIL | 값 | 값 | 값 | 값 | 값 | MAST·프로젝트 라벨 |
+| Run 묶음 | 토폴로지 | 역할별 실행 | 기대 상태 | 도구 순서 | 기록 참조 | 호출/episode | 평균 생성시간 | 주요 실패 원인 |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| DS-AGENT T0 v1 | T0 | 결정적 gold replay | 100.0% | 100.0% | 100.0% | 0.00 | 해당 없음 | 모델 성능이 아닌 oracle 상한 |
+| Qwen35 T1 v1 | T1 | A1/A4=Qwen, A2/A3/A5=결정적 | 72.9% | 50.0% | 50.0% | 2.00 | 38.24초 | A1 검색 24건 빈 결과 |
+| Qwen35 T2 v1 | T2 | A1/A4=역할별 Qwen, A2/A3/A5=결정적 | 62.5% | 29.2% | 29.2% | 2.00 | 38.01초 | A1 검색 34건 빈 결과 |
+| Qwen35 T3 v2 | T3 | A1~A5=동일 Qwen·역할별 prompt | 12.5% | 29.2% | 27.1% | 4.73 | 58.25초 | A1 검색 실패에 A2 왜곡·A3/A4 근거·A5 상태 실패 추가 |
+
+T1~T3의 A1 gold 요청 exact match는 모두 0%였다. exact match는 날짜·검색어 문자열 차이도 실패로 세므로, 실제 검색 결과와 trace 단계 실패를 함께 봤다. T3는 T2보다 도구 순서가 개선되지 않은 채 생성 역할·지연·인계 실패만 늘었다. 이는 이 실험 조건에서는 H1·H3을 지지하지 않으며, 역할 수 증가가 자동으로 품질 향상을 만들지 않음을 보여준다. H2는 별도 A5의 안전 개선보다 상태 불일치가 관찰되어 지지되지 않았다. H4는 다른 모델을 실행하지 않았으므로 미검증이다.
+
+전체 기계 판독 결과는 [`자동화 에이전트 평가 보고서`](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)에 고정했다. 모든 실행은 `automated_development_diagnostic=true`, `evaluation_eligible=false`, `model_performance_result=false`, `medical_release_gate_result=false`다.
 
 ### 11.3 결과 설명 형식
 
@@ -408,7 +417,7 @@ development 연결 smoke만으로 “멀티에이전트 성능이 좋다”, “
 
 | 단계 | 모델 | 다운로드 여부 | 첫 용도 | 준비할 파일·정보 |
 |---|---|---|---|---|
-| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본·manifest, 데스크톱 load-time NF4 프로필·DS-AGENT backend와 development 1건 연결 smoke 완료** | T1~T3에서 동일 모델을 사용한 구조 비교 | [`RT-M1-HF-BNB-NF4-WIN-001`](./qwen35_local_runtime_decision.md) 사용. 별도 양자화 weight가 아니라 원본 lock+runtime profile로 실행을 식별하며, 정식 성능 평가는 남음 |
+| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본·manifest, 데스크톱 load-time NF4 프로필, T1~T3 각 48건 자동 개발 진단 완료** | T1~T3에서 동일 모델을 사용한 구조 비교 | [`RT-M1-HF-BNB-NF4-WIN-001`](./qwen35_local_runtime_decision.md) 사용. T1은 비통과 개선 기준선이며 제품·의료 모델 채택을 뜻하지 않음 |
 | M2 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | M1 실험 뒤 | 범용 4B 기준선과 모델 세대 효과 | M1과 같은 manifest 항목 |
 | M3 | [MedGemma 1.5 4B](https://huggingface.co/google/medgemma-1.5-4b-it) | T0~T3 뒤 선택 | A4 근거 제한 설명의 의료 특화 비교 | 이용조건 동의 기록, 공식 원본·tokenizer·config, revision·해시 |
 | M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | 도구 선택 오류가 확인될 때만 | A1 코디네이터의 도구 호출 특화 비교 | 정확히 `2511` 리비전, 커스텀 코드 보안 검토, 해시 |
@@ -429,12 +438,12 @@ development 연결 smoke만으로 “멀티에이전트 성능이 좋다”, “
 | 단계 | 데이터 | 획득 방식 | 첫 실험 용도 | 지금 필요한가? |
 |---|---|---|---|---|
 | D0 | 합성 간병기록·가상 환자 상태 | 요구사항과 데이터 스키마를 이용해 프로젝트에서 직접 작성 | 환자 격리, 복약 누락, 부정·수치·시각 보존, 다단계 도구 사용 | **필수, 외부 다운로드 없음** |
-| D1 | `DS-AGENT` 파일럿 40~60개 | D0와 승인 근거를 연결해 프로젝트에서 직접 라벨링 | T0~T3 태스크 성공, 도구·인자, 인계와 보류 비교 | **합성 48개·host/trace smoke 완료. 사람 라벨 검수와 승인 근거 연결 미완료** |
-| D2 | 식약처 [의약품개요정보(e약은요) OpenAPI](https://www.data.go.kr/data/15075057/openapi.do) 원본 스냅샷 | API 원본 JSON과 수집 메타데이터 저장 후 `raw → staged → review → approved` 게이트 적용 | 실제 승인 후보 문장 기반 약의 일반 효능·주의사항 RAG | **전체 raw 수집·staged·review catalog 완료, `awaiting_selection`; 승인 snapshot 없음** |
+| D1 | `DS-AGENT` 파일럿 40~60개 | D0와 승인 근거를 연결해 프로젝트에서 직접 라벨링 | T0~T3 태스크 성공, 도구·인자, 인계와 보류 비교 | **미검수 합성 48개로 T0~T3 자동 개발 진단 완료. 사람 라벨 검수와 승인 근거 연결은 수행하지 않음** |
+| D2 | 식약처 [의약품개요정보(e약은요) OpenAPI](https://www.data.go.kr/data/15075057/openapi.do) 원본 스냅샷 | API 원본 JSON과 수집 메타데이터 저장 후 `raw → staged → review → approved` 게이트 적용 | 실제 승인 후보 문장 기반 약의 일반 효능·주의사항 RAG | **전체 raw 수집·staged·review catalog 완료. 임상 검수 자원 부재로 `awaiting_selection`에서 승격 차단, 승인 snapshot 없음** |
 | D3 | 식약처 [DUR 품목정보 OpenAPI](https://www.data.go.kr/data/15059486/openapi.do) 소규모 스냅샷 | API 활용신청 후 원본 JSON 저장 | 생성 답변이 아닌 구조화 규칙·조회 경로 검증 | D2 뒤 선택 |
 | D4 | 식품영양성분DB·질환별 공식 자료 | 첫 복약 실험 종료 후 별도 승인 | 음식·활동 에이전트 확장 | 지금 받지 않음 |
 | D5 | 처방전·약 봉투 이미지와 AI Hub OCR 데이터 | 동의·비식별·권리·보유절차 확정 후 | A6 OCR·VLM 실험 | 지금 받지 않음 |
-| D6 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA | 공개 원천을 고정 manifest로 보존하고 source adapter로 정규화 | A1~A5 구성요소 진단과 한국어 보조평가 | **다운로드·adapter·구성요소 runner/grader core 완료, 사람 검수·모델 실행 미완료** |
+| D6 | BFCL·LongHealth·MIRAGE·HealthBench·RAGTruth·한국어 QA | 공개 원천을 고정 manifest로 보존하고 source adapter로 정규화 | A1~A5 구성요소 진단과 한국어 보조평가 | **다운로드·adapter·runner/grader와 원천별 2건 연결 smoke 완료. LongHealth 장문, MIRAGE ID mapping, HealthBench 독립 판정은 미채점으로 명시** |
 
 첫 도메인은 모든 질환과 약을 포괄하지 않고 **복약 기록과 일반 약 정보 이해**로 제한한다. D2에서 사용할 제품 범위와 개수는 질문·근거 라벨을 먼저 설계한 뒤 확정하며, 내려받은 전체 API 응답을 자동으로 승인 지식으로 사용하지 않는다.
 
@@ -477,33 +486,31 @@ experiments/agent_eval/results/
 2. 모델 원본·양자화 파일과 평가 trace를 보관할 디스크 공간
 3. Hugging Face 및 MedGemma 등 각 이용조건에 동의할 주체
 4. e약은요·DUR API 활용신청과 원본 응답 보관 조건
-5. 첫 복약 질문 범위, 합성 환자 수와 의료 검수자
+5. 첫 복약 질문 범위와 합성 환자 수. 의료 검수자는 현재 미확보이며 관련 의료 평가·승인 기능은 차단
 6. 개발·검증·동결시험 split과 `do-not-train` manifest 책임자
 
 ## 13. 실행 순서와 종료 조건
 
-계획과 다운로드 manifest가 합의된 뒤 이 연구 트랙을 애플리케이션 skeleton보다 먼저 수행하되, 실제 환자 대상 자동 의료행동은 만들지 않는다.
+자동화 에이전트 선행 연구의 1차 단계는 완료됐다. 실제 환자 대상 자동 의료행동은 만들지 않으며 이제 애플리케이션 skeleton을 우선한다.
 
 1. **실험계획 사전 등록:** H1~H4, 도구 계약, 데이터 split, hard gate, 비교 지표와 반복 횟수를 고정한다.
 2. **최소 자료 준비:** M1 원본과 D0~D2를 준비하고 revision·해시·이용조건 manifest를 작성한다.
 3. **역할·도구 계약 고정:** 첫 텍스트 실험에 필요한 A1~A5 입력·출력 JSON 스키마, 읽기 도구 허용 목록과 종료조건을 작성한다.
-4. **`DS-AGENT` 파일럿 구축:** 승인 지식 없이 기록 조회·안전 보류를 검증하는 합성 48개와 결정적 host·trace smoke는 구현됐다. 다음으로 질문·도구 label을 사람이 검수하고 승인 근거 episode를 추가·봉인한다.
-5. **프로젝트 E2E 평가 하네스 구현:** 공개 case용 역할별 renderer·local runner·grader, DS-AGENT용 가짜 기록 저장소·결정적 도구 host·trace, `RT-M1-HF-BNB-NF4-WIN-001` 로더와 A1~A5 실제 모델 JSON 연결 runner를 구현하고 development 1건 연결 smoke를 통과했다. 다음으로 승인 문서 snapshot·근거/citation scorer를 연결한다.
-6. **T0·T1 기준선 실행:** 결정적 구성과 단일 제한형 에이전트를 비교한다.
-7. **T2·T3 역할 분리 실험:** 같은 M1 모델을 사용해 토폴로지 효과만 분리한다.
-8. **추가 다운로드 결정:** 오류 분포를 보고 M2~M4 중 필요한 모델만 준비한다.
-9. **T4 특화 모델 실험:** 단순 구성보다 개선 가능성이 확인된 역할에만 별도 모델을 투입한다.
-10. **원인 제거 실험:** ABL-01~ABL-07과 MAST·프로젝트 라벨로 실패 원인을 분석한다.
-11. **모바일 실기기 검증:** 통과 후보만 목표 Android 장비에서 양자화·지연·메모리·오프라인 시험을 수행한다.
-12. **Architecture Decision Record 작성:** 채택 토폴로지, 역할별 모델, 허용 도구, 실패 시 fallback과 제외한 구성의 이유를 기록한다.
+4. **`DS-AGENT` 파일럿 구축 — 완료:** 미검수 합성 48개, 결정적 host·trace와 T0 oracle을 구현했다.
+5. **프로젝트 자동 개발 평가 하네스 — 완료:** 실제 모델 JSON runner, checkpoint/resume, 역할별 채점과 자동 통합 report를 구현했다.
+6. **T0~T3 비교 — 완료:** 동일한 M1과 48개 fixture에서 구조 효과, 호출·지연과 실패 단계를 비교했다.
+7. **공개 구성요소 연결 smoke — 완료:** 원천별 2건으로 backend·renderer·grader 연결과 미채점 이유를 확인했다.
+8. **모바일 skeleton — 다음 단계:** 기술스택, 암호화 저장, migration과 기록 CRUD를 우선 구현한다.
+9. **추가 모델·T4 — 보류:** 모바일 기반 이후 A1 실패를 개선할 명확한 가설과 실행 예산이 있을 때만 재개한다.
+10. **의료 E2E·출시 판정 — 차단:** 승인 snapshot과 임상 검수 없이는 실행 결과를 만들거나 활성화하지 않는다.
 
-다음 조건이 충족되면 이 선행 연구의 1차 단계를 종료하고 모바일 skeleton과 저장계층 구현을 본격화한다.
+다음 조건은 충족됐다. 따라서 이 선행 연구의 1차 단계를 종료하고 모바일 skeleton과 저장계층 구현을 본격화한다.
 
 - 프로젝트 전용 도구와 평가 항목 스키마가 버전으로 고정됨
 - T0와 T1 기준선 결과가 재현됨
 - 검색·도구·생성·검증 실패를 독립적으로 구분할 수 있음
-- 최소 한 구성이 사전 평가 세트의 hard gate를 통과하거나, 어떤 생성 구성도 통과하지 못했다는 결론과 템플릿 fallback이 문서화됨
-- 최종 채택 전 남은 임상 검수·장비·라이선스 위험이 명시됨
+- 최소 한 구성이 자동 계약·격리·보류 게이트를 통과하거나, 어떤 생성 구성도 통과하지 못했다는 결론과 템플릿 fallback이 문서화됨
+- 의료 hard gate는 판정 불가로 남고, 임상 검수 전 의료 기능을 활성화하지 않는 경계가 명시됨
 
 ## 14. 참고 문서
 

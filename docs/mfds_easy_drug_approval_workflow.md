@@ -1,7 +1,8 @@
 # e약은요 `staged → approved` 검수·승격 절차
 
 - 현재 대상 staged ID: `mfds-easy-drug-20260901T061358Z-schema-v1`
-- 현재 상태: `awaiting_selection`
+- 데이터 상태: `awaiting_selection`
+- 승격 상태: 임상 검수자 부재로 `staged → approved` 차단
 - 현재 검수 카탈로그: `data/easy-drug/review/20260901T061358Z-schema-v1-review-v1`
 
 ## 목차
@@ -32,6 +33,7 @@ staged_unreviewed
 - 승인 직후 `runtime_rag_eligible=false`, `mobile_bundle=false`를 유지한다.
 - 검수자 자격의 진위는 코드가 확인할 수 없다. 조직 또는 프로젝트의 책임자가 별도로 확인하고 그 확인자를 결정 파일에 기록해야 한다.
 - 원본 staged 파일, 검수 패킷 또는 manifest의 해시가 달라지면 승격을 중단한다.
+- 현재 사람·임상 검수 자원이 없으므로 선정 템플릿이나 자동 모델 판정으로 검수 결정을 대신하지 않는다. staged 자료는 구조·검색 코드의 비활성 개발 입력으로도 의료 답변 생성에 사용하지 않으며 `awaiting_selection`에서 유지한다.
 
 ## 2. 1단계: 검수 대상 선정
 

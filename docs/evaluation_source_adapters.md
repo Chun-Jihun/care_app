@@ -179,8 +179,8 @@ conda run -n care_app python -X utf8 scripts/adapt_evaluation_sources.py `
 2. BFCL 공식 채점기·상태형 runtime과 `live_relevance` 실행 의미를 연결하고 라이선스를 검토한다. 현재 공식 runtime이 필요한 1,055건은 `BFCL_OFFICIAL_RUNTIME_REQUIRED`, 직접 gold가 없는 16건은 `BFCL_GOLD_UNAVAILABLE`로 분리한다.
 3. **구현 완료:** LongHealth runtime loader의 이름·생년월일 마스킹과 원문 locator 검증. 모델별 실제 문맥 길이·지연 측정은 남아 있다.
 4. **일부 구현:** MIRAGE profile별 score·snippet ID 지연 로딩. BioASQ 618건을 실제 채점하려면 PubMed chunk ID→PMID mapping을 추가해야 한다.
-5. HealthBench A4 독립 rubric 판정 절차와 판정자 일치도를 고정한다. HealthBench·RAGTruth 구성요소 지표는 계속 프로젝트 의료 hard gate와 별도로 보고한다.
-6. adapter 출력 샘플·locator·정답을 사람이 검수한 뒤 평가 bundle을 봉인하는 review·seal 도구를 만든다.
-7. 별도로 `DS-AGENT` candidate의 도구 label·승인 근거 적용 범위를 검수하고 seal한다.
+5. HealthBench A4는 원래 rubric을 사용하는 자동 judge proxy로만 실행하고, HealthBench·RAGTruth 구성요소 지표를 프로젝트 의료 hard gate와 별도로 보고한다.
+6. 사람 검수 bundle은 현재 만들지 않는다. adapter 출력은 `adapter_generated_unreviewed`, `project_evaluation_eligible=false`를 유지한 채 upstream gold 기반 자동 진단에만 사용한다.
+7. `DS-AGENT` candidate도 별도 seal 없이 미검수 development fixture로만 실행하며 공식 프로젝트 E2E 점수를 만들지 않는다.
 
 공개 benchmark 점수와 프로젝트 간병 도메인 E2E 결과는 같은 표에서 평균내지 않는다.

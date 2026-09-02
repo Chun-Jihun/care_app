@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Sequence
 
 try:
+    from scripts.ds_agent_model_runner import ModelRunnerError, Qwen35Nf4Backend
     from scripts.role_evaluation_harness import (
         HarnessError,
         MirageCachedRetrievalBackend,
@@ -18,6 +19,7 @@ try:
         run_request_bundle,
     )
 except ModuleNotFoundError:  # Direct execution: python scripts/<name>.py
+    from ds_agent_model_runner import ModelRunnerError, Qwen35Nf4Backend  # type: ignore
     from role_evaluation_harness import (
         HarnessError,
         MirageCachedRetrievalBackend,
@@ -86,6 +88,21 @@ def _parser() -> argparse.ArgumentParser:
     transformers.add_argument("--max-new-tokens", type=int, default=512)
     transformers.add_argument("--temperature", type=float, default=0.0)
     transformers.add_argument("--device-map", default="auto")
+    qwen = subparsers.add_parser(
+        "qwen35-nf4", help="잠금된 Qwen3.5-4B Transformers+bitsandbytes NF4 프로필"
+    )
+    qwen.add_argument(
+        "--runtime-profile",
+        type=Path,
+        default=Path("experiments/agent_eval/manifests/runtime_profiles.json"),
+    )
+    qwen.add_argument("--runtime-profile-id", default="RT-M1-HF-BNB-NF4-WIN-001")
+    qwen.add_argument(
+        "--generation-profile",
+        choices=("smoke", "primary_scored", "supplier_recommended_secondary"),
+        default="primary_scored",
+    )
+    qwen.add_argument("--seed", type=int)
     return parser
 
 
@@ -123,7 +140,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 retriever=args.retriever,
                 top_k=args.top_k,
             )
-        else:
+        elif args.backend == "transformers":
             model_path = _within(
                 root,
                 args.model_path if args.model_path.is_absolute() else root / args.model_path,
@@ -134,8 +151,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 temperature=args.temperature,
                 device_map=args.device_map,
             )
+        else:
+            profile_path = _within(
+                root,
+                args.runtime_profile
+                if args.runtime_profile.is_absolute()
+                else root / args.runtime_profile,
+            )
+            backend = Qwen35Nf4Backend(
+                root,
+                profile_path,
+                profile_id=args.runtime_profile_id,
+                generation_profile=args.generation_profile,
+                seed=args.seed,
+            )
         result = run_request_bundle(root, request_bundle, output, backend)
-    except HarnessError as exc:
+    except (HarnessError, ModelRunnerError) as exc:
         print(f"오류: {exc}")
         return 1
     manifest = json.loads((result / "manifest.json").read_text(encoding="utf-8"))

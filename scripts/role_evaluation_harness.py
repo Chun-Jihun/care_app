@@ -23,7 +23,7 @@ from typing import Any, Iterable, Iterator, Mapping, Protocol, Sequence
 import unicodedata
 
 
-SCRIPT_VERSION = "0.1.0"
+SCRIPT_VERSION = "0.2.0"
 SCHEMA_VERSION = "1.0"
 CONTRACT_VERSION = "0.1.0"
 PROMPT_VERSION = "component-projection-v0.1.0"
@@ -1076,6 +1076,58 @@ class TransformersLocalBackend:
         )
 
 
+def _generate_with_format_repair(
+    backend: LocalBackend, request: Mapping[str, Any]
+) -> BackendResult:
+    """Allow one schema-only repair without changing benchmark facts or labels."""
+
+    first = backend.generate(request)
+    response_schema = request.get("response_schema")
+    if not isinstance(response_schema, Mapping):
+        return first
+    try:
+        parsed = parse_json_response(first.raw_text)
+        errors = _schema_errors(parsed, response_schema)
+    except HarnessError as exc:
+        errors = [f"JSON_PARSE_ERROR:{exc}"]
+    if not errors:
+        usage = dict(first.usage)
+        usage["format_repair_count"] = 0
+        return BackendResult(raw_text=first.raw_text, usage=usage)
+    messages = request.get("messages")
+    if not isinstance(messages, list):
+        return first
+    repair_request = dict(request)
+    repair_request["messages"] = [
+        *messages,
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "format_repair": True,
+                    "validation_errors": errors,
+                    "invalid_output": first.raw_text,
+                    "response_schema": dict(response_schema),
+                    "instruction": (
+                        "Return exactly one JSON object matching the schema. Correct keys and "
+                        "structure only; do not add facts, labels, reasoning, or tool calls."
+                    ),
+                },
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+        },
+    ]
+    repaired = backend.generate(repair_request)
+    usage = dict(repaired.usage)
+    usage["format_repair_count"] = 1
+    usage["initial_attempt"] = dict(first.usage)
+    usage["initial_raw_output_sha256"] = hashlib.sha256(
+        first.raw_text.encode("utf-8")
+    ).hexdigest()
+    return BackendResult(raw_text=repaired.raw_text, usage=usage)
+
+
 def run_request_bundle(
     workspace_root: Path,
     request_bundle_dir: Path,
@@ -1093,7 +1145,7 @@ def run_request_bundle(
         request_id = _nonempty_string(request.get("request_id"), "request_id")
         started = time.perf_counter()
         try:
-            backend_result = backend.generate(request)
+            backend_result = _generate_with_format_repair(backend, request)
             raw_text = backend_result.raw_text
             usage = dict(backend_result.usage)
             try:
@@ -1141,6 +1193,7 @@ def run_request_bundle(
             "script": "scripts/role_evaluation_harness.py",
             "version": SCRIPT_VERSION,
             "network_access": False,
+            "format_repair_limit": 1,
             "backend": dict(backend.metadata),
         },
         "request_bundle": {
