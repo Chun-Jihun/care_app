@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "MODEL-COMPARISON-V1",
+  "result_scope": "automated_development_diagnostic_not_medical_performance",
+  "locked_assets": {
+    "runtime_profile_path": "experiments/agent_eval/manifests/model_comparison_runtime_profiles_v1.json",
+    "runtime_profile_sha256": "d23957bead93b28f2dd6fea6bd12103ead1d2172bfaff88b483ea80309c763e5",
+    "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+    "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f"
+  },
+  "screening": {
+    "description": "The first eight development DS-AGENT episodes, sorted by item_id, are executed with the same T1 topology and primary_scored budget.",
+    "expected_episode_count": 8,
+    "runs": [
+      {
+        "model_id": "M1",
+        "label": "Qwen3.5-4B",
+        "path": "data/agent-eval/model-comparison-v1/screening/m1-qwen35-t1-development-8"
+      },
+      {
+        "model_id": "M2",
+        "label": "Qwen3-4B-Instruct-2507",
+        "path": "data/agent-eval/model-comparison-v1/screening/m2-qwen3-t1-development-8"
+      },
+      {
+        "model_id": "M5",
+        "label": "EXAONE-4.0-1.2B",
+        "path": "data/agent-eval/model-comparison-v1/screening/m5-exaone-t1-development-8"
+      }
+    ]
+  },
+  "protocol_checks": [
+    {
+      "model_id": "M1",
+      "label": "Qwen3.5-4B",
+      "role": "A1",
+      "kind": "control",
+      "path": "data/agent-eval/model-comparison-v1/protocol-controls/m1-qwen35-a1"
+    },
+    {
+      "model_id": "M1",
+      "label": "Qwen3.5-4B",
+      "role": "A4",
+      "kind": "control",
+      "path": "data/agent-eval/model-comparison-v1/protocol-controls/m1-qwen35-a4"
+    },
+    {
+      "model_id": "M3",
+      "label": "MedGemma-1.5-4B",
+      "role": "A4",
+      "kind": "challenger",
+      "path": "data/agent-eval/model-comparison-v1/protocol-probes/m3-medgemma-a4"
+    },
+    {
+      "model_id": "M4",
+      "label": "Nanbeige4-3B-Thinking-2511",
+      "role": "A1",
+      "kind": "challenger",
+      "path": "data/agent-eval/model-comparison-v1/protocol-probes/m4-nanbeige-a1"
+    }
+  ],
+  "selection_rule": {
+    "order": [
+      "all_expected_checks_passed_rate",
+      "expected_records_referenced_rate",
+      "allowed_tool_sequence_match_rate",
+      "expected_final_status_match_rate",
+      "fewer_format_repairs",
+      "lower_mean_generation_latency"
+    ],
+    "meaning": "Selects only a desktop automated-development candidate for the current A1/A4 contract. It cannot select a medical or mobile-release model."
+  },
+  "limitations": [
+    "The DS-AGENT source is compiler_generated_unreviewed and evaluation_eligible=false.",
+    "The eight-case screen is a staged engineering screen, not a benchmark score.",
+    "Protocol checks contain one component-projection case per role and test interface compatibility only.",
+    "MedGemma and Nanbeige are not assigned a medical-quality rank when their current interface contract fails.",
+    "No result in this experiment can satisfy a medical release gate without an approved knowledge snapshot and independent clinical review."
+  ]
+}

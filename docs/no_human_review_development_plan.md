@@ -114,7 +114,7 @@ T1~T3의 A1 gold 요청 exact match는 모두 0%였다. 여기에는 날짜·검
 - [x] 승인 의료 지식이 없을 때 의학 설명을 안전 보류함
 - [x] 결과 manifest가 미검수·비출시 상태를 자동으로 표시함
 
-추가 모델 다운로드와 T4 역할별 특화 모델 실험은 위 결과에서 Qwen3.5-4B의 특정 역할 실패가 반복적으로 확인될 때만 진행한다.
+추가 모델 선별은 완료했다. Qwen3.5-4B·Qwen3-4B·EXAONE 1.2B의 동일 T1 8건과 MedGemma 1.5 4B·Nanbeige4-3B의 목표 역할 protocol probe 결과는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 고정했다. Qwen3.5만 데스크톱 기술 후보로 유지하며, 더 큰 T4 역할별 특화 실험은 현재 실패를 개선할 구체적인 프롬프트·constrained decoding·검색 가설이 있을 때만 재개한다.
 
 ## 6. 검수 자원이 끝내 확보되지 않는 경우의 제품 범위
 

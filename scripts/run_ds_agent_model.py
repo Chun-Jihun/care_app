@@ -25,6 +25,7 @@ try:
         EXECUTION_MODE,
         ModelRunnerError,
         PROMPT_VERSION,
+        LockedTransformersNf4Backend,
         Qwen35Nf4Backend,
         ReplayRoleBackend,
         RoleModelBackend,
@@ -61,6 +62,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
         EXECUTION_MODE,
         ModelRunnerError,
         PROMPT_VERSION,
+        LockedTransformersNf4Backend,
         Qwen35Nf4Backend,
         ReplayRoleBackend,
         RoleModelBackend,
@@ -90,7 +92,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
     )
 
 
-SCRIPT_VERSION = "0.3.0"
+SCRIPT_VERSION = "0.4.0"
 CHECKPOINT_SCHEMA_VERSION = "1.0"
 
 
@@ -614,7 +616,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--topology", choices=TOPOLOGY_IDS, default="T3")
     parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--backend", choices=("qwen35-nf4", "replay"), required=True)
+    parser.add_argument(
+        "--backend", choices=("locked-nf4", "qwen35-nf4", "replay"), required=True
+    )
     parser.add_argument("--replay-jsonl", type=Path)
     parser.add_argument(
         "--runtime-profile",
@@ -624,7 +628,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runtime-profile-id", default="RT-M1-HF-BNB-NF4-WIN-001")
     parser.add_argument(
         "--generation-profile",
-        choices=("smoke", "primary_scored", "supplier_recommended_secondary"),
+        choices=(
+            "smoke",
+            "primary_scored",
+            "protocol_probe",
+            "supplier_recommended_secondary",
+        ),
         default="primary_scored",
     )
     parser.add_argument("--seed", type=int)
@@ -643,7 +652,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.replay_jsonl is not None:
                 raise ModelRunnerError("--replay-jsonl is only valid for replay backend")
             profile_path = _resolve_inside(root, args.runtime_profile)
-            backend = Qwen35Nf4Backend(
+            backend_class = (
+                Qwen35Nf4Backend
+                if args.backend == "qwen35-nf4"
+                else LockedTransformersNf4Backend
+            )
+            backend = backend_class(
                 root,
                 profile_path,
                 profile_id=args.runtime_profile_id,

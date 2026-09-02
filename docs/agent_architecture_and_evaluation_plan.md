@@ -413,16 +413,17 @@ T1~T3의 A1 gold 요청 exact match는 모두 0%였다. exact match는 날짜·�
 
 따라서 첫 단계에서는 같은 모델로 T0~T3를 비교해 **구조 효과**를 먼저 측정한다. T4의 역할별 특화 모델은 그 뒤에 비교한다.
 
-### 12.2 모델 다운로드 순서
+### 12.2 모델 다운로드와 실제 비교 상태
 
-| 단계 | 모델 | 다운로드 여부 | 첫 용도 | 준비할 파일·정보 |
+| 단계 | 모델 | 다운로드·실행 상태 | 첫 용도 | 현재 판단 |
 |---|---|---|---|---|
-| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **공식 원본·manifest, 데스크톱 load-time NF4 프로필, T1~T3 각 48건 자동 개발 진단 완료** | T1~T3에서 동일 모델을 사용한 구조 비교 | [`RT-M1-HF-BNB-NF4-WIN-001`](./qwen35_local_runtime_decision.md) 사용. T1은 비통과 개선 기준선이며 제품·의료 모델 채택을 뜻하지 않음 |
-| M2 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | M1 실험 뒤 | 범용 4B 기준선과 모델 세대 효과 | M1과 같은 manifest 항목 |
-| M3 | [MedGemma 1.5 4B](https://huggingface.co/google/medgemma-1.5-4b-it) | T0~T3 뒤 선택 | A4 근거 제한 설명의 의료 특화 비교 | 이용조건 동의 기록, 공식 원본·tokenizer·config, revision·해시 |
-| M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | 도구 선택 오류가 확인될 때만 | A1 코디네이터의 도구 호출 특화 비교 | 정확히 `2511` 리비전, 커스텀 코드 보안 검토, 해시 |
+| M1 | [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | **원본·revision·파일 hash 고정, NF4 T1~T3 48건과 동일 8건 모델 비교 완료** | T1~T3 구조 비교와 A1/A4 범용 기준선 | 8건에서 전체 계약·기록 참조 각각 **62.5%**. 현재 데스크톱 기술 후보지만 제품·의료·모바일 모델로 선정하지 않음 |
+| M2 | [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) | **원본·revision·파일 hash 고정, 동일 T1 8건 완료** | 범용 4B 기준선과 모델 세대 효과 | JSON은 유효했으나 전체 계약 **0%**, 기록 참조 **12.5%**, 8건 모두 보류. 더 빠르고 VRAM이 작아도 정확도 우선 기준에서 M1보다 후순위 |
+| M3 | [MedGemma 1.5 4B](https://huggingface.co/google/medgemma-1.5-4b-it) | **원본·revision·파일 hash 고정, A4 protocol probe 1건 완료** | A4 근거 제한 설명의 의료 특화 비교 | 2,048-token과 1회 수리 후에도 단일 JSON 계약에 실패. 현재 인터페이스로 확대 실행하지 않으며 의료 지식 품질의 열위로 해석하지 않음 |
+| M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | **원본·revision·파일 hash 고정, `trust_remote_code=false` A1 protocol probe 1건 완료** | A1 코디네이터의 도구 호출 특화 비교 | 첫 출력 스키마 오류 뒤 2,048-token 수리도 실패. 현재 JSON 계약과 추론 예산에는 부적합하며 모델별 constrained decoding 가설이 있을 때 재시험 |
+| M5 | [EXAONE-4.0-1.2B](https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B) | **원본·revision·파일 hash 고정, 동일 T1 8건 완료** | 한국어 소형·온디바이스 하한 기준선 | 최대 VRAM **1.54 GiB**로 가장 작지만 A1 필수 필드 누락이 수리 후에도 반복되어 전체 계약 **0%**. 현재 계약의 단독 에이전트 후보에서는 제외 |
 
-첫 다운로드는 M1 하나로 충분하다. M2~M4는 M1을 이용한 T0~T3 결과에서 실제 비교 필요성이 확인된 뒤 받는다.
+다섯 모델은 모두 로컬에서 실제 load·생성을 수행했다. 비교 원본과 실행 프로필은 `model_comparison_v1` lock으로 분리했고 결과는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 고정했다. 이 8건 선별과 역할별 1건 protocol probe는 다음 실험 가설을 정하기 위한 자동 개발 진단이며 의료 성능 순위가 아니다.
 
 다음은 첫 실험에서 다운로드하지 않는다.
 
@@ -500,9 +501,10 @@ experiments/agent_eval/results/
 5. **프로젝트 자동 개발 평가 하네스 — 완료:** 실제 모델 JSON runner, checkpoint/resume, 역할별 채점과 자동 통합 report를 구현했다.
 6. **T0~T3 비교 — 완료:** 동일한 M1과 48개 fixture에서 구조 효과, 호출·지연과 실패 단계를 비교했다.
 7. **공개 구성요소 연결 smoke — 완료:** 원천별 2건으로 backend·renderer·grader 연결과 미채점 이유를 확인했다.
-8. **모바일 skeleton — 다음 단계:** 기술스택, 암호화 저장, migration과 기록 CRUD를 우선 구현한다.
-9. **추가 모델·T4 — 보류:** 모바일 기반 이후 A1 실패를 개선할 명확한 가설과 실행 예산이 있을 때만 재개한다.
-10. **의료 E2E·출시 판정 — 차단:** 승인 snapshot과 임상 검수 없이는 실행 결과를 만들거나 활성화하지 않는다.
+8. **다운로드 후보 모델 선별 비교 — 완료:** M1·M2·M5는 같은 T1 development 8건, M3·M4는 목표 역할의 2,048-token protocol probe로 실제 로컬 호출했다. M1만 데스크톱 기술 후보로 유지하며 어느 모델도 의료용으로 선정하지 않았다.
+9. **모바일 skeleton — 다음 단계:** 기술스택, 암호화 저장, migration과 기록 CRUD를 우선 구현한다.
+10. **추가 모델·T4 — 보류:** 모바일 기반 이후 A1 실패 또는 역할별 계약 호환성을 개선할 명확한 가설과 실행 예산이 있을 때만 재개한다.
+11. **의료 E2E·출시 판정 — 차단:** 승인 snapshot과 임상 검수 없이는 실행 결과를 만들거나 활성화하지 않는다.
 
 다음 조건은 충족됐다. 따라서 이 선행 연구의 1차 단계를 종료하고 모바일 skeleton과 저장계층 구현을 본격화한다.
 
@@ -524,3 +526,4 @@ experiments/agent_eval/results/
 8. [SLM·VLM·RAG 검증 계획](./slm_rag_validation_plan.md) — 전체 hard gate, 데이터와 실행 절차
 9. [모델·RAG 데이터 카탈로그](./model_and_rag_data_catalog.md) — 데이터별 출처, 권리와 채택 상태
 10. [Qwen3.5-4B 로컬 추론 런타임·양자화 결정](./qwen35_local_runtime_decision.md) — 첫 데스크톱 실험의 고정 환경과 모바일 검증 경계
+11. [로컬 모델 비교 실험 V1](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md) — 다섯 로컬 모델의 동일 T1 선별·역할 계약 probe와 기술 후보 판단

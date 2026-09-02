@@ -14,6 +14,7 @@
 - 합성 48개 `DS-AGENT` oracle fixture, 결정적 읽기 전용 도구 host와 SHA-256 체인 trace를 구현·smoke 실행한 상태. 이는 모델 성능이나 의료 출시 결과가 아님
 - 실제 모델 출력을 A1~A5 JSON 계약, 결정적 도구 host와 A5 hard gate에 연결하는 DS-AGENT bundle runner를 구현·replay 통합시험한 상태
 - 첫 데스크톱 Qwen3.5-4B 실행을 Windows·Python 3.12·Transformers 5.16.1·bitsandbytes NF4/BF16 프로필로 고정하고, T1~T3 각각 48건 자동 개발 진단과 통합 보고서까지 완료한 상태. 어떤 생성 토폴로지도 전체 계약을 통과하지 못했으며 의료 사용 모델은 선택하지 않음
+- 다운로드한 Qwen3.5-4B·Qwen3-4B·MedGemma 1.5 4B·Nanbeige4-3B-Thinking·EXAONE 1.2B의 revision·파일 hash와 공통 NF4 프로필을 고정하고 실제 로컬 비교를 완료한 상태. 동일 T1 8건에서 Qwen3.5가 전체 계약·기록 참조 62.5%로 가장 높아 데스크톱 기술 후보로만 유지하며 의료·제품·모바일 모델은 미선정
 - e약은요 전체 raw snapshot을 staged·review catalog로 변환했으며, 임상 검수 품목 선정 전인 `awaiting_selection` 상태
 - 현재 사람·임상 검수 자원을 확보하지 못한 것으로 가정하므로 자동 결과는 개발 진단으로만 사용하고, 승인 지식·의료 답변·의료 출시 게이트는 차단한 상태
 - 에이전트 역할·도구·토폴로지와 원인 분석을 앱 skeleton보다 먼저 검증하는 연구 트랙을 최우선으로 전환
@@ -49,6 +50,7 @@
 | 15 | [DS-AGENT A1~A5 로컬 모델 runner](./docs/ds_agent_model_runner.md) | 실제 모델 JSON을 역할 계약·도구 host·hard gate에 연결하는 실행 경로와 재현 명령 |
 | 16 | [사람 검수 없는 자동화 개발 트랙](./docs/no_human_review_development_plan.md) | 자동화로 계속할 수 있는 실험, 차단되는 의료 주장과 모바일 기록 중심 전환 기준 |
 | 17 | [자동화 에이전트 평가 결과](./experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md) | T0~T3 실제 실행, 공개 구성요소 연결 smoke와 비출시 결론 |
+| 18 | [로컬 모델 비교 실험 V1](./experiments/agent_eval/results/model_comparison_v1/model_comparison.md) | 다섯 모델의 동일 T1 선별·역할별 protocol probe, 자원 측정과 관찰된 실패 원인 |
 
 ## 현재 최우선 작업
 
@@ -60,7 +62,7 @@
 4. 식사·복약·증상·활동·첨부파일/OCR 순으로 확장한다.
 5. 승인 snapshot과 임상 검수가 없으므로 생성형 의료 Q&A와 임상 위험 규칙은 비활성 feature gate 뒤에 둔다.
 
-자동 결과에서 T1은 기대 상태 72.9%, 기록 참조 50.0%로 가장 나은 생성형 구성이었지만 전체 계약을 통과하지 못한 개발 기준선일 뿐이다. T3는 호출과 지연이 늘고 A2·A3의 생성 실패면이 추가됐다. 공개 AgentBench·BFCL·ToolBench 점수와 이번 2건 구성요소 smoke는 후보·연결 진단 자료이며 프로젝트 의료 성능이 아니다.
+자동 결과에서 Qwen3.5 T1은 기존 48건에서 기대 상태 72.9%, 기록 참조 50.0%였고, 새 동일 8건 모델 비교에서는 전체 계약·기록 참조가 각각 62.5%였다. Qwen3는 기록 참조 12.5%, EXAONE은 A1 스키마 실패로 전체 계약 0%였고, MedGemma와 Nanbeige는 목표 역할 1건의 긴 protocol probe에서도 현재 JSON 계약을 충족하지 못했다. 따라서 Qwen3.5를 데스크톱 개발 기준선으로 유지하지만 전체 계약을 통과하지 못했고 표본도 미검수이므로 의료 성능이나 제품 채택 근거가 아니다.
 
 ## 초기 MVP 범위
 
@@ -93,7 +95,7 @@
 |---|---|---|
 | 애플리케이션 | 로컬 우선, 오프라인 기록과 조회 | 플랫폼 미정 |
 | 저장소 | 환자별 분리, 암호화 DB·사진 저장소·수정 이력 | 제품·암호화 방식 미정 |
-| 텍스트·멀티모달 모델 | Qwen3.5-4B, MedGemma 1.5 4B와 한국어·저사양 후보 비교 | Qwen3.5-4B 데스크톱 NF4 T1~T3 자동 개발 진단 완료, 비통과 T1을 개선 기준선으로만 유지. 제품·의료 모델 미선정 |
+| 텍스트·멀티모달 모델 | Qwen3.5-4B, Qwen3-4B, MedGemma 1.5 4B, Nanbeige4-3B, EXAONE 1.2B | 공통 데스크톱 NF4 선별 완료. Qwen3.5를 A1/A4 기술 후보로만 유지하고 제품·의료·모바일 모델은 미선정 |
 | OCR | 범용 VLM, 한국어 VLM, 전용 OCR+필드 파서와 수동 입력 기준선 비교 | 평가 전 |
 | RAG | 승인 스냅샷 기반 혼합 검색과 재순위화 | 임베딩·재순위 모델 미정 |
 | 안전 | LLM보다 먼저 실행하는 구조화 규칙 엔진 | 규칙 승인자·첫 질환 범위 미정 |

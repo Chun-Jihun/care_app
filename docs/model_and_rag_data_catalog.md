@@ -2,7 +2,7 @@
 
 - 문서 상태: 조사 완료 후보 목록, 도입 승인 전
 - 조사 기준일: 2026-08-29
-- 모델 비교군 반영일: 2026-08-31
+- 모델 비교군 반영일: 2026-09-02
 - 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 검증 계획: [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md)
 
@@ -208,11 +208,11 @@ e약은요의 실제 `staged → approved` 검수 패킷, 결정 형식, 승격 
 2. **약 정보 파일럿**: 첫 텍스트 도메인을 복약 기록과 일반 약 정보 이해로 제한하고, e약은요의 소규모 원본 스냅샷을 만든다.
 3. **구조화 안전 데이터**: DUR은 자유생성 RAG가 아니라 규칙·구조화 조회 실험에 필요한 범위만 별도 스냅샷으로 준비한다.
 4. **동일 모델 구조 비교**: Qwen3.5-4B 하나로 단일 에이전트와 역할 분리 구성을 먼저 비교해 모델 차이와 구조 차이를 섞지 않는다.
-5. **추가 모델 필요성 결정**: 첫 오류 분포를 확인한 뒤 Qwen3-4B, MedGemma 1.5 4B 또는 Nanbeige 중 필요한 후보만 추가한다.
+5. **추가 모델 선별 비교 — 완료**: Qwen3-4B·MedGemma 1.5 4B·Nanbeige4-3B·EXAONE 1.2B를 내려받아 revision·hash를 고정하고, 동일 T1 8건 또는 목표 역할 protocol probe를 실행했다. 결과는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)을 따른다.
 6. **학습 필요성 결정**: zero/few-shot 프로젝트 기준선이 앱 전용 도구·구조화 출력 게이트를 못 넘을 때만 xLAM 60k 일부와 앱 전용 검수 샘플을 이용한 LoRA를 검토한다.
 7. **음식·OCR·질환 확장**: 첫 텍스트 실험을 마친 뒤 식품영양성분DB, AI Hub OCR과 질환별 문서를 각각 별도 계획으로 준비한다.
 
-따라서 초기에는 AgentBench, BFCL, ToolBench, xLAM 60k, APIGen-MT-5k와 AI Hub 헬스케어 QA 전체를 일괄 다운로드하지 않는다.
+따라서 다음 확장에서는 AgentBench 전체 실행환경, ToolBench, xLAM 60k, APIGen-MT-5k와 AI Hub 헬스케어 QA 전체를 구체적인 실패 개선 가설 없이 추가 다운로드하지 않는다. 이미 확보한 BFCL 등 공개 평가 원천은 `do_not_train=true`인 구성요소 진단 자료로만 유지한다.
 
 ## 10. 아직 결정해야 할 사항
 

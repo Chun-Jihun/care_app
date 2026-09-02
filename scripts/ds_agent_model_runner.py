@@ -47,7 +47,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
     )
 
 
-SCRIPT_VERSION = "0.2.1"
+SCRIPT_VERSION = "0.3.0"
 PROMPT_VERSION = "ds-agent-role-json-v0.2.2"
 EXECUTION_MODE = "local_model_a1_to_a5_contract"
 TOPOLOGY_VERSION = "ds-agent-topology-v0.1.0"
@@ -1686,7 +1686,20 @@ def _load_runtime_profile(path: Path, profile_id: str) -> tuple[dict[str, Any], 
     matches = [value for value in profiles if isinstance(value, dict) and value.get("id") == profile_id]
     if len(matches) != 1:
         raise ModelRunnerError(f"runtime profile ID must match exactly once: {profile_id}")
-    profile_value = dict(matches[0])
+    defaults = document.get("defaults", {})
+    if not isinstance(defaults, Mapping):
+        raise ModelRunnerError("runtime profile defaults must be an object")
+
+    def merge(base: Mapping[str, Any], override: Mapping[str, Any]) -> dict[str, Any]:
+        result = dict(base)
+        for key, value in override.items():
+            if isinstance(value, Mapping) and isinstance(result.get(key), Mapping):
+                result[key] = merge(result[key], value)  # type: ignore[arg-type]
+            else:
+                result[key] = value
+        return result
+
+    profile_value = merge(defaults, matches[0])
     if profile_value.get("decision_status") != "accepted_for_initial_desktop_evaluation":
         raise ModelRunnerError("runtime profile is not accepted")
     policy = profile_value.get("policy")
@@ -1782,15 +1795,15 @@ def _verify_locked_model(root: Path, profile: Mapping[str, Any]) -> tuple[Path, 
     return model_path, actual_lock_hash
 
 
-class Qwen35Nf4Backend:
-    """Lazy, fully-local Qwen3.5-4B NF4 backend for the selected Windows profile."""
+class LockedTransformersNf4Backend:
+    """Fully-local, lock-verified NF4 backend for an allowlisted model profile."""
 
     def __init__(
         self,
         workspace_root: Path,
         runtime_profile_path: Path,
         *,
-        profile_id: str = "RT-M1-HF-BNB-NF4-WIN-001",
+        profile_id: str,
         generation_profile: str = "primary_scored",
         seed: int | None = None,
     ) -> None:
@@ -1827,12 +1840,15 @@ class Qwen35Nf4Backend:
         try:
             import torch  # type: ignore[import-not-found]
             from transformers import (  # type: ignore[import-not-found]
+                AutoModelForCausalLM,
+                AutoModelForMultimodalLM,
                 AutoProcessor,
+                AutoTokenizer,
                 BitsAndBytesConfig,
                 Qwen3_5ForConditionalGeneration,
             )
         except ImportError as exc:
-            raise ModelRunnerError("selected Qwen3.5 runtime packages are not installed") from exc
+            raise ModelRunnerError("selected Transformers NF4 runtime packages are not installed") from exc
         try:
             installed = {
                 name: importlib.metadata.version(name)
@@ -1854,12 +1870,38 @@ class Qwen35Nf4Backend:
                 raise ModelRunnerError(
                     f"runtime package mismatch: {name}={installed.get(name)} != {required}"
                 )
-        if runtime.get("linear_attention_kernel") != "pytorch_reference":
-            raise ModelRunnerError("linear-attention kernel choice is not fixed")
-        if any(importlib.util.find_spec(name) is not None for name in ("fla", "causal_conv1d")):
-            raise ModelRunnerError(
-                "optional linear-attention kernels are installed but not allowed by this profile"
-            )
+        loader = profile_value.get("loader")
+        if not isinstance(loader, Mapping):
+            # Backward-compatible interpretation of the immutable M1 profile.
+            loader = {
+                "frontend_class": "AutoProcessor",
+                "model_class": "Qwen3_5ForConditionalGeneration",
+                "output_adapter": "plain_json",
+                "frontend_kwargs": {},
+            }
+        frontend_name = loader.get("frontend_class")
+        model_class_name = loader.get("model_class")
+        frontends = {
+            "AutoProcessor": AutoProcessor,
+            "AutoTokenizer": AutoTokenizer,
+        }
+        model_classes = {
+            "AutoModelForCausalLM": AutoModelForCausalLM,
+            "AutoModelForMultimodalLM": AutoModelForMultimodalLM,
+            "Qwen3_5ForConditionalGeneration": Qwen3_5ForConditionalGeneration,
+        }
+        if frontend_name not in frontends or model_class_name not in model_classes:
+            raise ModelRunnerError("runtime profile loader class is not allowlisted")
+        if model_class_name == "Qwen3_5ForConditionalGeneration":
+            if runtime.get("linear_attention_kernel") != "pytorch_reference":
+                raise ModelRunnerError("linear-attention kernel choice is not fixed")
+            if any(
+                importlib.util.find_spec(name) is not None
+                for name in ("fla", "causal_conv1d")
+            ):
+                raise ModelRunnerError(
+                    "optional linear-attention kernels are installed but not allowed by this profile"
+                )
         if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
             raise ModelRunnerError("CUDA and native BF16 support are required")
         model_path, model_lock_hash = _verify_locked_model(root, profile_value)
@@ -1873,22 +1915,36 @@ class Qwen35Nf4Backend:
             bnb_4bit_quant_storage=torch.uint8,
             bnb_4bit_use_double_quant=quant["double_quant"],
         )
+        frontend_kwargs = loader.get("frontend_kwargs", {})
+        if not isinstance(frontend_kwargs, Mapping):
+            raise ModelRunnerError("runtime frontend kwargs must be an object")
+        forbidden_frontend_kwargs = {"trust_remote_code", "local_files_only"}.intersection(
+            frontend_kwargs
+        )
+        if forbidden_frontend_kwargs:
+            raise ModelRunnerError("runtime frontend kwargs override a security policy")
+        model_kwargs: dict[str, Any] = {
+            "local_files_only": True,
+            "trust_remote_code": False,
+            "quantization_config": quantization_config,
+            "dtype": torch.bfloat16,
+            "device_map": runtime["device_map"],
+        }
+        if runtime.get("attention_implementation"):
+            model_kwargs["attn_implementation"] = runtime["attention_implementation"]
         try:
-            self._processor = AutoProcessor.from_pretrained(
-                str(model_path), local_files_only=True, trust_remote_code=False
-            )
-            self._model = Qwen3_5ForConditionalGeneration.from_pretrained(
+            self._frontend = frontends[str(frontend_name)].from_pretrained(
                 str(model_path),
                 local_files_only=True,
                 trust_remote_code=False,
-                quantization_config=quantization_config,
-                dtype=torch.bfloat16,
-                device_map=runtime["device_map"],
-                attn_implementation=runtime["attention_implementation"],
+                **dict(frontend_kwargs),
+            )
+            self._model = model_classes[str(model_class_name)].from_pretrained(
+                str(model_path), **model_kwargs
             )
         except Exception as exc:
             raise ModelRunnerError(
-                f"Qwen3.5 NF4 load failed without fallback: {type(exc).__name__}"
+                f"locked NF4 load failed without fallback: {type(exc).__name__}: {exc}"
             ) from exc
         self._model.eval()
         device_map = getattr(self._model, "hf_device_map", {})
@@ -1912,6 +1968,29 @@ class Qwen35Nf4Backend:
         self._generation = generation
         self._seed = seed
         self._installed = installed
+        self._frontend_name = str(frontend_name)
+        self._model_class_name = str(model_class_name)
+        self._output_adapter = str(loader.get("output_adapter", "plain_json"))
+        if self._output_adapter not in {
+            "plain_json",
+            "strip_closed_think_prefix",
+            "strip_medgemma_thought_prefix",
+        }:
+            raise ModelRunnerError("runtime output adapter is not allowlisted")
+        self._message_adapter = str(loader.get("message_adapter", "plain"))
+        if self._message_adapter not in {
+            "plain",
+            "merge_system_into_first_user",
+            "merge_system_and_adjacent_users",
+        }:
+            raise ModelRunnerError("runtime message adapter is not allowlisted")
+        chat_template_kwargs = generation_profiles.get("chat_template_kwargs", {})
+        if not isinstance(chat_template_kwargs, Mapping):
+            raise ModelRunnerError("chat template kwargs must be an object")
+        self._chat_template_kwargs = dict(chat_template_kwargs)
+        self._tokenize_add_special_tokens = bool(
+            loader.get("tokenize_add_special_tokens", False)
+        )
         properties = torch.cuda.get_device_properties(0)
         self._gpu = {
             "name": torch.cuda.get_device_name(0),
@@ -1922,7 +2001,7 @@ class Qwen35Nf4Backend:
     @property
     def metadata(self) -> Mapping[str, Any]:
         return {
-            "backend": "qwen35_transformers_bitsandbytes_nf4",
+            "backend": "locked_transformers_bitsandbytes_nf4",
             "runtime_profile_id": self._profile_id,
             "runtime_profile_sha256": self._profile_hash,
             "model_lock_sha256": self._model_lock_hash,
@@ -1932,6 +2011,10 @@ class Qwen35Nf4Backend:
             "packages": dict(self._installed),
             "gpu": dict(self._gpu),
             "model_path": self._model_path.as_posix(),
+            "frontend_class": self._frontend_name,
+            "model_class": self._model_class_name,
+            "output_adapter": self._output_adapter,
+            "message_adapter": self._message_adapter,
             "network_access": False,
             "local_files_only": True,
             "trust_remote_code": False,
@@ -1941,13 +2024,71 @@ class Qwen35Nf4Backend:
         messages = request.get("messages")
         if not isinstance(messages, list):
             raise ModelRunnerError("backend request messages must be an array")
-        prompt = self._processor.apply_chat_template(
-            messages,
+        adapted_messages = list(messages)
+        if self._message_adapter in {
+            "merge_system_into_first_user",
+            "merge_system_and_adjacent_users",
+        }:
+            system_parts = [
+                str(message.get("content"))
+                for message in messages
+                if isinstance(message, Mapping) and message.get("role") == "system"
+            ]
+            adapted_messages = [
+                dict(message)
+                for message in messages
+                if isinstance(message, Mapping) and message.get("role") != "system"
+            ]
+            first_user = next(
+                (
+                    message
+                    for message in adapted_messages
+                    if message.get("role") == "user"
+                    and isinstance(message.get("content"), str)
+                ),
+                None,
+            )
+            if first_user is None:
+                raise ModelRunnerError("message adapter requires a text user message")
+            if system_parts:
+                first_user["content"] = (
+                    "System constraints:\n"
+                    + "\n".join(system_parts)
+                    + "\n\nUser request:\n"
+                    + str(first_user["content"])
+                )
+            if self._message_adapter == "merge_system_and_adjacent_users":
+                merged_messages: list[dict[str, Any]] = []
+                for message in adapted_messages:
+                    if (
+                        merged_messages
+                        and message.get("role") == "user"
+                        and merged_messages[-1].get("role") == "user"
+                        and isinstance(message.get("content"), str)
+                        and isinstance(merged_messages[-1].get("content"), str)
+                    ):
+                        merged_messages[-1]["content"] = (
+                            str(merged_messages[-1]["content"])
+                            + "\n\nAdditional format correction:\n"
+                            + str(message["content"])
+                        )
+                    else:
+                        merged_messages.append(dict(message))
+                adapted_messages = merged_messages
+        prompt = self._frontend.apply_chat_template(
+            adapted_messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False,
+            **self._chat_template_kwargs,
         )
-        inputs = self._processor(text=[prompt], return_tensors="pt")
+        if self._frontend_name == "AutoProcessor":
+            inputs = self._frontend(text=[prompt], return_tensors="pt")
+        else:
+            inputs = self._frontend(
+                [prompt],
+                add_special_tokens=self._tokenize_add_special_tokens,
+                return_tensors="pt",
+            )
         input_tokens = int(inputs["input_ids"].shape[1])
         max_input = int(self._generation["max_input_tokens"])
         if input_tokens > max_input:
@@ -1966,15 +2107,28 @@ class Qwen35Nf4Backend:
             assert self._seed is not None
             self._torch.manual_seed(self._seed)
             self._torch.cuda.manual_seed_all(self._seed)
+        if "eos_token_id" in self._generation:
+            kwargs["eos_token_id"] = int(self._generation["eos_token_id"])
         self._torch.cuda.reset_peak_memory_stats(0)
         started = time.perf_counter()
         with self._torch.inference_mode():
             generated = self._model.generate(**inputs, **kwargs)
         generation_seconds = time.perf_counter() - started
         output_tokens = int(generated.shape[1] - input_tokens)
-        decoded = self._processor.batch_decode(
+        decoded = self._frontend.batch_decode(
             generated[:, input_tokens:], skip_special_tokens=True
         )[0]
+        original_output_sha256 = hashlib.sha256(decoded.encode("utf-8")).hexdigest()
+        output_adapter_applied = False
+        if self._output_adapter == "strip_closed_think_prefix":
+            stripped = decoded.lstrip()
+            if stripped.startswith("<think>") and "</think>" in stripped:
+                decoded = stripped.split("</think>", 1)[1].lstrip()
+                output_adapter_applied = True
+        elif self._output_adapter == "strip_medgemma_thought_prefix":
+            if "<unused95>" in decoded:
+                decoded = decoded.split("<unused95>", 1)[1].lstrip()
+                output_adapter_applied = True
         return ModelGeneration(
             raw_text=decoded,
             usage={
@@ -1987,7 +2141,30 @@ class Qwen35Nf4Backend:
                     if generation_seconds > 0
                     else None
                 ),
+                "unprocessed_output_sha256": original_output_sha256,
+                "output_adapter_applied": output_adapter_applied,
             },
+        )
+
+
+class Qwen35Nf4Backend(LockedTransformersNf4Backend):
+    """Backward-compatible wrapper for the original immutable Qwen3.5 profile."""
+
+    def __init__(
+        self,
+        workspace_root: Path,
+        runtime_profile_path: Path,
+        *,
+        profile_id: str = "RT-M1-HF-BNB-NF4-WIN-001",
+        generation_profile: str = "primary_scored",
+        seed: int | None = None,
+    ) -> None:
+        super().__init__(
+            workspace_root,
+            runtime_profile_path,
+            profile_id=profile_id,
+            generation_profile=generation_profile,
+            seed=seed,
         )
 
 
@@ -1995,6 +2172,7 @@ __all__ = [
     "EXECUTION_MODE",
     "ModelGeneration",
     "ModelRunnerError",
+    "LockedTransformersNf4Backend",
     "PROMPT_VERSION",
     "Qwen35Nf4Backend",
     "ROLE_SCHEMAS",

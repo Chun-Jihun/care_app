@@ -10,7 +10,11 @@ from pathlib import Path
 from typing import Sequence
 
 try:
-    from scripts.ds_agent_model_runner import ModelRunnerError, Qwen35Nf4Backend
+    from scripts.ds_agent_model_runner import (
+        LockedTransformersNf4Backend,
+        ModelRunnerError,
+        Qwen35Nf4Backend,
+    )
     from scripts.role_evaluation_harness import (
         HarnessError,
         MirageCachedRetrievalBackend,
@@ -19,7 +23,11 @@ try:
         run_request_bundle,
     )
 except ModuleNotFoundError:  # Direct execution: python scripts/<name>.py
-    from ds_agent_model_runner import ModelRunnerError, Qwen35Nf4Backend  # type: ignore
+    from ds_agent_model_runner import (  # type: ignore
+        LockedTransformersNf4Backend,
+        ModelRunnerError,
+        Qwen35Nf4Backend,
+    )
     from role_evaluation_harness import (
         HarnessError,
         MirageCachedRetrievalBackend,
@@ -99,10 +107,37 @@ def _parser() -> argparse.ArgumentParser:
     qwen.add_argument("--runtime-profile-id", default="RT-M1-HF-BNB-NF4-WIN-001")
     qwen.add_argument(
         "--generation-profile",
-        choices=("smoke", "primary_scored", "supplier_recommended_secondary"),
+        choices=(
+            "smoke",
+            "primary_scored",
+            "protocol_probe",
+            "supplier_recommended_secondary",
+        ),
         default="primary_scored",
     )
     qwen.add_argument("--seed", type=int)
+    locked = subparsers.add_parser(
+        "locked-nf4", help="비교 manifest에 잠긴 로컬 Transformers NF4 모델"
+    )
+    locked.add_argument(
+        "--runtime-profile",
+        type=Path,
+        default=Path(
+            "experiments/agent_eval/manifests/model_comparison_runtime_profiles_v1.json"
+        ),
+    )
+    locked.add_argument("--runtime-profile-id", required=True)
+    locked.add_argument(
+        "--generation-profile",
+        choices=(
+            "smoke",
+            "primary_scored",
+            "protocol_probe",
+            "supplier_recommended_secondary",
+        ),
+        default="primary_scored",
+    )
+    locked.add_argument("--seed", type=int)
     return parser
 
 
@@ -158,7 +193,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if args.runtime_profile.is_absolute()
                 else root / args.runtime_profile,
             )
-            backend = Qwen35Nf4Backend(
+            backend_class = (
+                Qwen35Nf4Backend
+                if args.backend == "qwen35-nf4"
+                else LockedTransformersNf4Backend
+            )
+            backend = backend_class(
                 root,
                 profile_path,
                 profile_id=args.runtime_profile_id,

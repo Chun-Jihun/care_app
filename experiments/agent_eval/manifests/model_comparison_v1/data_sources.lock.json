@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "generator": {
+    "script": "scripts/freeze_asset_manifests.py",
+    "version": "0.1.0",
+    "network_access": false
+  },
+  "license_checked_at": "2026-09-02",
+  "policy": {
+    "public_benchmarks_are_project_evaluation_only": true,
+    "evaluation_data_must_not_be_used_for_finetuning": true,
+    "raw_medical_sources_require_staging_and_clinical_approval": true,
+    "mobile_bundle_requires_explicit_approved_snapshot": true
+  },
+  "data_sources": []
+}

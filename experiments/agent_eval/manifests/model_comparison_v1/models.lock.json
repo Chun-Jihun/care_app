@@ -1,0 +1,575 @@
+{
+  "schema_version": "1.0",
+  "generator": {
+    "script": "scripts/freeze_asset_manifests.py",
+    "version": "0.1.0",
+    "network_access": false
+  },
+  "license_checked_at": "2026-09-02",
+  "models": [
+    {
+      "id": "M1",
+      "name": "Qwen3.5-4B",
+      "repository_id": "Qwen/Qwen3.5-4B",
+      "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "expected_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/qwen3.5_4b/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "A1_A4_reference",
+        "T1_model_comparison"
+      ],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "local_path": "models/qwen3.5_4b",
+      "required": true,
+      "availability": "present",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "revision_source": "huggingface_cache_tree_metadata",
+      "integrity": {
+        "algorithm": "sha256",
+        "coverage": "all_included_files_individually",
+        "excluded_directory_names": [
+          ".cache",
+          ".git",
+          "__pycache__"
+        ],
+        "excluded_file_names": [
+          ".DS_Store",
+          ".env",
+          "Thumbs.db"
+        ],
+        "file_count": 14,
+        "total_bytes": 9342907469
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1570,
+          "sha256": "34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11544,
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a"
+        },
+        {
+          "path": "README.md",
+          "bytes": 77661,
+          "sha256": "1406be1b6b8fd8a6545870da516912804756593628a1d0fb0a7965211e82a7bb"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 7756,
+          "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+        },
+        {
+          "path": "config.json",
+          "bytes": 3161,
+          "sha256": "ddc63e1c717afa86c865bb5e01313d89d72bb53b97ad4a8a03ba8510c0621670"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 3353259,
+          "sha256": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d"
+        },
+        {
+          "path": "model.safetensors-00001-of-00002.safetensors",
+          "bytes": 5329398688,
+          "sha256": "26a93f066e1916adb13453dae5a0c707c0fbc71299ed98779571a907b8e74c61"
+        },
+        {
+          "path": "model.safetensors-00002-of-00002.safetensors",
+          "bytes": 3990429408,
+          "sha256": "cb544bd9bfae93dc59b0f22b292f5933573854a7f9b97835c67060d7d910e188"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 76196,
+          "sha256": "cf3f798ee02ba45f9622aa8892a47369ab667d0afbf154ee7c2212de42e6302d"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 12807982,
+          "sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 16710,
+          "sha256": "316230d6a809701f4db5ea8f8fc862bc3a6f3229c937c174e674ff3ca0a64ac8"
+        },
+        {
+          "path": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": "7768af27c1fafa9cc9011c1dc20067e03f8915e03b63504550e11d5066986d13"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 6722759,
+          "sha256": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "Qwen3-4B-Instruct-2507",
+      "repository_id": "Qwen/Qwen3-4B-Instruct-2507",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+      "expected_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/qwen3_4b_instruct/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "A1_A4_general_baseline",
+        "T1_model_comparison"
+      ],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "local_path": "models/qwen3_4b_instruct",
+      "required": true,
+      "availability": "present",
+      "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "revision_source": "huggingface_cache_tree_metadata",
+      "integrity": {
+        "algorithm": "sha256",
+        "coverage": "all_included_files_individually",
+        "excluded_directory_names": [
+          ".cache",
+          ".git",
+          "__pycache__"
+        ],
+        "excluded_file_names": [
+          ".DS_Store",
+          ".env",
+          "Thumbs.db"
+        ],
+        "file_count": 13,
+        "total_bytes": 8060917568
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1570,
+          "sha256": "34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11343,
+          "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+        },
+        {
+          "path": "README.md",
+          "bytes": 8168,
+          "sha256": "8e3dd0c3b5b11897cc71092ccfe517bb7a9783479baa3665aad73c8d1a2041cd"
+        },
+        {
+          "path": "config.json",
+          "bytes": 727,
+          "sha256": "5beea1a4a34c62782bfb2f911c606741a3bab8f92d80a118fa053c28af12e8ba"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 238,
+          "sha256": "835fffe355c9438e7a25be099b3fccaa98350b83451f9fd2d99512e74f1ade48"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 1671839,
+          "sha256": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3"
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "bytes": 3957900840,
+          "sha256": "75311d91bb08cf0b882913da464a1e722a31fb44db35208663487efb7a3d8ed6"
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "bytes": 3987450520,
+          "sha256": "0b48adbb1f60e901153d91907ba11ce63bd4b8b584482e730f48808d055dfba1"
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "bytes": 99630640,
+          "sha256": "7dd39ccca5e4de123c74c14af44c9bf2eb75df33b4614382af0134528e060d5d"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 32819,
+          "sha256": "d6c42883a895dfef5b0080ed2116a1bcd764f558406b98923d675978a1abf29c"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 9377,
+          "sha256": "a62ff0a2472a0fa1b8eaabcb57c59b58afa42a22831dc141400b6e0cf2b65ce3"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 2776833,
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "MedGemma-1.5-4B-IT",
+      "repository_id": "google/medgemma-1.5-4b-it",
+      "source_url": "https://huggingface.co/google/medgemma-1.5-4b-it",
+      "expected_revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+      "license": {
+        "spdx": "LicenseRef-Health-AI-Developer-Foundations",
+        "status": "terms_accepted_at_download_and_recorded_in_model_card",
+        "evidence_path": "models/medgemma_1.5_4b/README.md"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "A4_A5_medical_specialization_challenger"
+      ],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "local_path": "models/medgemma_1.5_4b",
+      "required": true,
+      "availability": "present",
+      "revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+      "revision_source": "huggingface_cache_tree_metadata",
+      "integrity": {
+        "algorithm": "sha256",
+        "coverage": "all_included_files_individually",
+        "excluded_directory_names": [
+          ".cache",
+          ".git",
+          "__pycache__"
+        ],
+        "excluded_file_names": [
+          ".DS_Store",
+          ".env",
+          "Thumbs.db"
+        ],
+        "file_count": 15,
+        "total_bytes": 8639646105
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1570,
+          "sha256": "34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930"
+        },
+        {
+          "path": "README.md",
+          "bytes": 41503,
+          "sha256": "f27a352b40f1437ad0ef1cc070702cc15d5d0869fbb0c48c740d2bad09c01c95"
+        },
+        {
+          "path": "added_tokens.json",
+          "bytes": 35,
+          "sha256": "50b2f405ba56a26d4913fd772089992252d7f942123cc0a034d96424221ba946"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 1532,
+          "sha256": "7de1c58e208eda46e9c7f86397df37ec49883aeece39fb961e0a6b24088dd3c4"
+        },
+        {
+          "path": "config.json",
+          "bytes": 2551,
+          "sha256": "300c724c2c1fcdea39f1e21865cb1b14a605f1e3bb5ef50550faaa48da944fc8"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 115,
+          "sha256": "921a391e0d387377b4c4a05273a68b7bc2196cf2a272ee605007853ea37f3224"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "bytes": 4961251752,
+          "sha256": "5e4c75b0ef1fb009caee567ab244f9e354e915fda748d1b76179cc453a39b4b5"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "bytes": 3639026128,
+          "sha256": "958e39df78c35ddb812fbcb8b5e7f46e07f1b153c1589f2d3f0b41c3b0748d30"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 90558,
+          "sha256": "77f4b67de084c31c7bcd373b039908108eee6c6181607e6d53da730e5f0bc659"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 570,
+          "sha256": "5b2f684b616a25f3cd4a700e5e471a07fcaabc5ec07871d2231b7e376e8648ce"
+        },
+        {
+          "path": "processor_config.json",
+          "bytes": 70,
+          "sha256": "3ffd5f11778dc73e2b69b3c00535e4121e1badf7018136263cd17b5b34fbaa53"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 662,
+          "sha256": "2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 33384570,
+          "sha256": "7d4046bf0505a327dd5a0abbb427ecd4fc82f99c2ceaa170bc61ecde12809b0c"
+        },
+        {
+          "path": "tokenizer.model",
+          "bytes": 4689074,
+          "sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 1155415,
+          "sha256": "88269475414d45d3e59892d3519b0d4e28ec6416fecf6b523fb986cbe452075f"
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "name": "Nanbeige4-3B-Thinking-2511",
+      "repository_id": "Nanbeige/Nanbeige4-3B-Thinking-2511",
+      "source_url": "https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511",
+      "expected_revision": "396a1fb7a5e1a87941b321b4da85bc510b424d00",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_local_model_card_front_matter",
+        "evidence_path": "models/nanbeige4_3b_thinking/README.md"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "A1_tool_selection_challenger"
+      ],
+      "remote_code_policy": "must_load_with_trust_remote_code_false_or_be_excluded",
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "local_path": "models/nanbeige4_3b_thinking",
+      "required": true,
+      "availability": "present",
+      "revision": "396a1fb7a5e1a87941b321b4da85bc510b424d00",
+      "revision_source": "huggingface_cache_tree_metadata",
+      "integrity": {
+        "algorithm": "sha256",
+        "coverage": "all_included_files_individually",
+        "excluded_directory_names": [
+          ".cache",
+          ".git",
+          "__pycache__"
+        ],
+        "excluded_file_names": [
+          ".DS_Store",
+          ".env",
+          "Thumbs.db"
+        ],
+        "file_count": 17,
+        "total_bytes": 7889746894
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1769,
+          "sha256": "6bd8d7dee63c0ab6e246754d41006f1efe5815431a75db90333626e12863c439"
+        },
+        {
+          "path": "Nanbeige4-3B-Technical-Report.pdf",
+          "bytes": 610647,
+          "sha256": "f98631b379cf45a0f7423a01166f9b96af6e693ccacc5bbe0874a76ec6cc1070"
+        },
+        {
+          "path": "README.md",
+          "bytes": 5363,
+          "sha256": "c4b5219fcc153948d77a0dec9c15f942fad0ece12d39085ff6ebb099337a995e"
+        },
+        {
+          "path": "added_tokens.json",
+          "bytes": 174,
+          "sha256": "9e3b127a27647df2c353cc1e5500826f7cdbe8bd15a458e368bba8422e9719cf"
+        },
+        {
+          "path": "config.json",
+          "bytes": 753,
+          "sha256": "c23de7709317b4953842e4dc6bd6b3325d5989a4180bbe0038c148c6b1c86299"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 142,
+          "sha256": "762de61aa816a028146e845d59b435e11295fbf18e9a7696c0c87df5c85be359"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "bytes": 4987548472,
+          "sha256": "e77e09d9243c1a8b53477cf47c948efc2f25c031a6b606c603813149961ad64b"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "bytes": 2879759592,
+          "sha256": "b6d0473dcbf375a55074555a1a96c6548a280a508aa2ccb84c5384d1ba32217b"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 23949,
+          "sha256": "a60eb66f9bdec151e50a581f82dffc246196016cac1e4ea422c9f429e82c0d3b"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 623,
+          "sha256": "b718fce2b7a8940ffeddc1e67f3b092cc0d13ac885c63a021528786f8c4cf6c0"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 18451122,
+          "sha256": "1d8f0326910136aca20831249220b38ce5299527647bc8c6b65404485c479740"
+        },
+        {
+          "path": "tokenizer.model",
+          "bytes": 2782298,
+          "sha256": "fb41d04798b714520a9b075727b0226538b7330254299062742c50ec8374bc36"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 7927,
+          "sha256": "edac1eb1274d082ddb8736b0aeda31a817824ce6d758be926f1a3f9f97f091f1"
+        },
+        {
+          "path": "figures/nbg.png",
+          "bytes": 15639,
+          "sha256": "a8da0574aadbd88453fe662bc741379316d7ef353dc1631ed0870e3dfd3e9db0"
+        },
+        {
+          "path": "figures/nbg_performance.png",
+          "bytes": 179853,
+          "sha256": "0a3ad52df2a216cf7867ca678fb678e9c632b843f910552524252a9f08f77f1a"
+        },
+        {
+          "path": "figures/performance_2511.png",
+          "bytes": 304917,
+          "sha256": "7cd4d45102a187a2e388f008f33645d9b296ce6431435f21cc4773937db76ffc"
+        },
+        {
+          "path": "figures/performance_reasoning.png",
+          "bytes": 53654,
+          "sha256": "825ff2a6f633b47cade7b8825f42b28ec392fa963248d7fdd06be945d4fd7675"
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "name": "EXAONE-4.0-1.2B",
+      "repository_id": "LGAI-EXAONE/EXAONE-4.0-1.2B",
+      "source_url": "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B",
+      "expected_revision": "3abf2810673c7c0778df64a73c2d52eab32d91c4",
+      "license": {
+        "spdx": "LicenseRef-EXAONE",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/exaone_4.0_1.2b/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": [
+        "A1_A4_Korean_small_baseline",
+        "on_device_lower_bound"
+      ],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "local_path": "models/exaone_4.0_1.2b",
+      "required": true,
+      "availability": "present",
+      "revision": "3abf2810673c7c0778df64a73c2d52eab32d91c4",
+      "revision_source": "huggingface_cache_tree_metadata",
+      "integrity": {
+        "algorithm": "sha256",
+        "coverage": "all_included_files_individually",
+        "excluded_directory_names": [
+          ".cache",
+          ".git",
+          "__pycache__"
+        ],
+        "excluded_file_names": [
+          ".DS_Store",
+          ".env",
+          "Thumbs.db"
+        ],
+        "file_count": 13,
+        "total_bytes": 2570269094
+      },
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1561,
+          "sha256": "04bc81cb0b1a143a2f8bbeb55e04b607a85d509407eec07eb1cc47cea0e42284"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 13288,
+          "sha256": "8c1762fb4bd94c8f17e114c5caa567e0948e1da7d02b79b55e99be9616e0f9e3"
+        },
+        {
+          "path": "README.md",
+          "bytes": 37088,
+          "sha256": "78f32c0424a98b3b734d8f002da71e4cbc92d96838fca7303b2cf599fc3b4f17"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 5487,
+          "sha256": "de64119ec8394ec3619221283a05fc8019c9a319cbdf2a471fe1ee8c36119616"
+        },
+        {
+          "path": "config.json",
+          "bytes": 1527,
+          "sha256": "ad7066d57fbcd93591fa0c6bc96953a58c7b890c25e62f64721cedb023a7de8f"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 134,
+          "sha256": "425292e9803c79d440d3bfbf02b71a301ca3db439371161fc4388e1f076dfb82"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 1219196,
+          "sha256": "cec041befc96a8eac947c36940412fa22412458824e822d9c5d60f82b0906970"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 2558821288,
+          "sha256": "fa02ceaa9abd917c7421a05e05a02dba7e3f23008e72270a7e766d44fc8b168c"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 6704,
+          "sha256": "b91ce1519418fce1756efb80de1459069887df7b73a6b6bf08da6cd62ce62f37"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 7909232,
+          "sha256": "523b110391fc95d5c90ee3eaa05d65d21da1ef25b5766254307aceda9eb24a5b"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 70315,
+          "sha256": "541bbf1dcafbe5e26b015eacdb785a2758e99f9a15e3b7fd548866311e62eda7"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 1934190,
+          "sha256": "b2044b7b1c5109cf181ac11967b8617d67b48ca571fbc5ebff996be75f9d64b2"
+        },
+        {
+          "path": "assets/EXAONE_Symbol+BI_3d.png",
+          "bytes": 249084,
+          "sha256": "c473c63768e9303c02a4f968fd2e7d41df3f669fedc6a7b51c4398cfcd7f23e4"
+        }
+      ]
+    }
+  ]
+}

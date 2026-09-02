@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "license_checked_at": "2026-09-02",
+  "models": [
+    {
+      "id": "M1",
+      "name": "Qwen3.5-4B",
+      "local_path": "models/qwen3.5_4b",
+      "repository_id": "Qwen/Qwen3.5-4B",
+      "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "expected_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/qwen3.5_4b/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": ["A1_A4_reference", "T1_model_comparison"],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    },
+    {
+      "id": "M2",
+      "name": "Qwen3-4B-Instruct-2507",
+      "local_path": "models/qwen3_4b_instruct",
+      "repository_id": "Qwen/Qwen3-4B-Instruct-2507",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+      "expected_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/qwen3_4b_instruct/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": ["A1_A4_general_baseline", "T1_model_comparison"],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    },
+    {
+      "id": "M3",
+      "name": "MedGemma-1.5-4B-IT",
+      "local_path": "models/medgemma_1.5_4b",
+      "repository_id": "google/medgemma-1.5-4b-it",
+      "source_url": "https://huggingface.co/google/medgemma-1.5-4b-it",
+      "expected_revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+      "license": {
+        "spdx": "LicenseRef-Health-AI-Developer-Foundations",
+        "status": "terms_accepted_at_download_and_recorded_in_model_card",
+        "evidence_path": "models/medgemma_1.5_4b/README.md"
+      },
+      "precision": "upstream_original",
+      "intended_use": ["A4_A5_medical_specialization_challenger"],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    },
+    {
+      "id": "M4",
+      "name": "Nanbeige4-3B-Thinking-2511",
+      "local_path": "models/nanbeige4_3b_thinking",
+      "repository_id": "Nanbeige/Nanbeige4-3B-Thinking-2511",
+      "source_url": "https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511",
+      "expected_revision": "396a1fb7a5e1a87941b321b4da85bc510b424d00",
+      "license": {
+        "spdx": "Apache-2.0",
+        "status": "verified_from_local_model_card_front_matter",
+        "evidence_path": "models/nanbeige4_3b_thinking/README.md"
+      },
+      "precision": "upstream_original",
+      "intended_use": ["A1_tool_selection_challenger"],
+      "remote_code_policy": "must_load_with_trust_remote_code_false_or_be_excluded",
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    },
+    {
+      "id": "M5",
+      "name": "EXAONE-4.0-1.2B",
+      "local_path": "models/exaone_4.0_1.2b",
+      "repository_id": "LGAI-EXAONE/EXAONE-4.0-1.2B",
+      "source_url": "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B",
+      "expected_revision": "3abf2810673c7c0778df64a73c2d52eab32d91c4",
+      "license": {
+        "spdx": "LicenseRef-EXAONE",
+        "status": "verified_from_bundled_license",
+        "evidence_path": "models/exaone_4.0_1.2b/LICENSE"
+      },
+      "precision": "upstream_original",
+      "intended_use": ["A1_A4_Korean_small_baseline", "on_device_lower_bound"],
+      "mobile_deployment_status": "not_yet_quantized_or_device_validated",
+      "required": true
+    }
+  ],
+  "data_sources": []
+}

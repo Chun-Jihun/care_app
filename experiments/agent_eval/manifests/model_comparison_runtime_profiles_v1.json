@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.0",
+  "decided_at": "2026-09-02",
+  "comparison_id": "MODEL-COMPARISON-V1",
+  "defaults": {
+    "decision_status": "accepted_for_initial_desktop_evaluation",
+    "execution_status": "download_verified_smoke_pending",
+    "scope": [
+      "A1_A4_role_screening",
+      "DS_AGENT_T1_model_comparison"
+    ],
+    "target_hardware": {
+      "gpu": "NVIDIA GeForce RTX 3060 Ti",
+      "vram_mib": 8192,
+      "compute_capability": "8.6",
+      "observed_driver": "610.88"
+    },
+    "runtime": {
+      "os": "windows_x86_64",
+      "python": "3.12",
+      "engine": "transformers_in_process",
+      "device": "cuda:0",
+      "device_map": {"": "cuda:0"},
+      "attention_implementation": "sdpa",
+      "batch_size": 1,
+      "packages": {
+        "torch": "2.12.1+cu126",
+        "torchvision": "0.27.1+cu126",
+        "transformers": "5.16.1",
+        "accelerate": "1.14.0",
+        "bitsandbytes": "0.50.2",
+        "pillow": "12.3.0"
+      }
+    },
+    "quantization": {
+      "stage": "load_time",
+      "loader": "BitsAndBytesConfig",
+      "weight_bits": 4,
+      "quant_type": "nf4",
+      "compute_dtype": "bfloat16",
+      "storage_dtype": "uint8",
+      "double_quant": false,
+      "serialized_quantized_artifact": false,
+      "identity_rule": "model_lock_sha256_plus_runtime_profile_sha256"
+    },
+    "loader": {
+      "frontend_class": "AutoTokenizer",
+      "model_class": "AutoModelForCausalLM",
+      "frontend_kwargs": {},
+      "tokenize_add_special_tokens": false,
+      "output_adapter": "plain_json",
+      "message_adapter": "plain"
+    },
+    "generation": {
+      "mode": "non_thinking_or_contract_output",
+      "chat_template_kwargs": {},
+      "smoke": {
+        "do_sample": false,
+        "max_input_tokens": 4096,
+        "max_new_tokens": 512
+      },
+      "primary_scored": {
+        "do_sample": false,
+        "max_input_tokens": 4096,
+        "max_new_tokens": 512
+      },
+      "protocol_probe": {
+        "do_sample": false,
+        "max_input_tokens": 4096,
+        "max_new_tokens": 2048
+      },
+      "supplier_recommended_secondary": {
+        "do_sample": true,
+        "temperature": 0.6,
+        "top_p": 0.9,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "max_input_tokens": 4096,
+        "max_new_tokens": 512,
+        "seed_set": [1701, 1702, 1703, 1704, 1705]
+      }
+    },
+    "policy": {
+      "local_files_only": true,
+      "network_access": false,
+      "trust_remote_code": false,
+      "cpu_or_disk_offload": false,
+      "automatic_precision_fallback": false,
+      "patient_data_allowed": false,
+      "evaluation_data_only": true
+    },
+    "acceptance": {
+      "environment_version_match_required": true,
+      "model_lock_verification_required": true,
+      "cuda_bfloat16_support_required": true,
+      "all_parameters_on_cuda_required": true,
+      "offline_smoke_required": true,
+      "peak_vram_measurement_required": true,
+      "medical_hard_gates_must_not_regress": true
+    },
+    "mobile_deployment": {
+      "status": "not_selected_requires_separate_device_validation",
+      "reason": "Desktop NF4 screening is not an Android runtime or quantization decision."
+    }
+  },
+  "profiles": [
+    {
+      "id": "RT-CMP-M1-QWEN35-NF4-WIN-001",
+      "model": {
+        "asset_id": "M1",
+        "repository_id": "Qwen/Qwen3.5-4B",
+        "local_path": "models/qwen3.5_4b",
+        "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+        "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f",
+        "config_sha256": "ddc63e1c717afa86c865bb5e01313d89d72bb53b97ad4a8a03ba8510c0621670"
+      },
+      "runtime": {
+        "linear_attention_kernel": "pytorch_reference"
+      },
+      "loader": {
+        "frontend_class": "AutoProcessor",
+        "model_class": "Qwen3_5ForConditionalGeneration"
+      },
+      "generation": {
+        "chat_template_kwargs": {"enable_thinking": false}
+      },
+      "comparison_role_scope": ["A1", "A4", "T1"]
+    },
+    {
+      "id": "RT-CMP-M2-QWEN3-NF4-WIN-001",
+      "model": {
+        "asset_id": "M2",
+        "repository_id": "Qwen/Qwen3-4B-Instruct-2507",
+        "local_path": "models/qwen3_4b_instruct",
+        "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+        "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f",
+        "config_sha256": "5beea1a4a34c62782bfb2f911c606741a3bab8f92d80a118fa053c28af12e8ba"
+      },
+      "comparison_role_scope": ["A1", "A4", "T1"]
+    },
+    {
+      "id": "RT-CMP-M3-MEDGEMMA15-NF4-WIN-001",
+      "model": {
+        "asset_id": "M3",
+        "repository_id": "google/medgemma-1.5-4b-it",
+        "local_path": "models/medgemma_1.5_4b",
+        "revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+        "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f",
+        "config_sha256": "300c724c2c1fcdea39f1e21865cb1b14a605f1e3bb5ef50550faaa48da944fc8"
+      },
+      "loader": {
+        "frontend_class": "AutoProcessor",
+        "model_class": "AutoModelForMultimodalLM",
+        "message_adapter": "merge_system_and_adjacent_users",
+        "output_adapter": "strip_medgemma_thought_prefix"
+      },
+      "comparison_role_scope": ["A4", "A5"]
+    },
+    {
+      "id": "RT-CMP-M4-NANBEIGE-NF4-WIN-001",
+      "model": {
+        "asset_id": "M4",
+        "repository_id": "Nanbeige/Nanbeige4-3B-Thinking-2511",
+        "local_path": "models/nanbeige4_3b_thinking",
+        "revision": "396a1fb7a5e1a87941b321b4da85bc510b424d00",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+        "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f",
+        "config_sha256": "c23de7709317b4953842e4dc6bd6b3325d5989a4180bbe0038c148c6b1c86299"
+      },
+      "loader": {
+        "frontend_kwargs": {"use_fast": false},
+        "output_adapter": "strip_closed_think_prefix"
+      },
+      "generation": {
+        "smoke": {"eos_token_id": 166101},
+        "primary_scored": {"eos_token_id": 166101},
+        "protocol_probe": {"eos_token_id": 166101},
+        "supplier_recommended_secondary": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "eos_token_id": 166101
+        }
+      },
+      "comparison_role_scope": ["A1"]
+    },
+    {
+      "id": "RT-CMP-M5-EXAONE12-NF4-WIN-001",
+      "model": {
+        "asset_id": "M5",
+        "repository_id": "LGAI-EXAONE/EXAONE-4.0-1.2B",
+        "local_path": "models/exaone_4.0_1.2b",
+        "revision": "3abf2810673c7c0778df64a73c2d52eab32d91c4",
+        "input_precision": "bfloat16",
+        "model_lock_path": "experiments/agent_eval/manifests/model_comparison_v1/models.lock.json",
+        "model_lock_sha256": "00b8a60365c907b5da228006fe699aa9137b48b04b3dbb19ac92fb2ee9c4891f",
+        "config_sha256": "ad7066d57fbcd93591fa0c6bc96953a58c7b890c25e62f64721cedb023a7de8f"
+      },
+      "comparison_role_scope": ["A1", "A4", "T1", "mobile_lower_bound"]
+    }
+  ]
+}
