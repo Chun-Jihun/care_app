@@ -34,7 +34,7 @@
 4. 각 후보가 한국어 간병 기록, 승인 문서 RAG와 환자 격리 과제를 실제로 얼마나 수행하는가?
 5. 성공·실패가 모델 자체, 검색, 도구 스키마, 에이전트 간 인계, 검증기 또는 양자화 중 어디에서 비롯됐는가?
 
-현재 저장소에는 동작하는 간병 에이전트가 아직 구현되어 있지 않다. 아래 역할과 구성은 **검증할 설계 가설**이며 확정 아키텍처가 아니다. 공개 모델 카드와 논문의 점수도 프로젝트 실험결과가 아니다. 프로젝트 데이터와 목표 장비에서 실행한 결과만 제품 성능으로 보고한다.
+현재 저장소에는 합성·비식별 평가 episode를 실행하는 T0~T3 연구용 runner와 결정적 도구 호스트가 구현되어 있다. 다만 실제 환자에게 의료 답변을 제공하는 제품 에이전트는 아직 구현·승인되지 않았다. 아래 역할과 구성은 **검증 중인 설계 가설**이며 확정 제품 아키텍처가 아니다. 공개 모델 카드와 논문의 점수도 프로젝트 실험결과가 아니다. 프로젝트 데이터와 목표 장비에서 실행한 결과만 제품 성능으로 보고한다.
 
 멀티에이전트의 채택 자체를 목표로 삼지 않는다. 동일한 안전조건을 만족하면 더 단순하고 빠르며 추적 가능한 구성을 선택한다. 역할을 논리적으로 분리하더라도 여러 역할이 하나의 모델 파일을 공유할 수 있고, 반대로 하나의 모델을 여러 번 호출했다고 해서 반드시 독립적인 에이전트 시스템으로 보지는 않는다.
 
@@ -145,6 +145,82 @@ flowchart TB
     T3 --> COMPARE
     T4 --> COMPARE
 ```
+
+### 4.4 현재 구현된 T1 비교 구성
+
+아래는 최종 제품 구성이 아니라 `model_comparison_v1`에서 실제로 동일 실행한 T1 경로다. 후보 LLM 하나가 A1과 A4를 맡고, A2·A3·A5 및 도구 실행은 모든 후보에서 동일한 결정적 코드로 고정했다.
+
+```mermaid
+flowchart LR
+    INPUT[평가 질문<br/>선택 환자 범위] --> SG{사전 안전 게이트}
+    SG -- 중단 --> SAFE[안전 경로<br/>일반 실행 중단]
+    SG -- 계속 --> A1[A1 코디네이터<br/>후보 LLM]
+    A1 --> J1{A1 JSON 계약}
+    J1 -. 최초 실패 .-> R1[형식 수리<br/>최대 1회]
+    R1 --> J1
+    J1 -- 최종 실패 --> CLOSED[fail-closed<br/>도구 실행 안 함]
+    J1 -- 통과 --> HOST[결정적 도구 호스트<br/>환자 범위·허용 목록·인자·예산 검사]
+    CARE[(합성 간병기록)] --> HOST
+    HOST --> SEARCH[기록 검색<br/>A1 요청]
+    SEARCH --> DETAIL[기록 상세 조회<br/>호스트 자동 보완]
+    DETAIL --> A2[A2 기록 맥락 분석<br/>결정적 projection]
+    A2 --> A3[A3 승인 근거 묶음<br/>결정적 projection]
+    KB[(승인 지식 snapshot<br/>현재 8건에는 없음)] --> A3
+    A3 --> A4[A4 제한 답변 작성<br/>A1과 같은 후보 LLM]
+    A4 --> J4{A4 JSON 계약}
+    J4 -. 최초 실패 .-> R4[형식 수리<br/>최대 1회]
+    R4 --> J4
+    J4 -- 최종 실패 --> CLOSED
+    J4 -- 통과 --> A5{A5 근거·정책 검증<br/>결정적 hard gate}
+    A5 -- 통과 --> ANSWER[기록 답변 또는<br/>근거 제한 답변]
+    A5 -- 근거 부족 --> ABSTAIN[부분 기록 답변 뒤 보류<br/>또는 전체 보류]
+    A5 -. 제한된 재작성 1회 .-> A4
+    SAFE --> TRACE[SHA-256 연결 trace<br/>자동 채점]
+    CLOSED --> TRACE
+    ANSWER --> TRACE
+    ABSTAIN --> TRACE
+
+    classDef llm fill:#e8f0fe,stroke:#2563eb,color:#111827
+    classDef deterministic fill:#ecfdf5,stroke:#059669,color:#111827
+    classDef gate fill:#fff7ed,stroke:#ea580c,color:#111827
+    classDef data fill:#f3f4f6,stroke:#6b7280,color:#111827
+    class A1,A4 llm
+    class HOST,SEARCH,DETAIL,A2,A3,TRACE deterministic
+    class SG,J1,J4,A5,R1,R4,CLOSED,SAFE,ABSTAIN gate
+    class INPUT,CARE,KB,ANSWER data
+```
+
+- 파란색: 후보 LLM이 실제 생성한 역할
+- 초록색: 후보 모델과 무관하게 고정한 결정적 코드
+- 주황색: 계약·안전·보류를 강제하는 게이트
+- 회색: 입력, 저장 데이터 및 최종 산출물
+
+현재 T1에서 A2·A3·A5는 A1~A5 역할 계약의 이름을 사용하지만 자유생성 LLM 에이전트가 아니다. 모델은 DB나 도구를 직접 실행하지 않으며, 모든 도구 요청은 호스트가 환자 범위와 허용 규약을 검사한다. 현재 8건 비교에는 승인 지식 스냅샷이 없으므로 A3는 근거 없음 상태를 보존하고, A5가 약의 의학적 설명을 보류하게 한다.
+
+```mermaid
+flowchart TB
+    subgraph FULL[동일 DS-AGENT T1 8건 전체 실행]
+        M1[Qwen3.5-4B] --> SLOT[A1 + A4<br/>동일 모델 재사용]
+        M2[Qwen3-4B-Instruct-2507] --> SLOT
+        M5[EXAONE-4.0-1.2B] --> SLOT
+    end
+
+    subgraph PROBE[역할별 protocol probe 각 1건]
+        M1P[Qwen3.5-4B 대조군] --> PA1[A1 계약 시험]
+        M4[Nanbeige4-3B-Thinking-2511] --> PA1
+        M1P --> PA4[A4 계약 시험]
+        M3[MedGemma-1.5-4B] --> PA4
+    end
+
+    FIXED[A2 + A3 + A5 + 도구 호스트<br/>모든 T1 모델에서 동일한 결정적 코드] --- SLOT
+
+    classDef llm fill:#e8f0fe,stroke:#2563eb,color:#111827
+    classDef deterministic fill:#ecfdf5,stroke:#059669,color:#111827
+    class M1,M2,M3,M4,M5,M1P,SLOT,PA1,PA4 llm
+    class FIXED deterministic
+```
+
+MedGemma와 Nanbeige는 각각 A4와 A1의 1건 protocol probe만 실행했다. 따라서 이 두 결과는 JSON 역할 계약 연결 가능성 신호이며, Qwen3.5·Qwen3·EXAONE의 동일 T1 8건 E2E 결과와 직접 순위를 매길 수 없다. 상세 수치와 출력 예시는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 기록한다.
 
 ## 5. 역할별 LLM 후보
 
