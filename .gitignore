@@ -32,6 +32,19 @@ __pycache__/
 .ipynb_checkpoints/
 /temp.ipynb
 
+# Local mobile SDKs, dependency caches and build output
+/.tools/
+/mobile/.dart_tool/
+/mobile/build/
+/mobile/.flutter-plugins-dependencies
+/mobile/android/.gradle/
+/mobile/android/local.properties
+/mobile/ios/Pods/
+/mobile/ios/.symlinks/
+/mobile/ios/Flutter/ephemeral/
+/mobile/ios/Flutter/Generated.xcconfig
+/mobile/ios/Flutter/flutter_export_environment.sh
+
 # Logs and local coverage output
 *.log
 .coverage
