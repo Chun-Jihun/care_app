@@ -11,6 +11,8 @@ import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/app.dart';
 import 'package:care_notebook/domain/chat.dart';
+import 'package:care_notebook/domain/drafts.dart';
+import 'package:care_notebook/infrastructure/care_database.dart';
 
 import 'support.dart';
 
@@ -32,6 +34,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(() => c.setPin('123456'));
+    c.db.setDraftRetention(DraftRetention.month);
     await tester.pumpWidget(CareApp(controller: c));
     await tester.pumpAndSettle();
   }
@@ -162,16 +165,20 @@ void main() {
     await tester.pump();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('작성을 그만둘까요?'), findsOneWidget);
-    await tester.tap(find.text('취소'));
+    expect(find.text('작성 중인 내용을 어떻게 할까요?'), findsOneWidget);
+    await tester.tap(find.text('계속 작성'));
     await tester.pumpAndSettle();
     expect(find.text('잃으면 안 되는 합성 초안'), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('저장하지 않고 나가기'));
+    await tester.runAsync(() async {
+      await tester.tap(find.text('초안 삭제'));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
     await tester.pumpAndSettle();
     expect(find.text('오늘의 돌봄'), findsOneWidget);
     expect(c.entries, isEmpty);
+    expect(c.db.drafts(c.selectedId), isEmpty);
   });
   testWidgets(
     'CHAT-01/02/05 chat UI needs policy, requires visit confirmation and clears private routes',
@@ -206,6 +213,9 @@ void main() {
       expect(find.text('대화 시험 질문'), findsOneWidget);
       expect(c.visits, isEmpty);
       await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('작성 중인 내용을 어떻게 할까요?'), findsOneWidget);
+      await tester.tap(find.text('초안 보관 후 나가기'));
       await tester.pumpAndSettle();
       expect(find.text('간병 도우미'), findsOneWidget);
       expect(c.visits, isEmpty);

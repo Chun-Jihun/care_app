@@ -8,6 +8,11 @@ import 'package:uuid/uuid.dart';
 
 import '../domain/records.dart';
 import '../domain/chat.dart';
+import '../domain/drafts.dart';
+import '../domain/backup.dart';
+
+part 'database_drafts.dart';
+part 'database_backup.dart';
 
 /// Encrypted persistence only. UI/application decide patient scope explicitly.
 class CareDatabase {
@@ -15,7 +20,7 @@ class CareDatabase {
   final Database _db;
   final String directory;
   bool _closed = false;
-  static const schemaVersion = 2;
+  static const schemaVersion = 3;
   static String newId() => const Uuid().v7();
 
   static CareDatabase open(
@@ -54,12 +59,15 @@ class CareDatabase {
       store._migrate();
       store.verifyIntegrity();
       for (final name in ['care', 'identity']) {
-        final backup = File(p.join(directory, '$name.migration-v1.bak'));
-        if (backup.existsSync()) {
-          backup.deleteSync();
+        for (final version in [1, 2]) {
+          final backup = File(
+            p.join(directory, '$name.migration-v$version.bak'),
+          );
+          if (backup.existsSync()) backup.deleteSync();
         }
       }
       store.pruneChats();
+      store.pruneDrafts();
       return store;
     } catch (_) {
       db.close();
@@ -67,15 +75,21 @@ class CareDatabase {
     }
   }
 
+  int _transactionDepth = 0;
   T _transaction<T>(T Function() body) {
-    _db.execute('BEGIN IMMEDIATE');
+    final depth = _transactionDepth++;
+    final savepoint = 'care_$depth';
     try {
+      _db.execute(depth == 0 ? 'BEGIN IMMEDIATE' : 'SAVEPOINT $savepoint');
       final result = body();
-      _db.execute('COMMIT');
+      _db.execute(depth == 0 ? 'COMMIT' : 'RELEASE $savepoint');
       return result;
     } catch (_) {
-      _db.execute('ROLLBACK');
+      _db.execute(depth == 0 ? 'ROLLBACK' : 'ROLLBACK TO $savepoint');
+      if (depth != 0) _db.execute('RELEASE $savepoint');
       rethrow;
+    } finally {
+      _transactionDepth--;
     }
   }
 
@@ -91,6 +105,11 @@ class CareDatabase {
     }
     if (version == 1 && identityVersion == 1) {
       _upgradeChatSchema();
+      _upgradeDraftSchema();
+      return;
+    }
+    if (version == 2 && identityVersion == 2) {
+      _upgradeDraftSchema();
       return;
     }
     if (version != 0 || identityVersion != 0) {
@@ -142,6 +161,7 @@ class CareDatabase {
       ''');
     });
     _upgradeChatSchema();
+    _upgradeDraftSchema();
   }
 
   void _upgradeChatSchema() {

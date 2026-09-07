@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/records.dart';
 import '../domain/chat.dart';
+import '../domain/drafts.dart';
+import '../domain/backup.dart';
 import '../infrastructure/care_database.dart';
 import '../infrastructure/crypto.dart';
 import '../infrastructure/platform_services.dart';
@@ -22,6 +24,46 @@ class CareController extends ChangeNotifier {
   bool _vaultOpen = false;
   int _lockEpoch = 0;
   String? _reminderState;
+  final _draftFlushers = <VoidCallback>{};
+  bool _draftFlushFailed = false;
+  bool _flushingForLock = false;
+  int captureSession() {
+    _checkSession(_lockEpoch);
+    return _lockEpoch;
+  }
+
+  void requireSession(int session) => _checkSession(session);
+
+  void addDraftFlusher(VoidCallback flush) => _draftFlushers.add(flush);
+  void removeDraftFlusher(VoidCallback flush) => _draftFlushers.remove(flush);
+  void draftsChanged() {
+    if (unlocked) notifyListeners();
+  }
+
+  void saveDraftNow({
+    required String id,
+    required String? patientId,
+    required DraftType type,
+    required Map<String, dynamic> values,
+    required int session,
+    required bool create,
+    String? targetId,
+    String? base,
+  }) {
+    _checkSession(session);
+    if (busy && !_flushingForLock) {
+      throw const CareError('진행 중인 작업이 끝난 뒤 다시 시도해 주세요.');
+    }
+    db.saveDraft(
+      id: id,
+      patientId: patientId,
+      type: type,
+      values: values,
+      targetId: targetId,
+      base: base,
+      create: create,
+    );
+  }
 
   void _checkSession(int epoch, {bool requireUnlock = true}) {
     if (epoch != _lockEpoch || (requireUnlock && !unlocked)) {
@@ -38,6 +80,11 @@ class CareController extends ChangeNotifier {
     }
     final epoch = _lockEpoch;
     _checkSession(epoch, requireUnlock: requireUnlock);
+    if (requireUnlock) {
+      for (final flush in List<VoidCallback>.of(_draftFlushers)) {
+        flush();
+      }
+    }
     busy = true;
     notifyListeners();
     try {
@@ -248,6 +295,20 @@ class CareController extends ChangeNotifier {
   });
 
   void lock() {
+    if (unlocked) {
+      _flushingForLock = true;
+      try {
+        for (final flush in List<VoidCallback>.of(_draftFlushers)) {
+          try {
+            flush();
+          } catch (_) {
+            _draftFlushFailed = true;
+          }
+        }
+      } finally {
+        _flushingForLock = false;
+      }
+    }
     _sessionChats.clear();
     _lockEpoch++;
     unlocked = false;
@@ -274,6 +335,7 @@ class CareController extends ChangeNotifier {
       return;
     }
     db.pruneChats();
+    db.pruneDrafts();
     _sessionChats.removeWhere((pid, _) => !patients.any((p) => p.id == pid));
     if (!patients.any((p) => p.id == selectedId)) {
       if (patients.isEmpty) {
@@ -285,6 +347,10 @@ class CareController extends ChangeNotifier {
     notice = vault.maintenancePending
         ? '기록은 열렸습니다. 저장소 정리는 다음 실행 때 다시 시도합니다.'
         : null;
+    if (_draftFlushFailed) {
+      notice = '잠금 전 초안 저장에 실패했습니다. 마지막으로 저장된 초안부터 확인해 주세요.';
+      _draftFlushFailed = false;
+    }
     try {
       await vault.cleanup(removeOrphans: false);
     } catch (_) {
@@ -322,6 +388,7 @@ class CareController extends ChangeNotifier {
     final definitions = <String>[];
     if (notificationsEnabled) {
       for (final p in patients) {
+        if (db.setting('imported_muted:${p.id}') == 'true') continue;
         for (final t in db.tasks(p.id).where((t) => !t.done && t.reminder)) {
           final source = 'task:${p.id}:${t.id}';
           definitions.add('$source:${t.dueAt.millisecondsSinceEpoch}');
@@ -397,6 +464,30 @@ class CareController extends ChangeNotifier {
     _checkSession(epoch);
     await _external(() => platform.saveBackup(data));
   });
+
+  Future<void> exportSelection(String password, BackupSelection selection) =>
+      _exclusive((epoch) async {
+        final data = await vault.backupSelection(password, selection);
+        _checkSession(epoch);
+        await _external(() => platform.saveBackup(data));
+      });
+
+  Future<BackupPreview> inspectBackup(Uint8List data, String password) =>
+      _exclusive((epoch) async {
+        final result = await vault.inspectBackup(data, password);
+        _checkSession(epoch);
+        return result;
+      });
+
+  Future<void> importSelection(Uint8List data, String password) =>
+      _exclusive((epoch) async {
+        await vault.importSelection(
+          data,
+          password,
+          beforeCommit: () => _checkSession(epoch),
+        );
+        await _refresh();
+      });
 
   Future<Uint8List?> chooseBackup() => _exclusive((epoch) async {
     final data = await _external(platform.pickBackup);

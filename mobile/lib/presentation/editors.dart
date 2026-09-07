@@ -1,28 +1,59 @@
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
+import '../application/draft_session.dart';
+import '../domain/drafts.dart';
 import '../domain/records.dart';
 import 'common.dart';
+import 'draft_support.dart';
 
 Future<void> editEntry(
   BuildContext context,
   CareController c,
   EntryKind kind, {
   CareEntry? entry,
+  CareDraft? restored,
 }) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
   final pid = c.selectedId!;
-  final note = TextEditingController(text: entry?.note);
+  final data = restored?.values;
+  final note = TextEditingController(
+    text: data?['note'] as String? ?? entry?.note,
+  );
   final values = {
     for (final field in kind.fields)
-      field.key: TextEditingController(text: entry?.fields[field.key]),
+      field.key: TextEditingController(
+        text:
+            (data?['fields'] as Map?)?[field.key] as String? ??
+            entry?.fields[field.key],
+      ),
   };
-  var at = entry?.occurredAt ?? DateTime.now();
+  var at = data?['at'] == null
+      ? entry?.occurredAt ?? DateTime.now()
+      : DateTime.fromMillisecondsSinceEpoch(data!['at'] as int);
+  final draft = DraftSession(
+    c,
+    patientId: pid,
+    type: DraftType.entry,
+    targetId: entry?.id,
+    restored: restored,
+    snapshot: () => {
+      'kind': kind.name,
+      'note': note.text,
+      'at': at.millisecondsSinceEpoch,
+      'fields': {for (final e in values.entries) e.key: e.value.text},
+    },
+  );
   try {
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (ctx) => EditorPage(
           title: '${kind.label} ${entry == null ? '기록' : '수정'}',
+          draft: draft,
           content: (update) => [
             Text(
               '${c.patient.label} · 직접 작성한 기록',
@@ -68,7 +99,7 @@ Future<void> editEntry(
             ),
           ],
           save: () async {
-            await c.mutate(
+            await draft.complete(
               () => c.db.saveEntry(
                 pid,
                 id: entry?.id,
@@ -84,11 +115,13 @@ Future<void> editEntry(
       ),
     );
   } finally {
+    draft.dispose();
     note.dispose();
     for (final value in values.values) {
       value.dispose();
     }
   }
+  c.draftsChanged();
 }
 
 Future<void> editPatient(
@@ -165,17 +198,42 @@ Future<void> editMedication(
   BuildContext context,
   CareController c, {
   Medication? medication,
+  CareDraft? restored,
 }) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
+  final data = restored?.values;
   final pid = c.selectedId!,
-      name = TextEditingController(text: medication?.name),
-      instruction = TextEditingController(text: medication?.instruction),
-      times = TextEditingController(text: medication?.times.join(', '));
+      name = TextEditingController(
+        text: data?['name'] as String? ?? medication?.name,
+      ),
+      instruction = TextEditingController(
+        text: data?['instruction'] as String? ?? medication?.instruction,
+      ),
+      times = TextEditingController(
+        text: data?['times'] as String? ?? medication?.times.join(', '),
+      );
+  final draft = DraftSession(
+    c,
+    patientId: pid,
+    type: DraftType.medication,
+    targetId: medication?.id,
+    restored: restored,
+    snapshot: () => {
+      'name': name.text,
+      'instruction': instruction.text,
+      'times': times.text,
+    },
+  );
   try {
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
           title: medication == null ? '약 추가' : '처방 지시 기록',
+          draft: draft,
           content: (_) => [
             textField(name, '약 이름 *'),
             textField(instruction, '의료진의 처방·복용 지시 원문', multiline: true),
@@ -185,7 +243,7 @@ Future<void> editMedication(
             ),
           ],
           save: () async {
-            await c.mutate(
+            await draft.complete(
               () => c.db.saveMedication(
                 pid,
                 id: medication?.id,
@@ -204,28 +262,52 @@ Future<void> editMedication(
       ),
     );
   } finally {
+    draft.dispose();
     name.dispose();
     instruction.dispose();
     times.dispose();
   }
+  c.draftsChanged();
 }
 
 Future<void> recordIntake(
   BuildContext context,
   CareController c,
-  Medication medication,
-) async {
+  Medication medication, {
+  CareDraft? restored,
+}) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
+  final data = restored?.values;
   final pid = c.selectedId!,
-      reason = TextEditingController(),
-      reaction = TextEditingController();
-  var status = 'taken';
-  var at = DateTime.now();
+      reason = TextEditingController(text: data?['reason'] as String?),
+      reaction = TextEditingController(text: data?['reaction'] as String?);
+  var status = data?['status'] as String? ?? 'taken';
+  var at = data?['at'] == null
+      ? DateTime.now()
+      : DateTime.fromMillisecondsSinceEpoch(data!['at'] as int);
+  final draft = DraftSession(
+    c,
+    patientId: pid,
+    type: DraftType.intake,
+    targetId: medication.id,
+    restored: restored,
+    snapshot: () => {
+      'status': status,
+      'at': at.millisecondsSinceEpoch,
+      'reason': reason.text,
+      'reaction': reaction.text,
+    },
+  );
   try {
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (ctx) => EditorPage(
           title: '복약 기록',
+          draft: draft,
           content: (update) => [
             Text(medication.name, style: Theme.of(ctx).textTheme.headlineSmall),
             if (medication.instruction.isNotEmpty) Text(medication.instruction),
@@ -244,7 +326,7 @@ Future<void> recordIntake(
             textField(reaction, '관찰한 반응 (선택)', multiline: true),
           ],
           save: () async {
-            await c.mutate(
+            await draft.complete(
               () => c.db.recordIntake(
                 pid,
                 medication.id,
@@ -259,27 +341,55 @@ Future<void> recordIntake(
       ),
     );
   } finally {
+    draft.dispose();
     reason.dispose();
     reaction.dispose();
   }
+  c.draftsChanged();
 }
 
 Future<void> editTask(
   BuildContext context,
   CareController c, {
   CareTask? task,
+  CareDraft? restored,
 }) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
+  final data = restored?.values;
   final pid = c.selectedId!,
-      title = TextEditingController(text: task?.title),
-      note = TextEditingController(text: task?.note);
-  var at = task?.dueAt ?? DateTime.now().add(const Duration(hours: 1));
-  var reminder = task?.reminder ?? false;
+      title = TextEditingController(
+        text: data?['title'] as String? ?? task?.title,
+      ),
+      note = TextEditingController(
+        text: data?['note'] as String? ?? task?.note,
+      );
+  var at = data?['at'] == null
+      ? task?.dueAt ?? DateTime.now().add(const Duration(hours: 1))
+      : DateTime.fromMillisecondsSinceEpoch(data!['at'] as int);
+  var reminder = data?['reminder'] as bool? ?? task?.reminder ?? false;
+  final draft = DraftSession(
+    c,
+    patientId: pid,
+    type: DraftType.task,
+    targetId: task?.id,
+    restored: restored,
+    snapshot: () => {
+      'title': title.text,
+      'note': note.text,
+      'at': at.millisecondsSinceEpoch,
+      'reminder': reminder,
+    },
+  );
   try {
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (ctx) => EditorPage(
           title: task == null ? '할 일 추가' : '할 일 수정',
+          draft: draft,
           content: (update) => [
             textField(title, '할 일 *'),
             dateButton(ctx, at, update, (v) => at = v),
@@ -297,7 +407,7 @@ Future<void> editTask(
             ),
           ],
           save: () async {
-            await c.mutate(
+            await draft.complete(
               () => c.db.saveTask(
                 pid,
                 id: task?.id,
@@ -312,9 +422,11 @@ Future<void> editTask(
       ),
     );
   } finally {
+    draft.dispose();
     title.dispose();
     note.dispose();
   }
+  c.draftsChanged();
 }
 
 Future<void> editVisit(
@@ -322,27 +434,68 @@ Future<void> editVisit(
   CareController c, {
   VisitPreparation? visit,
   String? initialQuestions,
+  CareDraft? restored,
 }) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
+  final data = restored?.values;
   final pid = c.selectedId!,
-      title = TextEditingController(text: visit?.title),
+      title = TextEditingController(
+        text: data?['title'] as String? ?? visit?.title,
+      ),
       questions = TextEditingController(
-        text: visit?.questions ?? initialQuestions,
+        text:
+            data?['questions'] as String? ??
+            visit?.questions ??
+            initialQuestions,
       );
-  final selected = visit == null
+  final selected = data?['selected'] != null
+      ? Set<String>.from(data!['selected'] as List)
+      : visit == null
       ? <String>{}
       : c.db.visitEntries(pid, visit.id).map((e) => e.id).toSet();
   final entries = c.entries;
+  final availableEntryIds = entries.map((e) => e.id).toSet();
+  final draft = DraftSession(
+    c,
+    patientId: pid,
+    type: DraftType.visit,
+    targetId: visit?.id,
+    restored: restored,
+    snapshot: () => {
+      'title': title.text,
+      'questions': questions.text,
+      'selected': selected.toList()..sort(),
+    },
+  );
   try {
+    if (initialQuestions != null) draft.flush(force: true);
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
           title: visit == null ? '진료 준비' : '진료 준비 검토',
+          draft: draft,
           content: (update) => [
             textField(title, '진료 준비 제목 *', hint: '예: 다음 외래에서 확인할 내용'),
             textField(questions, '의료진에게 물어볼 질문', multiline: true),
             const Section('함께 볼 기록'),
             const Text('선택한 원본 기록을 모아 볼 수 있어요. 기록이 바뀌면 다시 확인하도록 표시합니다.'),
+            if (selected.any((id) => !availableEntryIds.contains(id))) ...[
+              const Text(
+                '초안에서 선택했던 원본 중 삭제된 기록이 있어요. 해당 연결을 제외한 뒤 저장할 수 있습니다.',
+              ),
+              OutlinedButton(
+                onPressed: () => update(
+                  () => selected.removeWhere(
+                    (id) => !availableEntryIds.contains(id),
+                  ),
+                ),
+                child: const Text('삭제된 원본 연결 제외'),
+              ),
+            ],
             if (entries.isEmpty) const Text('먼저 일기에 기록을 남겨 주세요.'),
             for (final e in entries)
               CheckboxListTile(
@@ -360,7 +513,7 @@ Future<void> editVisit(
               ),
           ],
           save: () async {
-            await c.mutate(
+            await draft.complete(
               () => c.db.saveVisit(
                 pid,
                 id: visit?.id,
@@ -374,22 +527,46 @@ Future<void> editVisit(
       ),
     );
   } finally {
+    draft.dispose();
     title.dispose();
     questions.dispose();
   }
+  c.draftsChanged();
 }
 
-Future<void> addCheckin(BuildContext context, CareController c) async {
-  final fatigue = TextEditingController(),
-      sleep = TextEditingController(),
-      stress = TextEditingController(),
-      note = TextEditingController();
+Future<void> addCheckin(
+  BuildContext context,
+  CareController c, {
+  CareDraft? restored,
+}) async {
+  if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
+      !context.mounted) {
+    return;
+  }
+  final data = restored?.values;
+  final fatigue = TextEditingController(text: data?['fatigue'] as String?),
+      sleep = TextEditingController(text: data?['sleep'] as String?),
+      stress = TextEditingController(text: data?['stress'] as String?),
+      note = TextEditingController(text: data?['note'] as String?);
+  final draft = DraftSession(
+    c,
+    patientId: null,
+    type: DraftType.checkin,
+    restored: restored,
+    snapshot: () => {
+      'fatigue': fatigue.text,
+      'sleep': sleep.text,
+      'stress': stress.text,
+      'note': note.text,
+    },
+  );
   try {
     await pushPage(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
           title: '돌보는 나의 상태',
+          draft: draft,
           content: (_) => [
             const Text('돌봄을 이어가는 내 상태를 적어 보세요. 환자의 일기와 따로 보관됩니다.'),
             textField(fatigue, '피로 정도'),
@@ -406,7 +583,7 @@ Future<void> addCheckin(BuildContext context, CareController c) async {
             ].every((c) => c.text.trim().isEmpty)) {
               throw const CareError('내 상태를 한 가지 이상 적어 주세요.');
             }
-            await c.mutate(
+            await draft.complete(
               () => c.db.addCheckin(
                 fatigue: fatigue.text,
                 sleep: sleep.text,
@@ -419,8 +596,10 @@ Future<void> addCheckin(BuildContext context, CareController c) async {
       ),
     );
   } finally {
+    draft.dispose();
     for (final t in [fatigue, sleep, stress, note]) {
       t.dispose();
     }
   }
+  c.draftsChanged();
 }

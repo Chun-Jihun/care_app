@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/records.dart';
+import '../application/draft_session.dart';
 
 const forest = Color(0xFF22664E);
 const ink = Color(0xFF223B32);
@@ -47,6 +48,7 @@ Future<bool> confirm(
       context: context,
       useRootNavigator: false,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text(title),
         content: Text(body),
         actions: [
@@ -176,6 +178,11 @@ class EntryTile extends StatelessWidget {
   );
 }
 
+/// A reviewed multistep action was cancelled; leave its form open quietly.
+class EditorCancelled implements Exception {
+  const EditorCancelled();
+}
+
 class EditorPage extends StatefulWidget {
   const EditorPage({
     super.key,
@@ -183,10 +190,12 @@ class EditorPage extends StatefulWidget {
     required this.content,
     required this.save,
     this.saveLabel = '저장',
+    this.draft,
   });
   final String title, saveLabel;
   final List<Widget> Function(StateSetter setState) content;
   final Future<void> Function() save;
+  final DraftSession? draft;
   @override
   State<EditorPage> createState() => _EditorPageState();
 }
@@ -196,19 +205,72 @@ class _EditorPageState extends State<EditorPage> {
   bool dirty = false, leaving = false, confirming = false;
   String? error;
   @override
+  void initState() {
+    super.initState();
+    dirty = widget.draft?.saved ?? false;
+  }
+
+  void changed() {
+    setState(() => dirty = true);
+    widget.draft?.changed();
+  }
+
+  @override
   Widget build(BuildContext context) => PopScope(
     canPop: !saving && (!dirty || leaving),
     onPopInvokedWithResult: (didPop, _) async {
       if (didPop || saving || confirming) return;
       confirming = true;
-      final discard = await confirm(
-        context,
-        '작성을 그만둘까요?',
-        '아직 저장하지 않은 내용이 있습니다.',
-        action: '저장하지 않고 나가기',
-      );
-      confirming = false;
-      if (!context.mounted || !discard) return;
+      var leave = false;
+      try {
+        if (widget.draft case final draft?) {
+          final choice = await showDialog<String>(
+            context: context,
+            useRootNavigator: false,
+            builder: (ctx) => AlertDialog(
+              title: const Text('작성 중인 내용을 어떻게 할까요?'),
+              content: const Text(
+                '초안은 기록으로 확정되지 않아요. 잠금을 해제한 뒤 이어서 작성할 수 있습니다.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('계속 작성'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 'discard'),
+                  child: const Text('초안 삭제'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, 'keep'),
+                  child: const Text('초안 보관 후 나가기'),
+                ),
+              ],
+            ),
+          );
+          if (!mounted) return;
+          if (choice == 'keep') {
+            draft.flush(force: true);
+            leave = true;
+          }
+          if (choice == 'discard') {
+            await draft.discard();
+            leave = true;
+          }
+        } else {
+          leave = await confirm(
+            context,
+            '작성을 그만둘까요?',
+            '아직 저장하지 않은 내용이 있습니다.',
+            action: '저장하지 않고 나가기',
+          );
+        }
+      } catch (e) {
+        if (mounted) setState(() => error = errorText(e));
+      } finally {
+        confirming = false;
+      }
+      if (!context.mounted || !leave) return;
       setState(() => leaving = true);
       await WidgetsBinding.instance.endOfFrame;
       if (context.mounted) Navigator.pop(context);
@@ -218,15 +280,25 @@ class _EditorPageState extends State<EditorPage> {
       body: AbsorbPointer(
         absorbing: saving,
         child: Form(
-          onChanged: () => setState(() => dirty = true),
+          onChanged: changed,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             children: [
+              if (widget.draft case final draft?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: draft.status,
+                    builder: (_, text, _) =>
+                        Text(text, style: const TextStyle(color: forest)),
+                  ),
+                ),
               ...widget
                   .content(
                     (action) => setState(() {
                       action();
                       dirty = true;
+                      widget.draft?.changed();
                     }),
                   )
                   .expand((w) => [w, const SizedBox(height: 16)]),
@@ -262,7 +334,7 @@ class _EditorPageState extends State<EditorPage> {
                     if (mounted) {
                       setState(() {
                         saving = false;
-                        error = errorText(e);
+                        error = e is EditorCancelled ? null : errorText(e);
                       });
                     }
                   }

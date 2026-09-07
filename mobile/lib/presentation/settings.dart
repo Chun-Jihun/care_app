@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/records.dart';
+import '../infrastructure/care_database.dart';
 import 'common.dart';
 import 'editors.dart';
+import 'draft_page.dart';
+import 'backup_page.dart';
 
 Widget contactCard(BuildContext context, CareController c) => Card(
   child: Column(
@@ -77,6 +80,22 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
           value: c.notificationsEnabled,
           onChanged: (v) => attempt(context, () => c.enableNotifications(v)),
         ),
+        if (c.db.setting('imported_muted:${c.selectedId}') != null)
+          SwitchListTile(
+            title: const Text('복원한 이 수첩의 알림 허용'),
+            subtitle: const Text(
+              '약 목록과 할 일의 시각을 검토한 뒤 켜 주세요. 전체 알림 설정도 켜져 있어야 합니다.',
+            ),
+            value: c.db.setting('imported_muted:${c.selectedId}') != 'true',
+            onChanged: (v) => attempt(context, () async {
+              await c.mutate(
+                () => c.db.setSetting(
+                  'imported_muted:${c.selectedId}',
+                  (!v).toString(),
+                ),
+              );
+            }),
+          ),
         FutureBuilder<bool>(
           future: c.deviceAuthEnabled,
           builder: (context, snapshot) => SwitchListTile(
@@ -97,6 +116,19 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
           onTap: c.lock,
         ),
       ],
+    ),
+  ),
+  const Section('초안 보관'),
+  Card(
+    child: ListTile(
+      leading: const Icon(Icons.edit_note, color: forest),
+      title: const Text('작성 중인 초안과 보관기간'),
+      subtitle: Text(c.db.draftRetention?.label ?? '처음 기록할 때 선택해요.'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => DraftPage(c)),
+      ),
     ),
   ),
   Section('돌보는 나', action: '상태 기록', onAction: () => addCheckin(context, c)),
@@ -144,14 +176,14 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
         ListTile(
           leading: const Icon(Icons.lock_outline, color: forest),
           title: const Text('암호화 백업 저장'),
-          subtitle: const Text('모든 수첩과 사진, 내 상태 기록 포함'),
+          subtitle: const Text('수첩·기간·사진·대화·내 상태를 선택'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => backupFlow(context, c),
         ),
         ListTile(
           leading: const Icon(Icons.restore, color: forest),
           title: const Text('백업에서 복원'),
-          subtitle: const Text('현재 수첩 전체를 백업 내용으로 교체'),
+          subtitle: const Text('선택 백업은 별도 수첩으로 추가'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => restoreFlow(context, c),
         ),
@@ -211,72 +243,4 @@ Future<void> changePin(BuildContext context, CareController c) async {
     a.dispose();
     b.dispose();
   }
-}
-
-Future<void> backupFlow(BuildContext context, CareController c) async {
-  final a = TextEditingController(), b = TextEditingController();
-  try {
-    await pushPage(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => EditorPage(
-          title: '암호화 백업 저장',
-          saveLabel: '암호화하고 저장 위치 선택',
-          content: (_) => [
-            const Text(
-              '모든 수첩을 하나의 암호화 파일로 저장합니다. 기기 잠금 번호와 다른, 12자 이상의 비밀번호를 정해 주세요.',
-            ),
-            textField(a, '백업 비밀번호 (12자 이상)', secret: true),
-            textField(b, '백업 비밀번호 확인', secret: true),
-          ],
-          save: () async {
-            if (a.text != b.text) {
-              throw const CareError('두 비밀번호가 일치하지 않습니다.');
-            }
-            await c.exportBackup(a.text);
-          },
-        ),
-      ),
-    );
-  } finally {
-    a.dispose();
-    b.dispose();
-  }
-}
-
-Future<void> restoreFlow(BuildContext context, CareController c) async {
-  await attempt(context, () async {
-    final data = await c.chooseBackup();
-    if (data == null || !context.mounted) {
-      return;
-    }
-    if (!await confirm(
-          context,
-          '이 백업으로 복원할까요?',
-          '현재 기기의 모든 수첩을 교체합니다. 지금 기록이 필요하다면 먼저 백업해 주세요. 백업 검증에 실패하면 현재 기록을 유지합니다.',
-          action: '계속',
-        ) ||
-        !context.mounted) {
-      return;
-    }
-    final password = TextEditingController();
-    try {
-      await pushPage(
-        context,
-        MaterialPageRoute<void>(
-          builder: (_) => EditorPage(
-            title: '백업 복원',
-            saveLabel: '검증하고 복원',
-            content: (_) => [
-              const Text('백업을 저장할 때 정한 비밀번호를 입력해 주세요. 현재 기기의 잠금 번호는 유지됩니다.'),
-              textField(password, '백업 비밀번호', secret: true),
-            ],
-            save: () => c.restoreBackup(data, password.text),
-          ),
-        ),
-      );
-    } finally {
-      password.dispose();
-    }
-  });
 }

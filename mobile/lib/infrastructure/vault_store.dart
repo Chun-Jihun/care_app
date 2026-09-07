@@ -7,8 +7,12 @@ import 'package:path/path.dart' as p;
 import 'package:image/image.dart' as img;
 
 import '../domain/records.dart';
+import '../domain/backup.dart';
+
 import 'care_database.dart';
 import 'crypto.dart';
+
+part 'selective_backup.dart';
 
 abstract interface class SecretStore {
   Future<String?> read(String key);

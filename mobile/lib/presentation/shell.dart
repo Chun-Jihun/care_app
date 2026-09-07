@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/records.dart';
+import '../infrastructure/care_database.dart';
 import 'common.dart';
 import 'details.dart';
 import 'editors.dart';
 import 'settings.dart';
 import 'chat_page.dart';
+import 'draft_page.dart';
 
 class CareShell extends StatefulWidget {
   const CareShell(this.c, {super.key});
@@ -156,6 +158,22 @@ class _CareShellState extends State<CareShell> {
                   key: ValueKey('$tab-${c.selectedId}'),
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
+                    if (c.db.draftCount(c.selectedId) > 0 ||
+                        c.db.draftCount(null) > 0)
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.edit_note, color: forest),
+                          title: const Text('작성 중인 초안이 있어요'),
+                          subtitle: const Text('확인하고 이어서 작성하기'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => DraftPage(c),
+                            ),
+                          ),
+                        ),
+                      ),
                     if (c.notice != null)
                       Card(
                         color: const Color(0xFFFFF1DB),
