@@ -4,6 +4,7 @@ import 'package:care_notebook/infrastructure/platform_services.dart';
 class MemorySecrets implements SecretStore {
   final values = <String, String>{};
   String? rejectKey;
+  String? rejectDeleteKey;
   @override
   Future<String?> read(String key) async => values[key];
   @override
@@ -16,6 +17,7 @@ class MemorySecrets implements SecretStore {
 
   @override
   Future<void> delete(String key) async {
+    if (key == rejectDeleteKey) throw StateError('injected delete failure');
     values.remove(key);
   }
 }

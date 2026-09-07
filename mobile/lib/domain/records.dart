@@ -146,7 +146,7 @@ void validateEntry(EntryKind kind, Map<String, String> fields, String note) {
   for (final field in kind.fields) {
     final value = (fields[field.key] ?? '').trim();
     if (field.required && value.isEmpty) {
-      throw CareError('${field.label}을 입력해 주세요.');
+      throw CareError('필수 항목을 입력해 주세요: ${field.label}');
     }
     if (value.length > 4000) {
       throw CareError('${field.label}은 4,000자 이내로 입력해 주세요.');
@@ -161,7 +161,7 @@ void validateEntry(EntryKind kind, Map<String, String> fields, String note) {
     if (field.choices.isNotEmpty &&
         value.isNotEmpty &&
         !field.choices.containsKey(value)) {
-      throw CareError('${field.label}을 다시 선택해 주세요.');
+      throw CareError('항목을 다시 선택해 주세요: ${field.label}');
     }
   }
   if (kind == EntryKind.generalNote && note.trim().isEmpty) {

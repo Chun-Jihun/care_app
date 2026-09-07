@@ -19,7 +19,7 @@ class EntryDetails extends StatelessWidget {
       if (!c.unlocked) {
         return const SizedBox.shrink();
       }
-      final e = c.db.entries(pid).where((e) => e.id == id).firstOrNull;
+      final e = c.db.entry(pid, id);
       if (e == null) {
         return Scaffold(
           appBar: AppBar(),
@@ -107,12 +107,13 @@ class EntryDetails extends StatelessWidget {
                   leading: const Icon(Icons.photo_outlined, color: forest),
                   title: const Text('첨부 사진'),
                   subtitle: Text('${(a.bytes / 1024).ceil()} KB'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => PhotoPage(c.vault.photo(pid, id, a.id)),
-                    ),
-                  ),
+                  onTap: () {
+                    final photo = c.photo(pid, id, a.id);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(builder: (_) => PhotoPage(photo)),
+                    );
+                  },
                   trailing: IconButton(
                     tooltip: '사진 삭제',
                     icon: const Icon(Icons.delete_outline),

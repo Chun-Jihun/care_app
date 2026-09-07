@@ -24,6 +24,95 @@ void main() {
     vault.close();
     await root.delete(recursive: true);
   });
+  test('REVIEW-04 rejects oversized PNG headers before allocating pixels', () {
+    final source = Uint8List.fromList(
+      img.encodePng(img.Image(width: 2, height: 2)),
+    );
+    final bytes = ByteData.sublistView(source);
+    bytes.setUint32(16, 100000);
+    bytes.setUint32(20, 100000);
+    var crc = 0xffffffff;
+    for (final byte in source.sublist(12, 29)) {
+      crc ^= byte;
+      for (var bit = 0; bit < 8; bit++) {
+        crc = (crc >> 1) ^ ((crc & 1) == 1 ? 0xedb88320 : 0);
+      }
+    }
+    bytes.setUint32(29, crc ^ 0xffffffff);
+    expect(
+      () => VaultStore.normalizePhoto(source),
+      throwsA(
+        isA<CareError>().having(
+          (e) => e.message,
+          'size error',
+          contains('2,400만'),
+        ),
+      ),
+    );
+  });
+
+  test(
+    'REVIEW-05 restore commit wins over a future legacy clock marker',
+    () async {
+      final p = vault.db.createPatient(alias: '복원할 수첩');
+      const password = 'review-backup-password';
+      final backup = await vault.backup(password);
+      vault.db.createPatient(alias: '복원 전 수첩');
+      final marker = (await Directory(
+        '${root.path}/commits',
+      ).list().toList()).single;
+      await marker.rename(
+        '${root.path}/commits/ffffffff-ffff-7fff-8fff-ffffffffffff.commit',
+      );
+      await vault.restore(backup, password);
+      vault.close();
+      vault = VaultStore(root, secrets);
+      await vault.open();
+      expect(vault.db.patients().single.id, p.id);
+    },
+  );
+  test(
+    'REVIEW-05 cleanup failure after commit keeps restored state usable',
+    () async {
+      final p = vault.db.createPatient(alias: '복원한 수첩');
+      const password = 'review-backup-password';
+      final backup = await vault.backup(password);
+      final originalKey = secrets.values.keys.single;
+      vault.db.createPatient();
+      secrets.rejectDeleteKey = originalKey;
+      await vault.restore(backup, password);
+      expect(vault.maintenancePending, true);
+      expect(vault.db.patients().single.id, p.id);
+      vault.close();
+      secrets.rejectDeleteKey = null;
+      vault = VaultStore(root, secrets);
+      await vault.open();
+      expect(vault.maintenancePending, false);
+      expect(vault.db.patients().single.id, p.id);
+      expect(secrets.values.containsKey(originalKey), false);
+    },
+  );
+
+  test(
+    'REVIEW-01/05 cancelled restore keeps original generation and keys',
+    () async {
+      vault.db.createPatient();
+      const password = 'review-backup-password';
+      final backup = await vault.backup(password);
+      final current = vault.db.createPatient(alias: '보존할 수첩');
+      final originalKeys = Map<String, String>.from(secrets.values);
+      await expectLater(
+        vault.restore(
+          backup,
+          password,
+          beforeCommit: () => throw const CareError('잠금'),
+        ),
+        throwsA(isA<CareError>()),
+      );
+      expect(vault.db.patients().any((p) => p.id == current.id), true);
+      expect(secrets.values, originalKeys);
+    },
+  );
   test('LOCAL-07/09 photo raster loses metadata, encrypted attachment survives reopen and scoped deletion', () async {
     final p = vault.db.createPatient(), other = vault.db.createPatient();
     final e = vault.db.saveEntry(

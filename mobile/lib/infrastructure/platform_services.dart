@@ -32,6 +32,7 @@ class DeviceSecretStore implements SecretStore {
 }
 
 abstract class PlatformServices {
+  Future<String> timeZone() async => '';
   Future<bool> authenticate() => Future.value(false);
   Future<bool> requestNotifications() => Future.value(false);
   Future<void> schedule(List<Reminder> reminders) async {}
@@ -46,12 +47,28 @@ class Reminder {
   final int id;
   final DateTime at;
   final bool daily;
+  static int idFor(String source) {
+    // Stable across process restarts and independent of list order.
+    var hash = 0x811c9dc5;
+    for (final unit in source.codeUnits) {
+      hash = ((hash ^ unit) * 0x01000193) & 0x7fffffff;
+    }
+    return hash;
+  }
 }
 
 class DevicePlatformServices extends PlatformServices {
   static const privacy = MethodChannel('org.carenotebook/privacy');
   final _notifications = FlutterLocalNotificationsPlugin();
   bool _notificationsReady = false;
+  final _scheduled = <int, String>{};
+  @override
+  Future<String> timeZone() async {
+    final zone = await privacy.invokeMethod<String>('timeZone');
+    if (zone == null) throw const CareError('기기 시간대를 확인할 수 없습니다.');
+    return zone;
+  }
+
   static Future<Directory> prepareDirectory() async {
     final root = await Directory(
       p.join((await getApplicationSupportDirectory()).path, 'care-vault'),
@@ -105,10 +122,7 @@ class DevicePlatformServices extends PlatformServices {
       return;
     }
     tz_data.initializeTimeZones();
-    final zone = await privacy.invokeMethod<String>('timeZone');
-    if (zone == null) {
-      throw const CareError('기기 시간대를 확인할 수 없습니다.');
-    }
+    final zone = await timeZone();
     tz.setLocalLocation(tz.getLocation(zone));
     await _notifications.initialize(
       settings: const InitializationSettings(
@@ -145,12 +159,38 @@ class DevicePlatformServices extends PlatformServices {
   @override
   Future<void> schedule(List<Reminder> reminders) async {
     await _initializeNotifications();
-    final zone = await privacy.invokeMethod<String>('timeZone');
-    if (zone != null) {
-      tz.setLocalLocation(tz.getLocation(zone));
+    final zone = await timeZone();
+    tz.setLocalLocation(tz.getLocation(zone));
+    if (reminders.isEmpty) {
+      await _notifications.cancelAll();
+      _scheduled.clear();
+      return;
     }
-    await _notifications.cancelAll();
-    for (final reminder in reminders.take(60)) {
+    final pending = (await _notifications.pendingNotificationRequests())
+        .map((r) => r.id)
+        .toSet();
+    final now = DateTime.now();
+    final future = reminders.where((r) => r.at.isAfter(now)).take(60).toList();
+    // An inexact alarm may be due but not delivered yet. Keep it until it fires
+    // unless the user completes, disables or removes that specific task.
+    final retained = {
+      ...future.map((r) => r.id),
+      ...reminders
+          .where((r) => !r.daily && !r.at.isAfter(now))
+          .map((r) => r.id),
+    };
+    for (final id in {...pending, ..._scheduled.keys}.difference(retained)) {
+      await _notifications.cancel(id: id);
+      _scheduled.remove(id);
+    }
+    for (final reminder in future) {
+      final signature = reminder.daily
+          ? '$zone:daily:${reminder.at.hour}:${reminder.at.minute}'
+          : '$zone:${reminder.at.millisecondsSinceEpoch}';
+      if (pending.contains(reminder.id) &&
+          _scheduled[reminder.id] == signature) {
+        continue;
+      }
       await _notifications.zonedSchedule(
         id: reminder.id,
         scheduledDate: tz.TZDateTime.from(reminder.at, tz.local),
@@ -172,6 +212,7 @@ class DevicePlatformServices extends PlatformServices {
             ? DateTimeComponents.time
             : null,
       );
+      _scheduled[reminder.id] = signature;
     }
   }
 

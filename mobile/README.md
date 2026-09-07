@@ -81,3 +81,9 @@ iOS는 Mac과 Xcode, 서명 팀 설정이 필요하다. `flutter build ios --no-
 Android는 화면 캡처 보호와 OS 자동 백업·기기 전송 제외를 구성했다. iOS는 앱 전환 가림과 파일 백업 제외를 구성했으며 사용자가 직접 찍는 모든 스크린샷을 차단한다고 보장하지 않는다. 요일·기간·필요 시 복용 같은 복잡한 반복 일정, 대용량 스트리밍 백업, 앱스토어 배포는 후속 작업이다.
 
 참고: [Flutter 설치](https://docs.flutter.dev/install), [sqlite3 SQLCipher 빌드 훅](https://pub.dev/documentation/sqlite3/latest/topics/hook-topic.html), [flutter_secure_storage 변경사항](https://pub.dev/packages/flutter_secure_storage/changelog), [AGP 9.3 호환성](https://developer.android.com/build/releases/agp-9-3-0-release-notes).
+
+## 전체 코드 검토 후 갱신 (2026-09-07)
+
+위 초기 검증 이후 전체 모바일 코드와 개발 도구의 보안 경계를 추가 검토했다. 잠금 후 비동기 작업 차단·DB/이미지 캐시 정리, 저장 작업의 동시 실행 방지, 알림 변경분 예약, 복원 커밋 순서, 이미지 디코딩 전 크기 검사, 기록 조회 최적화, 큰 글자 대화 화면과 미저장 폼 나가기 확인을 개선했다. Python 다운로드 도구의 인증키 오류 출력도 보완했다.
+
+최신 결과는 Flutter 시험 **34개**, Python 시험 **96개** 통과, Flutter 정적 분석 문제 없음이다. 수정 근거, Android 업데이트 실행 결과와 iOS·배포 서명·정책·대용량 데이터 등 남은 항목은 [전체 코드 검토 보고서](../docs/code_review_2026-09-07.md)를 따른다. iOS 네이티브 검증은 완료되지 않았다.

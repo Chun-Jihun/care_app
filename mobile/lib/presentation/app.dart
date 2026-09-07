@@ -21,11 +21,20 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.controller.addListener(clearLockedImages);
+  }
+
+  void clearLockedImages() {
+    if (!widget.controller.unlocked) {
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.controller.removeListener(clearLockedImages);
     super.dispose();
   }
 
@@ -34,8 +43,6 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused &&
         !widget.controller.externalOperation) {
       widget.controller.lock();
-      PaintingBinding.instance.imageCache.clear();
-      PaintingBinding.instance.imageCache.clearLiveImages();
     }
     setState(() => obscured = state != AppLifecycleState.resumed);
     if (state == AppLifecycleState.resumed && widget.controller.unlocked) {
@@ -216,6 +223,7 @@ class _LockScreenState extends State<LockScreen> {
                 TextField(
                   controller: pin,
                   obscureText: true,
+                  enableIMEPersonalizedLearning: false,
                   maxLength: 6,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -232,6 +240,7 @@ class _LockScreenState extends State<LockScreen> {
                     child: TextField(
                       controller: repeat,
                       obscureText: true,
+                      enableIMEPersonalizedLearning: false,
                       maxLength: 6,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],

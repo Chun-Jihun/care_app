@@ -72,6 +72,8 @@ void main() {
         c.db.chatMessages(pid, now: now.add(const Duration(days: 7))),
         isEmpty,
       );
+      // Reads filter expired messages without mutating the DB during build.
+      c.db.pruneChats(now: now.add(const Duration(days: 7)));
       await c.setChatRetention(pid, ChatRetention.forever);
       await c.addChatMessage(pid, '복원 질문');
       final backup = await c.vault.backup('chat-backup-password');

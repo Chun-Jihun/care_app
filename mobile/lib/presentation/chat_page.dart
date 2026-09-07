@@ -51,12 +51,26 @@ class _ChatBodyState extends State<ChatBody> {
   int policyRevision = 0;
   String? error;
   Timer? expiry;
+  ChatRetention? policy;
+  List<ChatMessage> messages = [];
+  void loadMessages() {
+    policy = widget.c.db.chatRetention(widget.pid);
+    messages = widget.c.chatMessages(widget.pid);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    loadMessages();
+  }
+
   @override
   void initState() {
     super.initState();
+    loadMessages();
     expiry = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted && widget.c.unlocked) {
-        setState(() => widget.c.db.pruneChats());
+        attempt(context, widget.c.refresh);
       }
     });
   }
@@ -129,219 +143,247 @@ class _ChatBodyState extends State<ChatBody> {
 
   @override
   Widget build(BuildContext context) {
-    final c = widget.c,
-        pid = widget.pid,
-        policy = c.db.chatRetention(pid),
-        messages = c.chatMessages(pid);
+    final c = widget.c, pid = widget.pid;
     return SafeArea(
       top: false,
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-            color: const Color(0xFFE8EFE8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.chat_bubble_outline,
-                      color: forest,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${c.patient.label} · AI 연결 전',
-                        style: const TextStyle(
-                          color: forest,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 7),
-                const Text(
-                  '지금은 질문을 남겨두는 대화창이에요. AI 답변은 제공되지 않으며 질문이 자동 전송되지 않아요.',
-                  style: TextStyle(height: 1.5, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 12, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<ChatRetention>(
-                    key: ValueKey('$policy-$policyRevision'),
-                    initialValue: policy,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: '질문 보관 방식',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    items: ChatRetention.values
-                        .map(
-                          (p) =>
-                              DropdownMenuItem(value: p, child: Text(p.label)),
-                        )
-                        .toList(),
-                    onChanged: sending
-                        ? null
-                        : (v) {
-                            if (v != null) {
-                              setPolicy(v);
-                            }
-                          },
-                  ),
-                ),
-                IconButton(
-                  tooltip: '모든 질문 삭제',
-                  onPressed: messages.isEmpty
-                      ? null
-                      : () async {
-                          if (await confirm(
-                                context,
-                                '이 수첩의 질문을 모두 삭제할까요?',
-                                '따로 저장한 진료 준비와 일기는 유지됩니다.',
-                              ) &&
-                              context.mounted) {
-                            await attempt(
-                              context,
-                              () => c.clearChatMessages(pid),
-                            );
-                          }
-                        },
-                  icon: const Icon(Icons.delete_sweep_outlined),
-                ),
-              ],
-            ),
-          ),
           Expanded(
-            child: messages.isEmpty
-                ? ListView(
-                    padding: const EdgeInsets.all(24),
+            child: CustomScrollView(
+              controller: scroll,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
                     children: [
-                      const SizedBox(height: 25),
-                      const Icon(Icons.forum_outlined, size: 42, color: forest),
-                      const SizedBox(height: 20),
-                      Text(
-                        '궁금한 점을\n잊기 전에 남겨 보세요.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              height: 1.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        '질문은 진료 준비에 옮겨 정리할 수 있어요.\n먼저 보관 방식을 선택해 주세요.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF68796E), height: 1.6),
-                      ),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: ['약에 관한 질문', '식사에 관한 질문', '활동에 관한 질문']
-                            .map(
-                              (text) => ActionChip(
-                                label: Text(text),
-                                onPressed: () =>
-                                    setState(() => input.text = '$text: '),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    controller: scroll,
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final m = messages[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+                        color: const Color(0xFFE8EFE8),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: forest,
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Text(
-                                m.text,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Text(
-                                  '${dateText(m.createdAt)} ${timeText(m.createdAt)} · 답변 없음',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF68796E),
-                                  ),
+                                const Icon(
+                                  Icons.chat_bubble_outline,
+                                  color: forest,
+                                  size: 18,
                                 ),
-                                PopupMenuButton<String>(
-                                  tooltip: '질문 메뉴',
-                                  onSelected: (action) async {
-                                    if (action == 'visit') {
-                                      await editVisit(
-                                        context,
-                                        c,
-                                        initialQuestions: m.text,
-                                      );
-                                    } else if (await confirm(
-                                          context,
-                                          '질문을 삭제할까요?',
-                                          '선택한 질문을 삭제합니다.',
-                                        ) &&
-                                        context.mounted) {
-                                      await attempt(
-                                        context,
-                                        () => c.deleteChatMessage(pid, m.id),
-                                      );
-                                    }
-                                  },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'visit',
-                                      child: Text('진료 준비로 정리'),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${c.patient.label} · AI 연결 전',
+                                    style: const TextStyle(
+                                      color: forest,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('질문 삭제'),
-                                    ),
-                                  ],
-                                  icon: const Icon(Icons.more_horiz, size: 18),
+                                  ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 7),
+                            const Text(
+                              '지금은 질문을 남겨두는 대화창이에요. AI 답변은 제공되지 않으며 질문이 자동 전송되지 않아요.',
+                              style: TextStyle(height: 1.5, fontSize: 13),
+                            ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 12, 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<ChatRetention>(
+                                key: ValueKey('$policy-$policyRevision'),
+                                initialValue: policy,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: '질문 보관 방식',
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                items: ChatRetention.values
+                                    .map(
+                                      (p) => DropdownMenuItem(
+                                        value: p,
+                                        child: Text(p.label),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: sending
+                                    ? null
+                                    : (v) {
+                                        if (v != null) {
+                                          setPolicy(v);
+                                        }
+                                      },
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: '모든 질문 삭제',
+                              onPressed: messages.isEmpty
+                                  ? null
+                                  : () async {
+                                      if (await confirm(
+                                            context,
+                                            '이 수첩의 질문을 모두 삭제할까요?',
+                                            '따로 저장한 진료 준비와 일기는 유지됩니다.',
+                                          ) &&
+                                          context.mounted) {
+                                        await attempt(
+                                          context,
+                                          () => c.clearChatMessages(pid),
+                                        );
+                                      }
+                                    },
+                              icon: const Icon(Icons.delete_sweep_outlined),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                messages.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 25),
+                              const Icon(
+                                Icons.forum_outlined,
+                                size: 42,
+                                color: forest,
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                '궁금한 점을\n잊기 전에 남겨 보세요.',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      height: 1.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                '질문은 진료 준비에 옮겨 정리할 수 있어요.\n먼저 보관 방식을 선택해 주세요.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFF68796E),
+                                  height: 1.6,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: ['약에 관한 질문', '식사에 관한 질문', '활동에 관한 질문']
+                                    .map(
+                                      (text) => ActionChip(
+                                        label: Text(text),
+                                        onPressed: () => setState(
+                                          () => input.text = '$text: ',
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : SliverList.builder(
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final m = messages[index];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 520,
+                                  ),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: forest,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Text(
+                                    m.text,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '${dateText(m.createdAt)} ${timeText(m.createdAt)} · 답변 없음',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF68796E),
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuButton<String>(
+                                      tooltip: '질문 메뉴',
+                                      onSelected: (action) async {
+                                        if (action == 'visit') {
+                                          await editVisit(
+                                            context,
+                                            c,
+                                            initialQuestions: m.text,
+                                          );
+                                        } else if (await confirm(
+                                              context,
+                                              '질문을 삭제할까요?',
+                                              '선택한 질문을 삭제합니다.',
+                                            ) &&
+                                            context.mounted) {
+                                          await attempt(
+                                            context,
+                                            () =>
+                                                c.deleteChatMessage(pid, m.id),
+                                          );
+                                        }
+                                      },
+                                      itemBuilder: (_) => const [
+                                        PopupMenuItem(
+                                          value: 'visit',
+                                          child: Text('진료 준비로 정리'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text('질문 삭제'),
+                                        ),
+                                      ],
+                                      icon: const Icon(
+                                        Icons.more_horiz,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ],
+            ),
           ),
           if (error != null)
             Padding(
@@ -364,6 +406,7 @@ class _ChatBodyState extends State<ChatBody> {
                     maxLines: 4,
                     maxLength: 20000,
                     autocorrect: false,
+                    enableIMEPersonalizedLearning: false,
                     enableSuggestions: false,
                     enabled: !sending,
                     decoration: InputDecoration(

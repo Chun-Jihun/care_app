@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
@@ -105,11 +106,73 @@ void main() {
       await tester.ensureVisible(find.text('저장'));
       await tester.tap(find.text('저장'));
       await settleIO(tester);
-      expect(find.text('단위을 입력해 주세요.'), findsOneWidget);
+      expect(find.text('필수 항목을 입력해 주세요: 단위'), findsOneWidget);
       expect(find.text('사용자 측정값'), findsOneWidget);
       expect(c.entries, isEmpty);
     },
   );
+  testWidgets('REVIEW-01 manual lock evicts decoded image cache', (
+    tester,
+  ) async {
+    await start(tester);
+    final photo = MemoryImage(
+      Uint8List.fromList(img.encodePng(img.Image(width: 2, height: 2))),
+    );
+    await tester.runAsync(
+      () => precacheImage(photo, tester.element(find.text('오늘의 돌봄'))),
+    );
+    expect(PaintingBinding.instance.imageCache.currentSize, greaterThan(0));
+    c.lock();
+    await tester.pumpAndSettle();
+    expect(PaintingBinding.instance.imageCache.currentSize, 0);
+    expect(PaintingBinding.instance.imageCache.liveImageCount, 0);
+  });
+  testWidgets('REVIEW-07 large text and keyboard keep chat usable', (
+    tester,
+  ) async {
+    await start(tester);
+    tester.view.physicalSize = const Size(320, 640);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byTooltip('간병 도우미 대화'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.runAsync(
+      () => c.setChatRetention(c.selectedId!, ChatRetention.week),
+    );
+    tester.view.viewInsets = const FakeViewPadding(bottom: 270);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.enterText(find.byKey(const ValueKey('chat_input')), '합성 질문');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byTooltip('질문 남기기').hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('REVIEW-08 back confirmation preserves an edited form', (
+    tester,
+  ) async {
+    await start(tester);
+    await tester.tap(find.text('기록하기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('자유 메모'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '잃으면 안 되는 합성 초안');
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('작성을 그만둘까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.text('잃으면 안 되는 합성 초안'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('저장하지 않고 나가기'));
+    await tester.pumpAndSettle();
+    expect(find.text('오늘의 돌봄'), findsOneWidget);
+    expect(c.entries, isEmpty);
+  });
   testWidgets(
     'CHAT-01/02/05 chat UI needs policy, requires visit confirmation and clears private routes',
     (tester) async {

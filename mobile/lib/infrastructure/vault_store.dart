@@ -24,6 +24,7 @@ class VaultStore {
   late String _generation;
   late Map<String, String> _keys;
   bool _opened = false;
+  bool maintenancePending = false;
   static const maxBackupBytes = 100 * 1024 * 1024;
   static final _id = RegExp(r'^[0-9a-fA-F-]{36}$');
   Directory get _directory => Directory(p.join(root.path, _generation));
@@ -77,14 +78,41 @@ class VaultStore {
       );
     }
     _opened = true;
-    await cleanup();
-    await _prune();
+    await _maintain();
+  }
+
+  Future<void> _maintain() async {
+    maintenancePending = false;
+    try {
+      await cleanup();
+      await _prune();
+    } catch (_) {
+      // The selected generation is already committed. Maintenance failure must
+      // not report a failed restore or leave the controller on the old patient.
+      maintenancePending = true;
+    }
   }
 
   Future<void> _commit(String id) async {
     final dir = await Directory(p.join(root.path, 'commits'))
         .create(recursive: true);
-    final marker = File(p.join(dir.path, '${CareDatabase.newId()}.commit'));
+    // Legacy UUIDv7 markers sort by wall clock and can go backwards. New
+    // markers use a persisted sequence and sort after every legacy marker.
+    var sequence = 0;
+    await for (final file in dir.list()) {
+      final match = RegExp(r'^z-(\d+)\.commit$')
+          .firstMatch(p.basename(file.path));
+      if (match != null) {
+        final value = int.parse(match[1]!);
+        if (value > sequence) sequence = value;
+      }
+    }
+    final marker = File(
+      p.join(
+        dir.path,
+        'z-${(sequence + 1).toString().padLeft(20, '0')}.commit',
+      ),
+    );
     final temp = File('${marker.path}.tmp');
     await temp.writeAsString(id, flush: true);
     await temp.rename(marker.path);
@@ -94,8 +122,8 @@ class VaultStore {
     await for (final entity in root.list()) {
       final name = p.basename(entity.path);
       if (entity is Directory && _id.hasMatch(name) && name != _generation) {
-        await entity.delete(recursive: true);
         await secrets.delete('vault.$name');
+        await entity.delete(recursive: true);
       }
     }
     final markers =
@@ -111,7 +139,7 @@ class VaultStore {
     }
   }
 
-  Future<void> cleanup() async {
+  Future<void> cleanup({bool removeOrphans = true}) async {
     final directory = await Directory(p.join(_directory.path, 'attachments'))
         .create(recursive: true);
     for (final id in db.pendingFileDeletes) {
@@ -124,6 +152,7 @@ class VaultStore {
       }
       db.finishFileDelete(id);
     }
+    if (!removeOrphans) return;
     final allowed = db.allAttachmentIds.toSet();
     await for (final entity in directory.list()) {
       if (entity is File &&
@@ -133,7 +162,12 @@ class VaultStore {
     }
   }
 
-  Future<void> addPhoto(String pid, String eid, Uint8List source) async {
+  Future<void> addPhoto(
+    String pid,
+    String eid,
+    Uint8List source, {
+    void Function()? beforeCommit,
+  }) async {
     if (source.length > 20 * 1024 * 1024) {
       throw const CareError('사진은 20MB 이하로 선택해 주세요.');
     }
@@ -156,6 +190,7 @@ class VaultStore {
     final file = File(p.join(dir.path, '$id.enc'));
     try {
       await file.writeAsBytes(encrypted, flush: true);
+      beforeCommit?.call();
       db.addAttachment(pid, eid, id, base64Encode(wrapped), encrypted.length);
     } catch (_) {
       if (await file.exists()) {
@@ -166,13 +201,31 @@ class VaultStore {
   }
 
   static Uint8List normalizePhoto(Uint8List source) {
-    final decoded = img.decodeImage(source);
-    if (decoded == null) {
+    if (source.length > 20 * 1024 * 1024) {
+      throw const CareError('사진은 20MB 이하로 선택해 주세요.');
+    }
+    // Restrict to the supported still-photo formats; inspect dimensions before
+    // allocating pixels, and never decode all frames of an animation.
+    final img.Decoder decoder;
+    if (img.JpegDecoder().isValidFile(source)) {
+      decoder = img.JpegDecoder();
+    } else if (img.PngDecoder().isValidFile(source)) {
+      decoder = img.PngDecoder();
+    } else {
       throw const CareError('사진을 읽을 수 없습니다. JPG 또는 PNG 사진을 선택해 주세요.');
     }
-    if (decoded.width * decoded.height > 24000000) {
+    final info = decoder.startDecode(source);
+    if (info == null || info.width <= 0 || info.height <= 0) {
+      throw const CareError('사진 파일이 올바르지 않습니다.');
+    }
+    if (info.width * info.height > 24000000) {
       throw const CareError('사진 크기가 너무 큽니다. 2,400만 화소 이하의 사진을 선택해 주세요.');
     }
+    if (info.numFrames != 1) {
+      throw const CareError('움직이는 사진은 지원하지 않습니다. 정지 사진을 선택해 주세요.');
+    }
+    final decoded = decoder.decodeFrame(0);
+    if (decoded == null) throw const CareError('사진을 읽을 수 없습니다.');
     final oriented = img.bakeOrientation(decoded);
     // A fresh raster has no EXIF, GPS, original name, embedded thumbnail or text chunks.
     final clean = img.Image(
@@ -203,6 +256,9 @@ class VaultStore {
   }
 
   Future<Uint8List> backup(String password) async {
+    if (password.length < 12) {
+      throw const CareError('백업 비밀번호는 12자 이상으로 입력해 주세요.');
+    }
     db.pruneChats();
     await cleanup();
     db.verifyIntegrity();
@@ -238,7 +294,11 @@ class VaultStore {
     return Isolate.run(() => VaultCrypto.passwordSeal(payload, password));
   }
 
-  Future<void> restore(Uint8List encrypted, String password) async {
+  Future<void> restore(
+    Uint8List encrypted,
+    String password, {
+    void Function()? beforeCommit,
+  }) async {
     if (encrypted.length > maxBackupBytes + 128) {
       throw const CareError('백업 파일이 너무 큽니다.');
     }
@@ -309,6 +369,7 @@ class VaultStore {
       }
       candidate.verifyIntegrity();
       await secrets.write('vault.$generation', jsonEncode(keys));
+      beforeCommit?.call();
       await _commit(
         generation,
       ); // Nothing affecting the old generation changes before this point.
@@ -318,8 +379,7 @@ class VaultStore {
       candidate = null;
       _generation = generation;
       _keys = keys;
-      await cleanup();
-      await _prune();
+      await _maintain();
     } finally {
       candidate?.close();
       if (!committed) {
@@ -335,8 +395,7 @@ class VaultStore {
     await File(p.join(root.path, 'wipe.pending'))
         .writeAsString('1', flush: true);
     if (_opened) {
-      db.close();
-      _opened = false;
+      close();
     }
     await _finishWipe();
   }
@@ -362,6 +421,7 @@ class VaultStore {
     if (_opened) {
       db.close();
       _opened = false;
+      _keys.clear();
     }
   }
 }

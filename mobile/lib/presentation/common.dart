@@ -193,63 +193,93 @@ class EditorPage extends StatefulWidget {
 
 class _EditorPageState extends State<EditorPage> {
   bool saving = false;
+  bool dirty = false, leaving = false, confirming = false;
   String? error;
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: !saving,
+    canPop: !saving && (!dirty || leaving),
+    onPopInvokedWithResult: (didPop, _) async {
+      if (didPop || saving || confirming) return;
+      confirming = true;
+      final discard = await confirm(
+        context,
+        '작성을 그만둘까요?',
+        '아직 저장하지 않은 내용이 있습니다.',
+        action: '저장하지 않고 나가기',
+      );
+      confirming = false;
+      if (!context.mounted || !discard) return;
+      setState(() => leaving = true);
+      await WidgetsBinding.instance.endOfFrame;
+      if (context.mounted) Navigator.pop(context);
+    },
     child: Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: AbsorbPointer(
         absorbing: saving,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-          children: [
-            ...widget
-                .content(setState)
-                .expand((w) => [w, const SizedBox(height: 16)]),
-            if (error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+        child: Form(
+          onChanged: () => setState(() => dirty = true),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            children: [
+              ...widget
+                  .content(
+                    (action) => setState(() {
+                      action();
+                      dirty = true;
+                    }),
+                  )
+                  .expand((w) => [w, const SizedBox(height: 16)]),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              FilledButton(
+                onPressed: () async {
+                  if (saving) {
+                    return;
+                  }
+                  setState(() {
+                    saving = true;
+                    error = null;
+                  });
+                  try {
+                    await widget.save();
+                    if (context.mounted) {
+                      setState(() {
+                        saving = false;
+                        leaving = true;
+                      });
+                      Navigator.pop(context);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        saving = false;
+                        error = errorText(e);
+                      });
+                    }
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(widget.saveLabel),
                 ),
               ),
-            FilledButton(
-              onPressed: () async {
-                if (saving) {
-                  return;
-                }
-                setState(() {
-                  saving = true;
-                  error = null;
-                });
-                try {
-                  await widget.save();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() {
-                      saving = false;
-                      error = errorText(e);
-                    });
-                  }
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(widget.saveLabel),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),
@@ -263,7 +293,7 @@ Widget textField(
   bool numeric = false,
   bool secret = false,
   String? hint,
-}) => TextField(
+}) => TextFormField(
   controller: controller,
   decoration: InputDecoration(
     labelText: label,
@@ -281,6 +311,7 @@ Widget textField(
       : TextInputType.text,
   obscureText: secret,
   autocorrect: false,
+  enableIMEPersonalizedLearning: false,
   enableSuggestions: false,
 );
 Widget dateButton(

@@ -89,6 +89,16 @@ void main() {
         ),
       );
       expect(c.entries.single.note, '저장 성공');
+      // Unrelated records do not touch the notification service anymore.
+      expect(c.notice, isNull);
+      await c.mutate(
+        () => c.db.saveTask(
+          pid,
+          title: '알림 실패 시험',
+          dueAt: DateTime.now().add(const Duration(hours: 1)),
+          reminder: true,
+        ),
+      );
       expect(c.notice, isNotNull);
       platform.scheduleFails = false;
       await c.enableNotifications(false);

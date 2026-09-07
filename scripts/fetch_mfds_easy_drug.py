@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 from urllib.error import HTTPError, URLError
-from urllib.parse import unquote, urlencode, urlsplit, urlunsplit
+from urllib.parse import quote, quote_plus, unquote, urlencode, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from xml.etree import ElementTree
 
@@ -172,6 +172,7 @@ def build_request_url(
 ) -> str:
     """Build a request URL while decoding and encoding the service key once."""
 
+    endpoint = normalize_endpoint(endpoint)
     if not service_key.strip():
         raise ConfigurationError("MFDS_EASY_DRUG_SERVICE_KEY가 비어 있습니다.")
     if page_no < 1:
@@ -320,6 +321,8 @@ def _sanitize_error_text(text: str, service_key: str) -> str:
     candidates = {
         service_key,
         unquote(service_key),
+        quote(unquote(service_key), safe=""),
+        quote_plus(unquote(service_key)),
     }
     for candidate in candidates:
         if candidate:
@@ -399,7 +402,10 @@ def fetch_page(
                 if exc.result_code in RETRYABLE_API_CODES and attempt < retries:
                     time.sleep(min(2**attempt, 8))
                     continue
-                raise
+                raise ApiResponseError(
+                    _sanitize_error_text(exc.result_code, service_key),
+                    _sanitize_error_text(exc.result_message, service_key),
+                ) from None
         except HTTPError as exc:
             try:
                 payload = exc.read()
@@ -411,7 +417,9 @@ def fetch_page(
                 time.sleep(min(2**attempt, 8))
                 continue
             if details:
-                raise ApiResponseError(*details) from None
+                raise ApiResponseError(
+                    *(_sanitize_error_text(part, service_key) for part in details)
+                ) from None
             raise DownloaderError(f"HTTP {exc.code}: API 요청에 실패했습니다.") from None
         except (TimeoutError, URLError, OSError) as exc:
             if attempt < retries:

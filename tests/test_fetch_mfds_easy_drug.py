@@ -1,8 +1,10 @@
 import json
+import io
 import tempfile
 import unittest
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from urllib.error import HTTPError
 
 from scripts.fetch_mfds_easy_drug import (
     ApiResponseError,
@@ -14,10 +16,30 @@ from scripts.fetch_mfds_easy_drug import (
     normalize_endpoint,
     parse_page_payload,
     write_bytes_atomic,
+    fetch_page,
 )
 
 
 class EndpointSafetyTests(unittest.TestCase):
+    def test_request_builder_enforces_endpoint_allowlist(self) -> None:
+        with self.assertRaises(ConfigurationError):
+            build_request_url('https://example.com/collect', 'synthetic-key', page_no=1, num_rows=1, filters={})
+
+    def test_api_errors_never_echo_the_service_key(self) -> None:
+        key = 'SYNTHETIC+KEY/ONLY='
+        payload = json.dumps({'header': {'resultCode': 'KEY_ERROR', 'resultMsg': f'Rejected {key}'}}).encode()
+        endpoint = normalize_endpoint('https://apis.data.go.kr/1471000/DrbEasyDrugInfoService')
+        for http_error in (False, True):
+            with self.subTest(http_error=http_error):
+                def opener(request, *, timeout):
+                    if http_error:
+                        raise HTTPError(request.full_url, 400, 'synthetic failure', {}, io.BytesIO(payload))
+                    return io.BytesIO(payload)
+                with self.assertRaises(ApiResponseError) as raised:
+                    fetch_page(endpoint, key, page_no=1, num_rows=1, filters={}, timeout_seconds=1, retries=0, opener=opener)
+                self.assertNotIn(key, str(raised.exception))
+                self.assertIn('[REDACTED]', str(raised.exception))
+
     def test_service_base_url_is_expanded_to_list_endpoint(self) -> None:
         endpoint = normalize_endpoint(
             "https://apis.data.go.kr/1471000/DrbEasyDrugInfoService"

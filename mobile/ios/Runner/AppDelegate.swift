@@ -20,15 +20,18 @@ import UserNotifications
       let arguments = call.arguments as? [String: Any] ?? [:]
       switch call.method {
       case "protectDirectory":
-        guard let path = arguments["path"] as? String,
-              path.hasPrefix(NSHomeDirectory() + "/Library/") else {
+        guard let path = arguments["path"] as? String else {
+          result(FlutterError(code: "path", message: "저장소 위치를 확인할 수 없습니다.", details: nil)); return
+        }
+        var url = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
+        let library = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library").resolvingSymlinksInPath()
+        guard url.path.hasPrefix(library.path + "/") else {
           result(FlutterError(code: "path", message: "저장소 위치를 확인할 수 없습니다.", details: nil)); return
         }
         do {
-          var url = URL(fileURLWithPath: path)
           var values = URLResourceValues(); values.isExcludedFromBackup = true
           try url.setResourceValues(values)
-          try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: path)
+          try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
           result(nil)
         } catch { result(FlutterError(code: "protection", message: "보안 저장소를 준비할 수 없습니다.", details: nil)) }
       case "timeZone": result(TimeZone.current.identifier)

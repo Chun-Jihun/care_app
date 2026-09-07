@@ -215,11 +215,10 @@ class CareDatabase {
   );
   List<ChatMessage> chatMessages(String pid, {DateTime? now}) {
     _patient(pid);
-    pruneChats(now: now);
     return _db
         .select(
-          'SELECT * FROM chat_message WHERE patient_id=? ORDER BY created_at,id',
-          [pid],
+          'SELECT * FROM chat_message WHERE patient_id=? AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at,id',
+          [pid, (now ?? DateTime.now()).millisecondsSinceEpoch],
         )
         .map(
           (r) => ChatMessage(
@@ -424,12 +423,14 @@ class CareDatabase {
     });
   }
 
-  CareEntry _entry(Row r) {
+  CareEntry _entry(Row r, {Row? detailRow}) {
     final kind = EntryKind.values.byName(r['kind'] as String);
-    final detail = _db.select(
-      'SELECT * FROM ${kind.table} WHERE patient_id=? AND entry_id=?',
-      [r['patient_id'], r['id']],
-    ).single;
+    final detail =
+        detailRow ??
+        _db.select(
+          'SELECT * FROM ${kind.table} WHERE patient_id=? AND entry_id=?',
+          [r['patient_id'], r['id']],
+        ).single;
     return CareEntry(
       id: r['id'] as String,
       patientId: r['patient_id'] as String,
@@ -448,6 +449,39 @@ class CareDatabase {
       },
       version: r['version'] as int,
     );
+  }
+
+  CareEntry? entry(String pid, String id) {
+    _patient(pid);
+    final row = _db.select(
+      'SELECT * FROM care_entry WHERE patient_id=? AND id=?',
+      [pid, id],
+    ).firstOrNull;
+    return row == null ? null : _entry(row);
+  }
+
+  Iterable<CareEntry> _readEntries(List<Row> rows) sync* {
+    // At most one detail query per kind and batch, instead of one per record.
+    for (var start = 0; start < rows.length; start += 200) {
+      final batch = rows.skip(start).take(200).toList();
+      final details = <String, Row>{};
+      for (final kind in batch.map((r) => r['kind'] as String).toSet()) {
+        final ids = batch
+            .where((r) => r['kind'] == kind)
+            .map((r) => r['id'])
+            .toList();
+        final table = EntryKind.values.byName(kind).table;
+        for (final detail in _db.select(
+          'SELECT * FROM $table WHERE entry_id IN (${List.filled(ids.length, '?').join(',')}) AND patient_id=?',
+          [...ids, batch.first['patient_id']],
+        )) {
+          details[detail['entry_id'] as String] = detail;
+        }
+      }
+      for (final row in batch) {
+        yield _entry(row, detailRow: details[row['id']]);
+      }
+    }
   }
 
   List<CareEntry> entries(
@@ -472,23 +506,22 @@ class CareDatabase {
         DateTime(day.year, day.month, day.day + 1).millisecondsSinceEpoch,
       ]);
     }
-    // Search inside the encrypted store's scoped result; no plaintext search index.
-    var result = _db
-        .select(
-          'SELECT * FROM care_entry WHERE $where ORDER BY occurred_at DESC,id DESC',
-          args,
-        )
-        .map(_entry)
-        .where(
-          (e) =>
-              query.trim().isEmpty ||
-              e.summary.toLowerCase().contains(query.trim().toLowerCase()),
-        )
-        .toList();
+    if (limit != null && limit <= 0) return [];
+    final term = query.trim().toLowerCase();
+    // Keep search inside the encrypted patient scope, preserving display labels.
+    // Apply SQL LIMIT before reading details for the common recent-record query.
+    final sqlLimit = limit != null && term.isEmpty ? ' LIMIT ?' : '';
+    if (sqlLimit.isNotEmpty) args.add(limit);
+    var result = _readEntries(
+      _db.select(
+        'SELECT * FROM care_entry WHERE $where ORDER BY occurred_at DESC,id DESC$sqlLimit',
+        args,
+      ),
+    ).where((e) => term.isEmpty || e.summary.toLowerCase().contains(term));
     if (limit != null) {
-      result = result.take(limit).toList();
+      result = result.take(limit);
     }
-    return result;
+    return result.toList();
   }
 
   CareEntry saveEntry(

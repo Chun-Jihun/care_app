@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
@@ -22,10 +24,13 @@ class _CareShellState extends State<CareShell> {
   String query = '';
   bool archived = false;
   final search = TextEditingController();
+  Timer? searchTimer;
+  int journalLimit = 50;
   CareController get c => widget.c;
   @override
   void dispose() {
     search.dispose();
+    searchTimer?.cancel();
     super.dispose();
   }
 
@@ -97,7 +102,10 @@ class _CareShellState extends State<CareShell> {
               tooltip: '수첩 전환',
               onSelected: (id) => attempt(context, () async {
                 await c.selectPatient(id);
+                if (!mounted) return;
+                searchTimer?.cancel();
                 setState(() {
+                  journalLimit = 50;
                   search.clear();
                   query = '';
                   filter = null;
@@ -136,33 +144,39 @@ class _CareShellState extends State<CareShell> {
         ),
         body: SafeArea(
           top: false,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: ListView(
-                key: ValueKey('$tab-${c.selectedId}'),
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                children: [
-                  if (c.notice != null)
-                    Card(
-                      color: const Color(0xFFFFF1DB),
-                      child: ListTile(
-                        title: Text(c.notice!),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() => c.notice = null),
+          child: Padding(
+            // Keep the primary action in its own area so it cannot cover a
+            // task checkbox, delete button or the final row while scrolling.
+            padding: EdgeInsets.only(bottom: tab == 4 ? 0 : 80),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: ListView(
+                  key: ValueKey('$tab-${c.selectedId}'),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    if (c.notice != null)
+                      Card(
+                        color: const Color(0xFFFFF1DB),
+                        child: ListTile(
+                          title: Text(c.notice!),
+                          trailing: IconButton(
+                            tooltip: '안내 닫기',
+                            icon: const Icon(Icons.close),
+                            onPressed: () => setState(() => c.notice = null),
+                          ),
                         ),
                       ),
-                    ),
-                  ...switch (tab) {
-                    0 => today(),
-                    1 => journal(),
-                    2 => meds(),
-                    3 => visits(),
-                    _ => settingsContent(context, c),
-                  },
-                ],
+                    ...switch (tab) {
+                      0 => today(),
+                      1 => journal(),
+                      2 => meds(),
+                      3 => visits(),
+                      _ => settingsContent(context, c),
+                    },
+                  ],
+                ),
               ),
             ),
           ),
@@ -221,6 +235,8 @@ class _CareShellState extends State<CareShell> {
   List<Widget> today() {
     final now = DateTime.now();
     final entries = c.db.entries(c.selectedId!, day: now);
+    final recent = c.db.entries(c.selectedId!, limit: 5);
+    final tasks = c.tasks;
     final water = entries
         .where((e) => e.kind == EntryKind.meal)
         .fold<double>(
@@ -266,9 +282,11 @@ class _CareShellState extends State<CareShell> {
               children: [
                 Icon(Icons.spa_outlined, color: Color(0xFFBDDAB9)),
                 SizedBox(width: 8),
-                Text(
-                  '차곡차곡, 오늘의 기록',
-                  style: TextStyle(color: Color(0xFFD5E8CE)),
+                Expanded(
+                  child: Text(
+                    '차곡차곡, 오늘의 기록',
+                    style: TextStyle(color: Color(0xFFD5E8CE)),
+                  ),
                 ),
               ],
             ),
@@ -331,17 +349,17 @@ class _CareShellState extends State<CareShell> {
                 .toList(),
       ),
       Section('할 일', action: '추가', onAction: () => editTask(context, c)),
-      if (c.tasks.isEmpty)
+      if (tasks.isEmpty)
         const EmptyCard(
           '기억할 일을 적어 두세요',
           '진료 일정, 준비물, 생활 속 할 일을 관리할 수 있어요.',
           icon: Icons.check_circle_outline,
         ),
-      ...c.tasks.map(taskCard),
+      ...tasks.map(taskCard),
       const Section('최근 기록'),
-      if (c.entries.isEmpty)
+      if (recent.isEmpty)
         const EmptyCard('첫 기록을 기다리고 있어요', '아래 기록하기를 눌러 식사나 오늘의 상태를 남겨 보세요.'),
-      ...c.entries.take(5).map((e) => EntryTile(e, onTap: () => openEntry(e))),
+      ...recent.map((e) => EntryTile(e, onTap: () => openEntry(e))),
       const Section('연락이 필요할 때'),
       contactCard(context, c),
     ];
@@ -367,11 +385,14 @@ class _CareShellState extends State<CareShell> {
   );
   Widget taskCard(CareTask task) => Card(
     child: ListTile(
-      leading: Checkbox(
-        value: task.done,
-        onChanged: (v) => attempt(context, () async {
-          await c.mutate(() => c.db.completeTask(c.selectedId!, task.id, v!));
-        }),
+      leading: Semantics(
+        label: '${task.title} 완료',
+        child: Checkbox(
+          value: task.done,
+          onChanged: (v) => attempt(context, () async {
+            await c.mutate(() => c.db.completeTask(c.selectedId!, task.id, v!));
+          }),
+        ),
       ),
       title: Text(
         task.title,
@@ -402,16 +423,30 @@ class _CareShellState extends State<CareShell> {
       kind: filter,
       query: query,
       day: day,
+      limit: journalLimit + 1,
     );
     return [
       const Section('돌봄 일기'),
       TextField(
         controller: search,
+        autocorrect: false,
+        enableIMEPersonalizedLearning: false,
+        enableSuggestions: false,
         decoration: const InputDecoration(
           hintText: '이 수첩의 기록 검색',
           prefixIcon: Icon(Icons.search),
         ),
-        onChanged: (v) => setState(() => query = v),
+        onChanged: (v) {
+          searchTimer?.cancel();
+          searchTimer = Timer(const Duration(milliseconds: 250), () {
+            if (mounted) {
+              setState(() {
+                query = v;
+                journalLimit = 50;
+              });
+            }
+          });
+        },
       ),
       const SizedBox(height: 12),
       SingleChildScrollView(
@@ -460,14 +495,23 @@ class _CareShellState extends State<CareShell> {
             ),
           const Spacer(),
           Text(
-            '${entries.length}건',
+            entries.length > journalLimit
+                ? '$journalLimit건 이상'
+                : '${entries.length}건',
             style: const TextStyle(color: Color(0xFF68796E)),
           ),
         ],
       ),
       if (entries.isEmpty)
         const EmptyCard('표시할 기록이 없어요', '새 기록을 남기거나 검색 조건을 바꿔 보세요.'),
-      ...entries.map((e) => EntryTile(e, onTap: () => openEntry(e))),
+      ...entries
+          .take(journalLimit)
+          .map((e) => EntryTile(e, onTap: () => openEntry(e))),
+      if (entries.length > journalLimit)
+        OutlinedButton(
+          onPressed: () => setState(() => journalLimit += 50),
+          child: const Text('기록 더 보기'),
+        ),
     ];
   }
 
