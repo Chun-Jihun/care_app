@@ -9,6 +9,7 @@ import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/app.dart';
+import 'package:care_notebook/domain/chat.dart';
 
 import 'support.dart';
 
@@ -63,8 +64,18 @@ void main() {
       await tester.tap(find.textContaining('합성 기록: 오후에 산책함').last);
       await tester.pumpAndSettle();
       expect(find.text('기록 삭제'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('기록 삭제'), findsNothing);
+      expect(find.text('돌봄 일기'), findsOneWidget);
+      await tester.tap(find.textContaining('합성 기록: 오후에 산책함').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('기록 삭제'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
       c.lock();
       await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
       expect(find.text('수첩 열기'), findsOneWidget);
       expect(find.textContaining('합성 기록'), findsNothing);
       await tester.runAsync(() => c.unlockPin('123456'));
@@ -97,6 +108,57 @@ void main() {
       expect(find.text('단위을 입력해 주세요.'), findsOneWidget);
       expect(find.text('사용자 측정값'), findsOneWidget);
       expect(c.entries, isEmpty);
+    },
+  );
+  testWidgets(
+    'CHAT-01/02/05 chat UI needs policy, requires visit confirmation and clears private routes',
+    (tester) async {
+      await start(tester);
+      await tester.tap(find.byTooltip('간병 도우미 대화'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('chat_input')),
+        '대화 시험 질문',
+      );
+      final button = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.arrow_upward),
+      );
+      expect(button.onPressed, isNull);
+      await tester.runAsync(
+        () => c.setChatRetention(c.selectedId!, ChatRetention.week),
+      );
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        await tester.tap(find.byTooltip('질문 남기기'));
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      });
+      await tester.pumpAndSettle();
+      expect(find.text('대화 시험 질문'), findsOneWidget);
+      expect(find.textContaining('답변 없음'), findsOneWidget);
+      expect(c.entries, isEmpty);
+      await tester.tap(find.byTooltip('질문 메뉴'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('진료 준비로 정리'));
+      await tester.pumpAndSettle();
+      expect(find.text('대화 시험 질문'), findsOneWidget);
+      expect(c.visits, isEmpty);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('간병 도우미'), findsOneWidget);
+      expect(c.visits, isEmpty);
+      await tester.tap(find.byType(DropdownButtonFormField<ChatRetention>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('이번 잠금 해제 동안만').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('취소'));
+      await tester.pumpAndSettle();
+      expect(c.db.chatRetention(c.selectedId!), ChatRetention.week);
+      expect(find.text('7일'), findsOneWidget);
+      c.lock();
+      await tester.pumpAndSettle();
+      expect(find.text('대화 시험 질문'), findsNothing);
+      expect(find.text('수첩 열기'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     },
   );
   testWidgets('synthetic home preview', (tester) async {
@@ -161,6 +223,22 @@ void main() {
           .writeAsBytes(bytes!.buffer.asUint8List());
       raster.dispose();
     });
-    debugDisableShadows=true;
+    await tester.tap(find.byTooltip('간병 도우미 대화'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await c.setChatRetention(c.selectedId!, ChatRetention.week);
+      await c.addChatMessage(c.selectedId!, '다음 진료 때 식사량이 줄어든 점을 물어보고 싶어요.');
+      await c.addChatMessage(c.selectedId!, '산책 후 느낀 불편함도 함께 정리해 둘게요.');
+    });
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.runAsync(() async {
+      final raster = await boundary.toImage(pixelRatio: 2);
+      final bytes = await raster.toByteData(format: ui.ImageByteFormat.png);
+      await File('build/preview/chat.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
+      raster.dispose();
+    });
+    debugDisableShadows = true;
   });
 }

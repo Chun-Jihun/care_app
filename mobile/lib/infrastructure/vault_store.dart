@@ -203,6 +203,7 @@ class VaultStore {
   }
 
   Future<Uint8List> backup(String password) async {
+    db.pruneChats();
     await cleanup();
     db.verifyIntegrity();
     final files = <String, String>{};

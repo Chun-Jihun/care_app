@@ -7,6 +7,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
 import '../domain/records.dart';
+import '../domain/chat.dart';
 
 /// Encrypted persistence only. UI/application decide patient scope explicitly.
 class CareDatabase {
@@ -14,7 +15,7 @@ class CareDatabase {
   final Database _db;
   final String directory;
   bool _closed = false;
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
   static String newId() => const Uuid().v7();
 
   static CareDatabase open(
@@ -52,6 +53,13 @@ class CareDatabase {
       final store = CareDatabase._(db, directory);
       store._migrate();
       store.verifyIntegrity();
+      for (final name in ['care', 'identity']) {
+        final backup = File(p.join(directory, '$name.migration-v1.bak'));
+        if (backup.existsSync()) {
+          backup.deleteSync();
+        }
+      }
+      store.pruneChats();
       return store;
     } catch (_) {
       db.close();
@@ -79,6 +87,10 @@ class CareDatabase {
       throw const CareError('이 백업은 더 새 버전의 앱에서 만들어졌습니다. 앱을 업데이트해 주세요.');
     }
     if (version == schemaVersion && identityVersion == schemaVersion) {
+      return;
+    }
+    if (version == 1 && identityVersion == 1) {
+      _upgradeChatSchema();
       return;
     }
     if (version != 0 || identityVersion != 0) {
@@ -129,6 +141,136 @@ class CareDatabase {
         PRAGMA identity.user_version=1;
       ''');
     });
+    _upgradeChatSchema();
+  }
+
+  void _upgradeChatSchema() {
+    // Both copies remain encrypted with their existing keys. Atomic schema edits
+    // keep v1 usable after a failed migration; remove copies before normal use.
+    final backups = <File>[];
+    try {
+      for (final name in ['care', 'identity']) {
+        backups.add(
+          File(p.join(directory, '$name.db'))
+              .copySync(p.join(directory, '$name.migration-v1.bak')),
+        );
+      }
+      _transaction(() {
+        _db.execute('''
+          CREATE TABLE chat_policy(patient_id TEXT PRIMARY KEY,retention TEXT NOT NULL CHECK(retention IN ('session','7d','30d','forever')),FOREIGN KEY(patient_id) REFERENCES patient_context(id) ON DELETE CASCADE);
+          CREATE TABLE chat_message(id TEXT PRIMARY KEY,patient_id TEXT NOT NULL,text TEXT NOT NULL CHECK(length(text)>0 AND length(text)<=20000),created_at INTEGER NOT NULL,expires_at INTEGER,FOREIGN KEY(patient_id) REFERENCES patient_context(id) ON DELETE CASCADE);
+          CREATE INDEX chat_timeline ON chat_message(patient_id,created_at,id);
+          PRAGMA user_version=2;
+          PRAGMA identity.user_version=2;
+        ''');
+      });
+    } finally {
+      for (final file in backups) {
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      }
+    }
+  }
+
+  ChatRetention? chatRetention(String pid) {
+    _patient(pid);
+    final value = _db.select(
+      'SELECT retention FROM chat_policy WHERE patient_id=?',
+      [pid],
+    ).firstOrNull?['retention'];
+    return value == null
+        ? null
+        : ChatRetention.values.firstWhere((r) => r.code == value);
+  }
+
+  void setChatRetention(String pid, ChatRetention policy, {DateTime? now}) {
+    _patient(pid);
+    pruneChats(now: now);
+    _transaction(() {
+      _db.execute(
+        'INSERT INTO chat_policy VALUES(?,?) ON CONFLICT(patient_id) DO UPDATE SET retention=excluded.retention',
+        [pid, policy.code],
+      );
+      if (policy == ChatRetention.session) {
+        _db.execute('DELETE FROM chat_message WHERE patient_id=?', [pid]);
+      } else if (policy.days == null) {
+        _db.execute(
+          'UPDATE chat_message SET expires_at=NULL WHERE patient_id=?',
+          [pid],
+        );
+      } else {
+        _db.execute(
+          'UPDATE chat_message SET expires_at=created_at+? WHERE patient_id=?',
+          [Duration(days: policy.days!).inMilliseconds, pid],
+        );
+      }
+    });
+    pruneChats(now: now);
+  }
+
+  void pruneChats({DateTime? now}) => _db.execute(
+    'DELETE FROM chat_message WHERE expires_at IS NOT NULL AND expires_at<=?',
+    [(now ?? DateTime.now()).millisecondsSinceEpoch],
+  );
+  List<ChatMessage> chatMessages(String pid, {DateTime? now}) {
+    _patient(pid);
+    pruneChats(now: now);
+    return _db
+        .select(
+          'SELECT * FROM chat_message WHERE patient_id=? ORDER BY created_at,id',
+          [pid],
+        )
+        .map(
+          (r) => ChatMessage(
+            id: r['id'] as String,
+            patientId: pid,
+            text: r['text'] as String,
+            createdAt: DateTime.fromMillisecondsSinceEpoch(
+              r['created_at'] as int,
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  ChatMessage addChatMessage(String pid, String text, {DateTime? now}) {
+    final policy = chatRetention(pid);
+    if (policy == null || policy == ChatRetention.session) {
+      throw const CareError('기기에 보관할 대화 기간을 먼저 선택해 주세요.');
+    }
+    if (text.trim().isEmpty || text.length > 20000) {
+      throw const CareError('질문을 1~20,000자로 입력해 주세요.');
+    }
+    final at = now ?? DateTime.now(), id = newId();
+    _db.execute('INSERT INTO chat_message VALUES(?,?,?,?,?)', [
+      id,
+      pid,
+      text.trim(),
+      at.millisecondsSinceEpoch,
+      policy.days == null
+          ? null
+          : at.add(Duration(days: policy.days!)).millisecondsSinceEpoch,
+    ]);
+    return ChatMessage(
+      id: id,
+      patientId: pid,
+      text: text.trim(),
+      createdAt: at,
+    );
+  }
+
+  void deleteChatMessage(String pid, String id) {
+    _scoped('chat_message', pid, id);
+    _db.execute('DELETE FROM chat_message WHERE patient_id=? AND id=?', [
+      pid,
+      id,
+    ]);
+  }
+
+  void clearChatMessages(String pid) {
+    _patient(pid);
+    _db.execute('DELETE FROM chat_message WHERE patient_id=?', [pid]);
   }
 
   void verifyIntegrity() {

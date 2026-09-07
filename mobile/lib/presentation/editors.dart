@@ -321,10 +321,13 @@ Future<void> editVisit(
   BuildContext context,
   CareController c, {
   VisitPreparation? visit,
+  String? initialQuestions,
 }) async {
   final pid = c.selectedId!,
       title = TextEditingController(text: visit?.title),
-      questions = TextEditingController(text: visit?.questions);
+      questions = TextEditingController(
+        text: visit?.questions ?? initialQuestions,
+      );
   final selected = visit == null
       ? <String>{}
       : c.db.visitEntries(pid, visit.id).map((e) => e.id).toSet();

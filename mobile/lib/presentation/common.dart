@@ -45,6 +45,7 @@ Future<bool> confirm(
 }) async =>
     await showDialog<bool>(
       context: context,
+      useRootNavigator: false,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(body),
@@ -64,6 +65,7 @@ Future<bool> confirm(
 Future<DateTime?> chooseDateTime(BuildContext context, DateTime value) async {
   final date = await showDatePicker(
     context: context,
+    useRootNavigator: false,
     initialDate: value,
     firstDate: DateTime(2000),
     lastDate: DateTime(2100),
@@ -73,6 +75,7 @@ Future<DateTime?> chooseDateTime(BuildContext context, DateTime value) async {
   }
   final time = await showTimePicker(
     context: context,
+    useRootNavigator: false,
     initialTime: TimeOfDay.fromDateTime(value),
   );
   return time == null

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../domain/records.dart';
+import '../domain/chat.dart';
 import '../infrastructure/care_database.dart';
 import '../infrastructure/crypto.dart';
 import '../infrastructure/platform_services.dart';
@@ -20,6 +21,61 @@ class CareController extends ChangeNotifier {
       externalOperation = false;
   bool _vaultOpen = false;
   int _lockEpoch = 0;
+  final _sessionChats = <String, List<ChatMessage>>{};
+  List<ChatMessage> chatMessages(String pid) {
+    if (!unlocked) {
+      return [];
+    }
+    return [...db.chatMessages(pid), ...?_sessionChats[pid]];
+  }
+
+  Future<void> setChatRetention(String pid, ChatRetention value) async {
+    await mutate(() => db.setChatRetention(pid, value));
+    _sessionChats.remove(pid);
+    notifyListeners();
+  }
+
+  Future<void> addChatMessage(String pid, String text) async {
+    await mutate(() {
+      final policy = db.chatRetention(pid);
+      if (policy == null) {
+        throw const CareError('질문 보관 방식을 먼저 선택해 주세요.');
+      }
+      if (text.trim().isEmpty || text.length > 20000) {
+        throw const CareError('질문을 1~20,000자로 입력해 주세요.');
+      }
+      if (policy == ChatRetention.session) {
+        (_sessionChats[pid] ??= []).add(
+          ChatMessage(
+            id: CareDatabase.newId(),
+            patientId: pid,
+            text: text.trim(),
+            createdAt: DateTime.now(),
+          ),
+        );
+      } else {
+        db.addChatMessage(pid, text);
+      }
+    });
+  }
+
+  Future<void> deleteChatMessage(String pid, String id) async {
+    await mutate(() {
+      if (_sessionChats[pid]?.any((m) => m.id == id) ?? false) {
+        _sessionChats[pid]!.removeWhere((m) => m.id == id);
+      } else {
+        db.deleteChatMessage(pid, id);
+      }
+    });
+  }
+
+  Future<void> clearChatMessages(String pid) async {
+    await mutate(() {
+      db.clearChatMessages(pid);
+      _sessionChats.remove(pid);
+    });
+  }
+
   String? selectedId, notice;
   CareDatabase get db => vault.db;
   List<Patient> get patients => _vaultOpen ? db.patients() : [];
@@ -150,6 +206,7 @@ class CareController extends ChangeNotifier {
   }
 
   void lock() {
+    _sessionChats.clear();
     _lockEpoch++;
     unlocked = false;
     notifyListeners();
@@ -168,6 +225,8 @@ class CareController extends ChangeNotifier {
     if (!_vaultOpen) {
       return;
     }
+    db.pruneChats();
+    _sessionChats.removeWhere((pid, _) => !patients.any((p) => p.id == pid));
     if (!patients.any((p) => p.id == selectedId)) {
       if (patients.isEmpty) {
         db.createPatient();
@@ -310,6 +369,7 @@ class CareController extends ChangeNotifier {
     notifyListeners();
     try {
       await vault.restore(data, password);
+      _sessionChats.clear();
       selectedId = null;
       await refresh();
     } finally {
@@ -328,6 +388,7 @@ class CareController extends ChangeNotifier {
       /* Local erasure must remain available when notification services fail. */
     }
     await vault.wipe();
+    _sessionChats.clear();
     _vaultOpen = false;
     for (final key in [
       'auth.pin',

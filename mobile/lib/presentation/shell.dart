@@ -6,6 +6,7 @@ import 'common.dart';
 import 'details.dart';
 import 'editors.dart';
 import 'settings.dart';
+import 'chat_page.dart';
 
 class CareShell extends StatefulWidget {
   const CareShell(this.c, {super.key});
@@ -84,6 +85,14 @@ class _CareShellState extends State<CareShell> {
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -1),
           ),
           actions: [
+            IconButton(
+              tooltip: '간병 도우미 대화',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => ChatPage(c)),
+              ),
+              icon: const Icon(Icons.chat_bubble_outline, size: 21),
+            ),
             PopupMenuButton<String>(
               tooltip: '수첩 전환',
               onSelected: (id) => attempt(context, () async {
@@ -431,6 +440,7 @@ class _CareShellState extends State<CareShell> {
             onPressed: () async {
               final date = await showDatePicker(
                 context: context,
+                useRootNavigator: false,
                 initialDate: day ?? DateTime.now(),
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2100),

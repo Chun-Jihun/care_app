@@ -8,7 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart' hide AndroidOptions;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:timezone/data/latest.dart' as tz_data;
+// Native OS identifiers can use IANA aliases (for example Android's GMT).
+import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/records.dart';
@@ -87,10 +88,16 @@ class DevicePlatformServices extends PlatformServices {
     if (!await auth.isDeviceSupported()) {
       return false;
     }
-    return auth.authenticate(
-      localizedReason: '간병수첩의 기록을 열기 위해 인증해 주세요.',
-      persistAcrossBackgrounding: true,
-    );
+    try {
+      return await auth.authenticate(
+        localizedReason: '간병수첩의 기록을 열기 위해 인증해 주세요.',
+        persistAcrossBackgrounding: true,
+      );
+    } on LocalAuthException {
+      // Cancellation, unavailable credentials and OS lockout never unlock the
+      // vault. The caller keeps the app PIN fallback and shows an auth message.
+      return false;
+    }
   }
 
   Future<void> _initializeNotifications() async {
@@ -105,7 +112,7 @@ class DevicePlatformServices extends PlatformServices {
     tz.setLocalLocation(tz.getLocation(zone));
     await _notifications.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@drawable/ic_notification'),
+        android: AndroidInitializationSettings('ic_notification'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,

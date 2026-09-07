@@ -15,6 +15,7 @@ class CareApp extends StatefulWidget {
 }
 
 class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
+  final privateNavigator = GlobalKey<NavigatorState>();
   bool obscured = false;
   @override
   void initState() {
@@ -101,10 +102,14 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
               children: [
                 AbsorbPointer(
                   absorbing: widget.controller.busy,
-                  child: Navigator(
-                    key: const ValueKey('unlocked'),
-                    onGenerateRoute: (_) => MaterialPageRoute<void>(
-                      builder: (_) => CareShell(widget.controller),
+                  child: NavigatorPopHandler<Object?>(
+                    onPopWithResult: (_) =>
+                        privateNavigator.currentState?.maybePop(),
+                    child: Navigator(
+                      key: privateNavigator,
+                      onGenerateRoute: (_) => MaterialPageRoute<void>(
+                        builder: (_) => CareShell(widget.controller),
+                      ),
                     ),
                   ),
                 ),
