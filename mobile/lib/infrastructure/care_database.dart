@@ -510,6 +510,7 @@ class CareDatabase {
     String query = '',
     DateTime? day,
     int? limit,
+    String Function(CareEntry)? displayText,
   }) {
     _patient(patientId);
     final args = <Object?>[patientId];
@@ -532,12 +533,17 @@ class CareDatabase {
     // Apply SQL LIMIT before reading details for the common recent-record query.
     final sqlLimit = limit != null && term.isEmpty ? ' LIMIT ?' : '';
     if (sqlLimit.isNotEmpty) args.add(limit);
-    var result = _readEntries(
-      _db.select(
-        'SELECT * FROM care_entry WHERE $where ORDER BY occurred_at DESC,id DESC$sqlLimit',
-        args,
-      ),
-    ).where((e) => term.isEmpty || e.summary.toLowerCase().contains(term));
+    var result =
+        _readEntries(
+          _db.select(
+            'SELECT * FROM care_entry WHERE $where ORDER BY occurred_at DESC,id DESC$sqlLimit',
+            args,
+          ),
+        ).where(
+          (e) =>
+              term.isEmpty ||
+              (displayText?.call(e) ?? e.summary).toLowerCase().contains(term),
+        );
     if (limit != null) {
       result = result.take(limit);
     }

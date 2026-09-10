@@ -1,3 +1,6 @@
+import 'language_picker.dart';
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -51,103 +54,109 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: '간병수첩',
-    locale: const Locale('ko'),
-    supportedLocales: const [Locale('ko')],
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: forest,
-        primary: forest,
-        surface: const Color(0xFFF7F8F3),
-        onSurface: ink,
-      ),
-      scaffoldBackgroundColor: const Color(0xFFF7F8F3),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF7F8F3),
-        foregroundColor: ink,
-        centerTitle: false,
-      ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFE6EBE4)),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) => MaterialApp(
+      debugShowCheckedModeBanner: false,
+      onGenerateTitle: (context) => context.tr('간병수첩'),
+      locale: widget.controller.language.locale,
+      supportedLocales: AppLanguage.values.map((value) => value.locale),
+      localizationsDelegates: const [
+        AppStrings.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: forest,
+          primary: forest,
+          surface: const Color(0xFFF7F8F3),
+          onSurface: ink,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF7F8F3),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF7F8F3),
+          foregroundColor: ink,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFE6EBE4)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFCCD7CE)),
+          ),
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: Color(0xFFDDEADB),
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: forest,
+          foregroundColor: Colors.white,
+          elevation: 2,
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFCCD7CE)),
-        ),
-      ),
-      navigationBarTheme: const NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: Color(0xFFDDEADB),
-      ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: forest,
-        foregroundColor: Colors.white,
-        elevation: 2,
-      ),
-    ),
-    home: AnimatedBuilder(
-      animation: widget.controller,
-      builder: (context, _) => !widget.controller.ready
-          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : widget.controller.unlocked
-          ?
-            // Authenticated routes are destroyed together, including open photo dialogs.
-            Stack(
-              children: [
-                AbsorbPointer(
-                  absorbing: widget.controller.busy,
-                  child: NavigatorPopHandler<Object?>(
-                    onPopWithResult: (_) =>
-                        privateNavigator.currentState?.maybePop(),
-                    child: Navigator(
-                      key: privateNavigator,
-                      onGenerateRoute: (_) => MaterialPageRoute<void>(
-                        builder: (_) => CareShell(widget.controller),
+      home: AnimatedBuilder(
+        animation: widget.controller,
+        builder: (context, _) => !widget.controller.ready
+            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+            : widget.controller.unlocked
+            ?
+              // Authenticated routes are destroyed together, including open photo dialogs.
+              Stack(
+                children: [
+                  AbsorbPointer(
+                    absorbing: widget.controller.busy,
+                    child: NavigatorPopHandler<Object?>(
+                      onPopWithResult: (_) =>
+                          privateNavigator.currentState?.maybePop(),
+                      child: Navigator(
+                        key: privateNavigator,
+                        onGenerateRoute: (_) => MaterialPageRoute<void>(
+                          builder: (_) => CareShell(widget.controller),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (widget.controller.busy)
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: SafeArea(child: LinearProgressIndicator()),
+                  if (widget.controller.busy)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(child: LinearProgressIndicator()),
+                    ),
+                ],
+              )
+            : LockScreen(widget.controller),
+      ),
+      builder: (context, child) => Stack(
+        children: [
+          child!,
+          if (obscured)
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Color(0xFFF7F8F3),
+                child: Center(
+                  child: Icon(
+                    Icons.lock_outline_rounded,
+                    color: forest,
+                    size: 48,
                   ),
-              ],
-            )
-          : LockScreen(widget.controller),
-    ),
-    builder: (context, child) => Stack(
-      children: [
-        child!,
-        if (obscured)
-          const Positioned.fill(
-            child: ColoredBox(
-              color: Color(0xFFF7F8F3),
-              child: Center(
-                child: Icon(
-                  Icons.lock_outline_rounded,
-                  color: forest,
-                  size: 48,
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     ),
   );
 }
@@ -162,7 +171,7 @@ class LockScreen extends StatefulWidget {
 class _LockScreenState extends State<LockScreen> {
   final pin = TextEditingController(), repeat = TextEditingController();
   bool working = false;
-  String? error;
+  Object? error;
   @override
   void dispose() {
     pin.dispose();
@@ -179,7 +188,7 @@ class _LockScreenState extends State<LockScreen> {
       await action();
     } catch (e) {
       if (mounted) {
-        setState(() => error = errorText(e));
+        setState(() => error = e);
       }
     } finally {
       if (mounted) {
@@ -200,6 +209,8 @@ class _LockScreenState extends State<LockScreen> {
               shrinkWrap: true,
               padding: const EdgeInsets.all(28),
               children: [
+                LanguagePicker(c),
+                const SizedBox(height: 12),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: CircleAvatar(
@@ -210,13 +221,17 @@ class _LockScreenState extends State<LockScreen> {
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  '매일의 돌봄을,\n한 권에.',
+                  context.tr('매일의 돌봄을,\n한 권에.'),
                   style: Theme.of(context).textTheme.headlineLarge
                       ?.copyWith(fontWeight: FontWeight.w700, height: 1.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  c.hasPin ? '잠금 번호를 입력해 수첩을 열어 주세요.' : '간병수첩에 오신 것을 환영해요.\n이 기기에 기록을 안전하게 보관할\n6자리 잠금 번호를 정해 주세요.',
+                  c.hasPin
+                      ? context.tr('잠금 번호를 입력해 수첩을 열어 주세요.')
+                      : context.tr(
+                          '간병수첩에 오신 것을 환영해요.\n이 기기에 기록을 안전하게 보관할\n6자리 잠금 번호를 정해 주세요.',
+                        ),
                   style: const TextStyle(height: 1.7),
                 ),
                 const SizedBox(height: 28),
@@ -227,7 +242,9 @@ class _LockScreenState extends State<LockScreen> {
                   maxLength: 6,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(labelText: '잠금 번호 6자리'),
+                  decoration: InputDecoration(
+                    labelText: context.tr('잠금 번호 6자리'),
+                  ),
                   onSubmitted: (_) {
                     if (c.hasPin && !working) {
                       run(() => c.unlockPin(pin.text));
@@ -244,8 +261,8 @@ class _LockScreenState extends State<LockScreen> {
                       maxLength: 6,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        labelText: '잠금 번호 다시 입력',
+                      decoration: InputDecoration(
+                        labelText: context.tr('잠금 번호 다시 입력'),
                       ),
                     ),
                   ),
@@ -253,7 +270,7 @@ class _LockScreenState extends State<LockScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      error!,
+                      errorText(context, error!),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -276,10 +293,10 @@ class _LockScreenState extends State<LockScreen> {
                     padding: const EdgeInsets.all(14),
                     child: Text(
                       working
-                          ? '수첩을 여는 중…'
+                          ? context.tr('수첩을 여는 중…')
                           : c.hasPin
-                          ? '수첩 열기'
-                          : '내 수첩 시작하기',
+                          ? context.tr('수첩 열기')
+                          : context.tr('내 수첩 시작하기'),
                     ),
                   ),
                 ),
@@ -287,16 +304,16 @@ class _LockScreenState extends State<LockScreen> {
                   TextButton.icon(
                     onPressed: working ? null : () => run(c.unlockDevice),
                     icon: const Icon(Icons.fingerprint),
-                    label: const Text('기기 인증으로 열기'),
+                    label: Text(context.tr('기기 인증으로 열기')),
                   ),
                 const SizedBox(height: 24),
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.lock_outline, size: 16, color: forest),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '기기에 암호화 저장 · 계정 없이 시작',
+                        context.tr('기기에 암호화 저장 · 계정 없이 시작'),
                         style: TextStyle(color: forest, fontSize: 13),
                       ),
                     ),
@@ -309,14 +326,16 @@ class _LockScreenState extends State<LockScreen> {
                         : () async {
                             if (await confirm(
                               context,
-                              '잠금 번호를 잊으셨나요?',
-                              '기존 잠금 번호를 복구할 수는 없습니다. 이 기기의 수첩을 모두 삭제하고 다시 시작할 수 있습니다. 따로 저장한 암호화 백업은 새 수첩의 설정에서 복원할 수 있습니다.',
-                              action: '모두 삭제하고 재시작',
+                              context.tr('잠금 번호를 잊으셨나요?'),
+                              context.tr(
+                                '기존 잠금 번호를 복구할 수는 없습니다. 이 기기의 수첩을 모두 삭제하고 다시 시작할 수 있습니다. 따로 저장한 암호화 백업은 새 수첩의 설정에서 복원할 수 있습니다.',
+                              ),
+                              action: context.tr('모두 삭제하고 재시작'),
                             )) {
                               await run(c.deleteAll);
                             }
                           },
-                    child: const Text('잠금 번호를 잊었어요'),
+                    child: Text(context.tr('잠금 번호를 잊었어요')),
                   ),
               ],
             ),

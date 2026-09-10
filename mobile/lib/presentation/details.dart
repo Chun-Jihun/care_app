@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -23,16 +25,16 @@ class EntryDetails extends StatelessWidget {
       if (e == null) {
         return Scaffold(
           appBar: AppBar(),
-          body: const Center(child: Text('삭제된 기록입니다.')),
+          body: Center(child: Text(context.tr('삭제된 기록입니다.'))),
         );
       }
       final attachments = c.db.attachments(pid, id);
       return Scaffold(
         appBar: AppBar(
-          title: Text(e.kind.label),
+          title: Text(context.tr(e.kind.label)),
           actions: [
             IconButton(
-              tooltip: '기록 수정',
+              tooltip: context.tr('기록 수정'),
               onPressed: () => editEntry(context, c, e.kind, entry: e),
               icon: const Icon(Icons.edit_outlined),
             ),
@@ -42,12 +44,12 @@ class EntryDetails extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           children: [
             Text(
-              '${dateText(e.occurredAt)} ${timeText(e.occurredAt)}',
+              '${dateText(context, e.occurredAt)} ${timeText(context, e.occurredAt)}',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              '직접 작성 · 수정 버전 ${e.version}',
+              context.tr('직접 작성 · 수정 버전 {0}', [e.version]),
               style: const TextStyle(color: forest),
             ),
             const SizedBox(height: 16),
@@ -56,15 +58,14 @@ class EntryDetails extends StatelessWidget {
                 Card(
                   child: ListTile(
                     title: Text(
-                      field.label,
+                      context.tr(field.label),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF68796E),
                       ),
                     ),
                     subtitle: SelectableText(
-                      field.choices[e.fields[field.key]] ??
-                          e.fields[field.key]!,
+                      context.strings.fieldValue(field, e.fields[field.key]!),
                       style: const TextStyle(fontSize: 16, color: ink),
                     ),
                   ),
@@ -79,9 +80,9 @@ class EntryDetails extends StatelessWidget {
                   ),
                 ),
               ),
-            const Section('사진'),
-            const Text(
-              '음식·처방자료 등을 첨부하세요. 사진 위치 정보는 제거하고 암호화해 저장합니다.',
+            Section(context.tr('사진')),
+            Text(
+              context.tr('음식·처방자료 등을 첨부하세요. 사진 위치 정보는 제거하고 암호화해 저장합니다.'),
               style: TextStyle(height: 1.5, color: Color(0xFF68796E)),
             ),
             const SizedBox(height: 12),
@@ -91,13 +92,13 @@ class EntryDetails extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => attempt(context, () => c.addPhoto(pid, id)),
                   icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('사진 선택'),
+                  label: Text(context.tr('사진 선택')),
                 ),
                 OutlinedButton.icon(
                   onPressed: () =>
                       attempt(context, () => c.addPhoto(pid, id, camera: true)),
                   icon: const Icon(Icons.photo_camera_outlined),
-                  label: const Text('촬영'),
+                  label: Text(context.tr('촬영')),
                 ),
               ],
             ),
@@ -105,7 +106,7 @@ class EntryDetails extends StatelessWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.photo_outlined, color: forest),
-                  title: const Text('첨부 사진'),
+                  title: Text(context.tr('첨부 사진')),
                   subtitle: Text('${(a.bytes / 1024).ceil()} KB'),
                   onTap: () {
                     final photo = c.photo(pid, id, a.id);
@@ -115,13 +116,13 @@ class EntryDetails extends StatelessWidget {
                     );
                   },
                   trailing: IconButton(
-                    tooltip: '사진 삭제',
+                    tooltip: context.tr('사진 삭제'),
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () async {
                       if (await confirm(
                             context,
-                            '사진을 삭제할까요?',
-                            '이 기록에 저장된 사진을 삭제합니다.',
+                            context.tr('사진을 삭제할까요?'),
+                            context.tr('이 기록에 저장된 사진을 삭제합니다.'),
                           ) &&
                           context.mounted) {
                         await attempt(context, () async {
@@ -136,21 +137,21 @@ class EntryDetails extends StatelessWidget {
               ),
             if (e.version > 1)
               ExpansionTile(
-                title: const Text('수정 전 기록'),
+                title: Text(context.tr('수정 전 기록')),
                 children: c.db.revisions(pid, id).map((r) {
                   final snapshot = r;
                   final fields = Map<String, dynamic>.from(
                     snapshot['fields'] as Map,
                   );
                   return ListTile(
-                    title: Text('버전 ${r['version']}'),
+                    title: Text(context.tr('버전 {0}', [r['version']])),
                     subtitle: Text(
                       [
                         ...e.kind.fields
                             .where((f) => (fields[f.key] ?? '') != '')
                             .map(
                               (f) =>
-                                  '${f.label}: ${f.choices[fields[f.key]] ?? fields[f.key]}',
+                                  '${context.tr(f.label)}: ${context.strings.fieldValue(f, fields[f.key] as String)}',
                             ),
                         snapshot['note'] ?? '',
                       ].join('\n'),
@@ -163,8 +164,10 @@ class EntryDetails extends StatelessWidget {
               onPressed: () async {
                 if (await confirm(
                       context,
-                      '기록을 삭제할까요?',
-                      '이 기록의 수정 이력과 첨부 사진도 삭제됩니다. 진료 준비 목록에서도 빠집니다.',
+                      context.tr('기록을 삭제할까요?'),
+                      context.tr(
+                        '이 기록의 수정 이력과 첨부 사진도 삭제됩니다. 진료 준비 목록에서도 빠집니다.',
+                      ),
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
@@ -176,7 +179,7 @@ class EntryDetails extends StatelessWidget {
                 }
               },
               icon: const Icon(Icons.delete_outline),
-              label: const Text('기록 삭제'),
+              label: Text(context.tr('기록 삭제')),
             ),
           ],
         ),
@@ -190,12 +193,12 @@ class PhotoPage extends StatelessWidget {
   final Future<Uint8List> photo;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('첨부 사진')),
+    appBar: AppBar(title: Text(context.tr('첨부 사진'))),
     body: FutureBuilder<Uint8List>(
       future: photo,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text('사진을 열 수 없습니다.'));
+          return Center(child: Text(context.tr('사진을 열 수 없습니다.')));
         }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -232,7 +235,9 @@ class MedicationDetails extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           children: [
             Text(
-              med.instruction.isEmpty ? '기록된 지시가 없습니다.' : med.instruction,
+              med.instruction.isEmpty
+                  ? context.tr('기록된 지시가 없습니다.')
+                  : med.instruction,
               style: const TextStyle(fontSize: 18, height: 1.6),
             ),
             const SizedBox(height: 12),
@@ -241,19 +246,23 @@ class MedicationDetails extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => recordIntake(context, c, med),
               icon: const Icon(Icons.add_task),
-              label: const Text('실제 복약 기록'),
+              label: Text(context.tr('실제 복약 기록')),
             ),
             OutlinedButton(
               onPressed: () => editMedication(context, c, medication: med),
-              child: const Text('처방 지시 수정 기록'),
+              child: Text(context.tr('처방 지시 수정 기록')),
             ),
-            const Section('처방 지시 이력'),
+            Section(context.tr('처방 지시 이력')),
             ...plans.map(
               (p) => Card(
                 child: ListTile(
-                  title: Text(p['status'] == 'active' ? '현재 기록된 지시' : '이전 지시'),
+                  title: Text(
+                    p['status'] == 'active'
+                        ? context.tr('현재 기록된 지시')
+                        : context.tr('이전 지시'),
+                  ),
                   subtitle: Text(
-                    '${dateText(DateTime.fromMillisecondsSinceEpoch(p['created_at'] as int))}\n${p['name']}\n${p['instruction']}\n${(jsonDecode(p['times'] as String) as List).join(' · ')}',
+                    '${dateText(context, DateTime.fromMillisecondsSinceEpoch(p['created_at'] as int))}\n${p['name']}\n${p['instruction']}\n${(jsonDecode(p['times'] as String) as List).join(' · ')}',
                   ),
                 ),
               ),
@@ -263,11 +272,15 @@ class MedicationDetails extends StatelessWidget {
               onPressed: () async {
                 if (await confirm(
                       context,
-                      med.active ? '목록에서 보관할까요?' : '다시 목록에 표시할까요?',
                       med.active
-                          ? '기존 복약 이력은 유지하고 이 약의 앱 알림을 끕니다. 약을 중단하라는 의미가 아닙니다.'
-                          : '저장된 시각에 따라 앱 알림을 다시 예약합니다.',
-                      action: med.active ? '보관' : '표시',
+                          ? context.tr('목록에서 보관할까요?')
+                          : context.tr('다시 목록에 표시할까요?'),
+                      med.active
+                          ? context.tr(
+                              '기존 복약 이력은 유지하고 이 약의 앱 알림을 끕니다. 약을 중단하라는 의미가 아닙니다.',
+                            )
+                          : context.tr('저장된 시각에 따라 앱 알림을 다시 예약합니다.'),
+                      action: med.active ? context.tr('보관') : context.tr('표시'),
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
@@ -277,7 +290,9 @@ class MedicationDetails extends StatelessWidget {
                   });
                 }
               },
-              child: Text(med.active ? '목록에서 보관' : '목록에 다시 표시'),
+              child: Text(
+                med.active ? context.tr('목록에서 보관') : context.tr('목록에 다시 표시'),
+              ),
             ),
           ],
         ),
@@ -301,7 +316,7 @@ class VisitDetails extends StatelessWidget {
       if (v == null) {
         return Scaffold(
           appBar: AppBar(),
-          body: const Center(child: Text('삭제된 진료 준비입니다.')),
+          body: Center(child: Text(context.tr('삭제된 진료 준비입니다.'))),
         );
       }
       return Scaffold(
@@ -309,7 +324,7 @@ class VisitDetails extends StatelessWidget {
           title: Text(v.title),
           actions: [
             IconButton(
-              tooltip: '진료 준비 검토',
+              tooltip: context.tr('진료 준비 검토'),
               onPressed: () => editVisit(context, c, visit: v),
               icon: const Icon(Icons.edit_outlined),
             ),
@@ -319,19 +334,23 @@ class VisitDetails extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           children: [
             if (v.stale)
-              const Card(
+              Card(
                 color: Color(0xFFFFF1DB),
                 child: Padding(
                   padding: EdgeInsets.all(16),
-                  child: Text('선택한 원본 기록이 변경되었어요. 수정 화면에서 다시 검토하고 저장해 주세요.'),
+                  child: Text(
+                    context.tr('선택한 원본 기록이 변경되었어요. 수정 화면에서 다시 검토하고 저장해 주세요.'),
+                  ),
                 ),
               ),
-            const Section('물어볼 질문'),
+            Section(context.tr('물어볼 질문')),
             SelectableText(
-              v.questions.isEmpty ? '아직 적어둔 질문이 없습니다.' : v.questions,
+              v.questions.isEmpty
+                  ? context.tr('아직 적어둔 질문이 없습니다.')
+                  : v.questions,
               style: const TextStyle(fontSize: 17, height: 1.6),
             ),
-            const Section('함께 볼 원본 기록'),
+            Section(context.tr('함께 볼 원본 기록')),
             ...c.db
                 .visitEntries(pid, id)
                 .map(
@@ -350,8 +369,8 @@ class VisitDetails extends StatelessWidget {
               onPressed: () async {
                 if (await confirm(
                       context,
-                      '진료 준비를 삭제할까요?',
-                      '원본 일기 기록은 그대로 남습니다.',
+                      context.tr('진료 준비를 삭제할까요?'),
+                      context.tr('원본 일기 기록은 그대로 남습니다.'),
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
@@ -363,7 +382,7 @@ class VisitDetails extends StatelessWidget {
                 }
               },
               icon: const Icon(Icons.delete_outline),
-              label: const Text('진료 준비 삭제'),
+              label: Text(context.tr('진료 준비 삭제')),
             ),
           ],
         ),

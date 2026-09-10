@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 
 import '../domain/records.dart';
@@ -11,13 +13,10 @@ Future<T?> pushPage<T>(BuildContext context, MaterialPageRoute<T> route) async {
   return value;
 }
 
-String dateText(DateTime at) =>
-    '${at.year}.${at.month.toString().padLeft(2, '0')}.${at.day.toString().padLeft(2, '0')}';
-String timeText(DateTime at) =>
-    '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
-String errorText(Object error) => error is CareError
-    ? error.message
-    : '작업을 완료하지 못했습니다. 입력 내용과 기기 저장 공간을 확인하고 다시 시도해 주세요.';
+String dateText(BuildContext context, DateTime at) => context.strings.date(at);
+String timeText(BuildContext context, DateTime at) => context.strings.time(at);
+String errorText(BuildContext context, Object error) =>
+    context.strings.error(error);
 
 Future<void> attempt(
   BuildContext context,
@@ -33,7 +32,7 @@ Future<void> attempt(
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(errorText(error))));
+          .showSnackBar(SnackBar(content: Text(errorText(context, error))));
     }
   }
 }
@@ -42,7 +41,7 @@ Future<bool> confirm(
   BuildContext context,
   String title,
   String body, {
-  String action = '삭제',
+  String? action,
 }) async =>
     await showDialog<bool>(
       context: context,
@@ -54,11 +53,11 @@ Future<bool> confirm(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
+            child: Text(context.tr('취소')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(action),
+            child: Text(action ?? context.tr('삭제')),
           ),
         ],
       ),
@@ -106,14 +105,16 @@ class Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 24, bottom: 10),
-    child: Row(
+    child: Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 4,
       children: [
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         if (action != null)
           TextButton(onPressed: onAction, child: Text(action!)),
@@ -165,9 +166,9 @@ class EntryTile extends StatelessWidget {
         foregroundColor: forest,
         child: Icon(kindIcon(entry.kind)),
       ),
-      title: Text(entry.kind.label),
+      title: Text(context.tr(entry.kind.label)),
       subtitle: Text(
-        '${dateText(entry.occurredAt)} ${timeText(entry.occurredAt)}\n${entry.summary}',
+        '${dateText(context, entry.occurredAt)} ${timeText(context, entry.occurredAt)}\n${context.strings.summary(entry)}',
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
       ),
@@ -189,10 +190,11 @@ class EditorPage extends StatefulWidget {
     required this.title,
     required this.content,
     required this.save,
-    this.saveLabel = '저장',
+    this.saveLabel,
     this.draft,
   });
-  final String title, saveLabel;
+  final String title;
+  final String? saveLabel;
   final List<Widget> Function(StateSetter setState) content;
   final Future<void> Function() save;
   final DraftSession? draft;
@@ -203,7 +205,7 @@ class EditorPage extends StatefulWidget {
 class _EditorPageState extends State<EditorPage> {
   bool saving = false;
   bool dirty = false, leaving = false, confirming = false;
-  String? error;
+  Object? error;
   @override
   void initState() {
     super.initState();
@@ -228,22 +230,22 @@ class _EditorPageState extends State<EditorPage> {
             context: context,
             useRootNavigator: false,
             builder: (ctx) => AlertDialog(
-              title: const Text('작성 중인 내용을 어떻게 할까요?'),
-              content: const Text(
-                '초안은 기록으로 확정되지 않아요. 잠금을 해제한 뒤 이어서 작성할 수 있습니다.',
+              title: Text(context.tr('작성 중인 내용을 어떻게 할까요?')),
+              content: Text(
+                context.tr('초안은 기록으로 확정되지 않아요. 잠금을 해제한 뒤 이어서 작성할 수 있습니다.'),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('계속 작성'),
+                  child: Text(context.tr('계속 작성')),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, 'discard'),
-                  child: const Text('초안 삭제'),
+                  child: Text(context.tr('초안 삭제')),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(ctx, 'keep'),
-                  child: const Text('초안 보관 후 나가기'),
+                  child: Text(context.tr('초안 보관 후 나가기')),
                 ),
               ],
             ),
@@ -260,13 +262,13 @@ class _EditorPageState extends State<EditorPage> {
         } else {
           leave = await confirm(
             context,
-            '작성을 그만둘까요?',
-            '아직 저장하지 않은 내용이 있습니다.',
-            action: '저장하지 않고 나가기',
+            context.tr('작성을 그만둘까요?'),
+            context.tr('아직 저장하지 않은 내용이 있습니다.'),
+            action: context.tr('저장하지 않고 나가기'),
           );
         }
       } catch (e) {
-        if (mounted) setState(() => error = errorText(e));
+        if (mounted) setState(() => error = e);
       } finally {
         confirming = false;
       }
@@ -289,8 +291,10 @@ class _EditorPageState extends State<EditorPage> {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: ValueListenableBuilder<String>(
                     valueListenable: draft.status,
-                    builder: (_, text, _) =>
-                        Text(text, style: const TextStyle(color: forest)),
+                    builder: (_, text, _) => Text(
+                      context.tr(text),
+                      style: const TextStyle(color: forest),
+                    ),
                   ),
                 ),
               ...widget
@@ -306,7 +310,7 @@ class _EditorPageState extends State<EditorPage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Text(
-                    error!,
+                    errorText(context, error!),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -334,7 +338,7 @@ class _EditorPageState extends State<EditorPage> {
                     if (mounted) {
                       setState(() {
                         saving = false;
-                        error = e is EditorCancelled ? null : errorText(e);
+                        error = e is EditorCancelled ? null : e;
                       });
                     }
                   }
@@ -347,7 +351,7 @@ class _EditorPageState extends State<EditorPage> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(widget.saveLabel),
+                      : Text(widget.saveLabel ?? context.tr('저장')),
                 ),
               ),
             ],
@@ -401,6 +405,6 @@ Widget dateButton(
   icon: const Icon(Icons.calendar_today_outlined),
   label: Padding(
     padding: const EdgeInsets.all(12),
-    child: Text('${dateText(date)}  ${timeText(date)}'),
+    child: Text('${dateText(context, date)}  ${timeText(context, date)}'),
   ),
 );

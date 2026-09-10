@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Care Notebook";
+"NSCameraUsageDescription" = "Attach photos of food and prescription documents to your records.";
+"NSPhotoLibraryUsageDescription" = "Attach the photos you select to your records.";
+"NSFaceIDUsageDescription" = "Unlock your Care Notebook.";

@@ -1,9 +1,13 @@
+import '../l10n/app_strings.dart';
+
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart' hide AndroidOptions;
 import 'package:path_provider/path_provider.dart';
@@ -32,6 +36,7 @@ class DeviceSecretStore implements SecretStore {
 }
 
 abstract class PlatformServices {
+  AppStrings strings = const AppStrings(AppLanguage.korean);
   Future<String> timeZone() async => '';
   Future<bool> authenticate() => Future.value(false);
   Future<bool> requestNotifications() => Future.value(false);
@@ -61,6 +66,7 @@ class DevicePlatformServices extends PlatformServices {
   static const privacy = MethodChannel('org.carenotebook/privacy');
   final _notifications = FlutterLocalNotificationsPlugin();
   bool _notificationsReady = false;
+  AppLanguage? _channelLanguage;
   final _scheduled = <int, String>{};
   @override
   Future<String> timeZone() async {
@@ -107,7 +113,15 @@ class DevicePlatformServices extends PlatformServices {
     }
     try {
       return await auth.authenticate(
-        localizedReason: '간병수첩의 기록을 열기 위해 인증해 주세요.',
+        localizedReason: strings.text('간병수첩의 기록을 열기 위해 인증해 주세요.'),
+        authMessages: [
+          AndroidAuthMessages(
+            cancelButton: strings.text('취소'),
+            signInTitle: strings.text('간병수첩'),
+            signInHint: strings.text('지문·얼굴 또는 기기 잠금으로 인증'),
+          ),
+          IOSAuthMessages(cancelButton: strings.text('취소')),
+        ],
         persistAcrossBackgrounding: true,
       );
     } on LocalAuthException {
@@ -166,6 +180,21 @@ class DevicePlatformServices extends PlatformServices {
       _scheduled.clear();
       return;
     }
+    if (_channelLanguage != strings.language) {
+      await _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(
+            AndroidNotificationChannel(
+              'care_reminders',
+              strings.text('간병 일정'),
+              description: strings.text('사용자가 설정한 일정과 복약 확인'),
+              importance: Importance.defaultImportance,
+            ),
+          );
+      _channelLanguage = strings.language;
+    }
     final pending = (await _notifications.pendingNotificationRequests())
         .map((r) => r.id)
         .toSet();
@@ -185,8 +214,8 @@ class DevicePlatformServices extends PlatformServices {
     }
     for (final reminder in future) {
       final signature = reminder.daily
-          ? '$zone:daily:${reminder.at.hour}:${reminder.at.minute}'
-          : '$zone:${reminder.at.millisecondsSinceEpoch}';
+          ? '${strings.language.code}:$zone:daily:${reminder.at.hour}:${reminder.at.minute}'
+          : '${strings.language.code}:$zone:${reminder.at.millisecondsSinceEpoch}';
       if (pending.contains(reminder.id) &&
           _scheduled[reminder.id] == signature) {
         continue;
@@ -194,13 +223,13 @@ class DevicePlatformServices extends PlatformServices {
       await _notifications.zonedSchedule(
         id: reminder.id,
         scheduledDate: tz.TZDateTime.from(reminder.at, tz.local),
-        title: '간병수첩',
-        body: '확인할 일정이 있어요. 수첩을 열어 확인해 주세요.',
-        notificationDetails: const NotificationDetails(
+        title: strings.text('간병수첩'),
+        body: strings.text('확인할 일정이 있어요. 수첩을 열어 확인해 주세요.'),
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'care_reminders',
-            '간병 일정',
-            channelDescription: '사용자가 설정한 일정과 복약 확인',
+            strings.text('간병 일정'),
+            channelDescription: strings.text('사용자가 설정한 일정과 복약 확인'),
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
             visibility: NotificationVisibility.secret,
@@ -244,7 +273,7 @@ class DevicePlatformServices extends PlatformServices {
   @override
   Future<void> saveBackup(Uint8List data) async {
     final result = await FilePicker.saveFile(
-      dialogTitle: '암호화 백업 저장',
+      dialogTitle: strings.text('암호화 백업 저장'),
       fileName:
           'care-notebook-${DateTime.now().toIso8601String().substring(0, 10)}.carebackup',
       type: FileType.any,
@@ -259,7 +288,7 @@ class DevicePlatformServices extends PlatformServices {
   Future<Uint8List?> pickBackup() async {
     try {
       final file = await FilePicker.pickFile(
-        dialogTitle: '간병수첩 백업 선택',
+        dialogTitle: strings.text('간병수첩 백업 선택'),
         type: FileType.any,
       );
       if (file == null) {

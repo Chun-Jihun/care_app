@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:care_notebook/infrastructure/platform_services.dart';
+import 'package:care_notebook/l10n/app_strings.dart';
 import 'package:timezone/data/latest_all.dart' as data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -66,6 +67,24 @@ void main() {
     expect(calls.where((c) => c.method == 'cancel').single.arguments['id'], 30);
     await platform.schedule(reminders);
     expect(calls.where((c) => c.method == 'zonedSchedule'), hasLength(1));
+    final original =
+        calls.where((c) => c.method == 'zonedSchedule').single.arguments as Map;
+    for (final language in AppLanguage.values.skip(1)) {
+      platform.strings = AppStrings(language);
+      await platform.schedule(reminders);
+      final next =
+          calls.where((c) => c.method == 'zonedSchedule').last.arguments as Map;
+      expect(next['id'], 20);
+      expect(next['scheduledDateTime'], original['scheduledDateTime']);
+      expect(next['title'], platform.strings.text('간병수첩'));
+      expect(
+        next['body'],
+        platform.strings.text('확인할 일정이 있어요. 수첩을 열어 확인해 주세요.'),
+      );
+      expect(pending, {10, 20});
+      expect(calls.where((c) => c.method == 'cancelAll'), isEmpty);
+    }
+    expect(calls.where((c) => c.method == 'zonedSchedule'), hasLength(5));
     await platform.schedule([]);
     expect(pending, isEmpty);
   });

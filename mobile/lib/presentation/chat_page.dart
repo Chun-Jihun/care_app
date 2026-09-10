@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -19,13 +21,18 @@ class ChatPage extends StatelessWidget {
       }
       return Scaffold(
         appBar: AppBar(
-          title: const Text('간병 도우미'),
+          title: Text(context.tr('간병 도우미')),
           actions: [
             PopupMenuButton<String>(
-              tooltip: '대화 수첩 전환',
+              tooltip: context.tr('대화 수첩 전환'),
               onSelected: (id) => attempt(context, () => c.selectPatient(id)),
               itemBuilder: (_) => c.patients
-                  .map((p) => PopupMenuItem(value: p.id, child: Text(p.label)))
+                  .map(
+                    (p) => PopupMenuItem(
+                      value: p.id,
+                      child: Text(context.strings.patient(p)),
+                    ),
+                  )
                   .toList(),
               icon: const Icon(Icons.people_outline),
             ),
@@ -49,7 +56,7 @@ class _ChatBodyState extends State<ChatBody> {
   final input = TextEditingController(), scroll = ScrollController();
   bool sending = false;
   int policyRevision = 0;
-  String? error;
+  Object? error;
   Timer? expiry;
   ChatRetention? policy;
   List<ChatMessage> messages = [];
@@ -89,11 +96,11 @@ class _ChatBodyState extends State<ChatBody> {
     if (hasMessages &&
         !await confirm(
           context,
-          '질문 보관 방식을 바꿀까요?',
+          context.tr('질문 보관 방식을 바꿀까요?'),
           value == ChatRetention.session
-              ? '기기에 저장한 기존 질문을 삭제합니다. 새 질문은 수첩을 잠글 때 지워집니다.'
-              : '기존 질문에도 새 기간을 적용합니다. 기간이 지난 질문과 임시 질문은 삭제됩니다.',
-          action: '변경',
+              ? context.tr('기기에 저장한 기존 질문을 삭제합니다. 새 질문은 수첩을 잠글 때 지워집니다.')
+              : context.tr('기존 질문에도 새 기간을 적용합니다. 기간이 지난 질문과 임시 질문은 삭제됩니다.'),
+          action: context.tr('변경'),
         )) {
       if (mounted) {
         setState(() => policyRevision++);
@@ -132,7 +139,7 @@ class _ChatBodyState extends State<ChatBody> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => error = errorText(e));
+        setState(() => error = e);
       }
     } finally {
       if (mounted) {
@@ -172,7 +179,9 @@ class _ChatBodyState extends State<ChatBody> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    '${c.patient.label} · AI 연결 전',
+                                    context.tr('{0} · AI 연결 전', [
+                                      context.strings.patient(c.patient),
+                                    ]),
                                     style: const TextStyle(
                                       color: forest,
                                       fontWeight: FontWeight.w700,
@@ -182,8 +191,10 @@ class _ChatBodyState extends State<ChatBody> {
                               ],
                             ),
                             const SizedBox(height: 7),
-                            const Text(
-                              '지금은 질문을 남겨두는 대화창이에요. AI 답변은 제공되지 않으며 질문이 자동 전송되지 않아요.',
+                            Text(
+                              context.tr(
+                                '지금은 질문을 남겨두는 대화창이에요. AI 답변은 제공되지 않으며 질문이 자동 전송되지 않아요.',
+                              ),
                               style: TextStyle(height: 1.5, fontSize: 13),
                             ),
                           ],
@@ -198,8 +209,8 @@ class _ChatBodyState extends State<ChatBody> {
                                 key: ValueKey('$policy-$policyRevision'),
                                 initialValue: policy,
                                 isExpanded: true,
-                                decoration: const InputDecoration(
-                                  labelText: '질문 보관 방식',
+                                decoration: InputDecoration(
+                                  labelText: context.tr('질문 보관 방식'),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
@@ -209,7 +220,7 @@ class _ChatBodyState extends State<ChatBody> {
                                     .map(
                                       (p) => DropdownMenuItem(
                                         value: p,
-                                        child: Text(p.label),
+                                        child: Text(context.tr(p.label)),
                                       ),
                                     )
                                     .toList(),
@@ -223,14 +234,16 @@ class _ChatBodyState extends State<ChatBody> {
                               ),
                             ),
                             IconButton(
-                              tooltip: '모든 질문 삭제',
+                              tooltip: context.tr('모든 질문 삭제'),
                               onPressed: messages.isEmpty
                                   ? null
                                   : () async {
                                       if (await confirm(
                                             context,
-                                            '이 수첩의 질문을 모두 삭제할까요?',
-                                            '따로 저장한 진료 준비와 일기는 유지됩니다.',
+                                            context.tr('이 수첩의 질문을 모두 삭제할까요?'),
+                                            context.tr(
+                                              '따로 저장한 진료 준비와 일기는 유지됩니다.',
+                                            ),
                                           ) &&
                                           context.mounted) {
                                         await attempt(
@@ -261,7 +274,7 @@ class _ChatBodyState extends State<ChatBody> {
                               ),
                               const SizedBox(height: 20),
                               Text(
-                                '궁금한 점을\n잊기 전에 남겨 보세요.',
+                                context.tr('궁금한 점을\n잊기 전에 남겨 보세요.'),
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
@@ -270,8 +283,10 @@ class _ChatBodyState extends State<ChatBody> {
                                     ),
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                '질문은 진료 준비에 옮겨 정리할 수 있어요.\n먼저 보관 방식을 선택해 주세요.',
+                              Text(
+                                context.tr(
+                                  '질문은 진료 준비에 옮겨 정리할 수 있어요.\n먼저 보관 방식을 선택해 주세요.',
+                                ),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Color(0xFF68796E),
@@ -283,16 +298,21 @@ class _ChatBodyState extends State<ChatBody> {
                                 alignment: WrapAlignment.center,
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: ['약에 관한 질문', '식사에 관한 질문', '활동에 관한 질문']
-                                    .map(
-                                      (text) => ActionChip(
-                                        label: Text(text),
-                                        onPressed: () => setState(
-                                          () => input.text = '$text: ',
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
+                                children:
+                                    [
+                                          context.tr('약에 관한 질문'),
+                                          context.tr('식사에 관한 질문'),
+                                          context.tr('활동에 관한 질문'),
+                                        ]
+                                        .map(
+                                          (text) => ActionChip(
+                                            label: Text(text),
+                                            onPressed: () => setState(
+                                              () => input.text = '$text: ',
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
                               ),
                             ],
                           ),
@@ -331,7 +351,10 @@ class _ChatBodyState extends State<ChatBody> {
                                   children: [
                                     Flexible(
                                       child: Text(
-                                        '${dateText(m.createdAt)} ${timeText(m.createdAt)} · 답변 없음',
+                                        context.tr('{0} {1} · 답변 없음', [
+                                          dateText(context, m.createdAt),
+                                          timeText(context, m.createdAt),
+                                        ]),
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: Color(0xFF68796E),
@@ -339,7 +362,7 @@ class _ChatBodyState extends State<ChatBody> {
                                       ),
                                     ),
                                     PopupMenuButton<String>(
-                                      tooltip: '질문 메뉴',
+                                      tooltip: context.tr('질문 메뉴'),
                                       onSelected: (action) async {
                                         if (action == 'visit') {
                                           await editVisit(
@@ -349,8 +372,8 @@ class _ChatBodyState extends State<ChatBody> {
                                           );
                                         } else if (await confirm(
                                               context,
-                                              '질문을 삭제할까요?',
-                                              '선택한 질문을 삭제합니다.',
+                                              context.tr('질문을 삭제할까요?'),
+                                              context.tr('선택한 질문을 삭제합니다.'),
                                             ) &&
                                             context.mounted) {
                                           await attempt(
@@ -360,14 +383,14 @@ class _ChatBodyState extends State<ChatBody> {
                                           );
                                         }
                                       },
-                                      itemBuilder: (_) => const [
+                                      itemBuilder: (_) => [
                                         PopupMenuItem(
                                           value: 'visit',
-                                          child: Text('진료 준비로 정리'),
+                                          child: Text(context.tr('진료 준비로 정리')),
                                         ),
                                         PopupMenuItem(
                                           value: 'delete',
-                                          child: Text('질문 삭제'),
+                                          child: Text(context.tr('질문 삭제')),
                                         ),
                                       ],
                                       icon: const Icon(
@@ -389,7 +412,7 @@ class _ChatBodyState extends State<ChatBody> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                error!,
+                errorText(context, error!),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
@@ -412,15 +435,15 @@ class _ChatBodyState extends State<ChatBody> {
                     decoration: InputDecoration(
                       counterText: '',
                       hintText: policy == null
-                          ? '보관 방식을 먼저 선택해 주세요'
-                          : '궁금한 점을 적어 주세요',
+                          ? context.tr('보관 방식을 먼저 선택해 주세요')
+                          : context.tr('궁금한 점을 적어 주세요'),
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
-                  tooltip: '질문 남기기',
+                  tooltip: context.tr('질문 남기기'),
                   onPressed:
                       policy == null || sending || input.text.trim().isEmpty
                       ? null

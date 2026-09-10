@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "간병수첩";
+"NSCameraUsageDescription" = "음식과 처방자료 사진을 기록에 첨부합니다.";
+"NSPhotoLibraryUsageDescription" = "선택한 사진을 기록에 첨부합니다.";
+"NSFaceIDUsageDescription" = "간병수첩 잠금을 해제합니다.";

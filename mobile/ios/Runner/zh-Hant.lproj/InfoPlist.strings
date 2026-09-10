@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "照護手冊";
+"NSCameraUsageDescription" = "將食物和處方資料照片附加到紀錄中。";
+"NSPhotoLibraryUsageDescription" = "將所選照片附加到紀錄中。";
+"NSFaceIDUsageDescription" = "解鎖照護手冊。";

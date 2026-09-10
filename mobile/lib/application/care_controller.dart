@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../l10n/app_strings.dart';
+
 import '../domain/records.dart';
 import '../domain/chat.dart';
 import '../domain/drafts.dart';
@@ -16,6 +18,9 @@ class CareController extends ChangeNotifier {
   CareController(this.vault, this.platform);
   final VaultStore vault;
   final PlatformServices platform;
+  AppLanguage _language = AppLanguage.korean;
+  AppLanguage get language => _language;
+  AppStrings get strings => AppStrings(_language);
   bool ready = false,
       unlocked = false,
       hasPin = false,
@@ -188,10 +193,33 @@ class CareController extends ChangeNotifier {
       unlocked && db.setting('reminders_enabled') == 'true';
 
   Future<void> initialize() async {
+    _language = AppLanguage.fromCode(await vault.secrets.read('app.language'));
+    platform.strings = strings;
     hasPin = await vault.secrets.read('auth.pin') != null;
     ready = true;
     notifyListeners();
   }
+
+  Future<void> setLanguage(AppLanguage value) => _exclusive((_) async {
+    if (value == _language) return;
+    try {
+      await vault.secrets.write('app.language', value.code);
+    } catch (_) {
+      throw const CareError('언어 설정을 저장하지 못했습니다. 다시 시도해 주세요.');
+    }
+    _language = value;
+    platform.strings = strings;
+    _reminderState = null;
+    notifyListeners();
+    // Locked records remain inaccessible. Reconcile scheduled copy on unlock.
+    if (unlocked) {
+      try {
+        await _syncReminders();
+      } catch (_) {
+        notice = '기록은 저장되었습니다. 알림 권한과 기기 설정을 확인해 주세요.';
+      }
+    }
+  }, requireUnlock: false);
 
   Future<void> _open(int epoch) async {
     if (epoch != _lockEpoch) return;

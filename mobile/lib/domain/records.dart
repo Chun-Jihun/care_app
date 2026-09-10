@@ -133,8 +133,10 @@ const recordFields = <EntryKind, List<RecordField>>{
 };
 
 class CareError implements Exception {
-  const CareError(this.message);
+  const CareError(this.message, {this.labels = const []});
   final String message;
+  // Arguments here are field metadata, never patient-entered content.
+  final List<String> labels;
   @override
   String toString() => message;
 }
@@ -146,22 +148,22 @@ void validateEntry(EntryKind kind, Map<String, String> fields, String note) {
   for (final field in kind.fields) {
     final value = (fields[field.key] ?? '').trim();
     if (field.required && value.isEmpty) {
-      throw CareError('필수 항목을 입력해 주세요: ${field.label}');
+      throw CareError('필수 항목을 입력해 주세요: {0}', labels: [field.label]);
     }
     if (value.length > 4000) {
-      throw CareError('${field.label}은 4,000자 이내로 입력해 주세요.');
+      throw CareError('{0}은 4,000자 이내로 입력해 주세요.', labels: [field.label]);
     }
     if (field.numeric &&
         value.isNotEmpty &&
         (double.tryParse(value) == null ||
             !double.parse(value).isFinite ||
             double.parse(value) < 0)) {
-      throw CareError('${field.label}은 0 이상의 숫자로 입력해 주세요.');
+      throw CareError('{0}은 0 이상의 숫자로 입력해 주세요.', labels: [field.label]);
     }
     if (field.choices.isNotEmpty &&
         value.isNotEmpty &&
         !field.choices.containsKey(value)) {
-      throw CareError('항목을 다시 선택해 주세요: ${field.label}');
+      throw CareError('항목을 다시 선택해 주세요: {0}', labels: [field.label]);
     }
   }
   if (kind == EntryKind.generalNote && note.trim().isEmpty) {
