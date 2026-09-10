@@ -58,3 +58,7 @@
 - 재현: `scripts/mobile.ps1 -Action Test`, `-Action Analyze`, `-Action BuildAndroid`. 로컬 로그는 `.tools/draft-backup-tests.log`, `draft-backup-ui-tests.log`, `draft-backup-analyze.log`, `draft-backup-build.log`에 있다. Python·AI 모델·지식 문서·프롬프트는 변경하지 않았다.
 
 최종 개발 검증용 APK: `mobile/build/app/outputs/flutter-apk/app-release.apk`, 76,743,388바이트. SHA-256: `BCB7876A9C990104CA63099D7F72075AC542636F81F5A6DBB8F3A25FA10D416A`. 이 APK도 가상기기에 업데이트 설치한 뒤 PIN으로 기존 저장소를 열어 오늘의 기록 2개(기존 기록 + 합성 복구 기록), 초안 없음 상태를 확인했다. 시험 중 변경한 화면 꺼짐 설정은 원래 값으로 되돌렸으며 전용 가상기기를 종료했다.
+
+## 후속 실기기 검증 (2026-09-10)
+
+동일 APK로 삼성 SM-S926N / Android 16에서 합성 자유 메모의 강제 종료 후 초안 복구·단일 확정 저장을 확인했다. 사용자 직접 촬영한 시험 사진 1개와 메모 1건을 실제 OS 파일 선택창으로 기기 내부 Download에 백업하고, 다시 불러와 원래 수첩을 유지하는 별도 수첩으로 복원했다. 원문·기록 시각·사진 연결 유지와 같은 백업의 중복 차단을 확인했다. 이는 9월 7일에 남아 있던 실제 파일 선택창 왕복 검증을 보완한다. 저장공간 부족·전원 장애·다른 입력 종류 전체를 실기기에서 검증한 것은 아니다. 상세 결과는 [Android 실기기 검증](./android_device_validation_2026-09-10.md)에 기록했다.
