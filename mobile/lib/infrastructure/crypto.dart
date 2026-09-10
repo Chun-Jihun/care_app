@@ -36,7 +36,7 @@ class VaultCrypto {
     String context = 'care-file-v1',
   }) async {
     if (data.length < 28) {
-      throw const CareError('암호화 파일 형식이 올바르지 않습니다.');
+      throw CareError(CareErrorCode.invalidEncryptedFile);
     }
     final result = await _aes.decrypt(
       SecretBox(
@@ -59,7 +59,7 @@ class VaultCrypto {
           .extractBytes();
   static Future<Uint8List> passwordSeal(Uint8List data, String password) async {
     if (password.length < 12) {
-      throw const CareError('백업 비밀번호는 12자 이상으로 입력해 주세요.');
+      throw CareError(CareErrorCode.backupPasswordTooShort);
     }
     final salt = randomBytes(16);
     final encrypted = await seal(
@@ -77,7 +77,7 @@ class VaultCrypto {
   static Future<Uint8List> passwordOpen(Uint8List data, String password) async {
     if (data.length < 52 ||
         utf8.decode(data.sublist(0, 8), allowMalformed: true) != 'CAREBK01') {
-      throw const CareError('간병수첩 백업 파일이 아닙니다.');
+      throw CareError(CareErrorCode.invalidBackupSignature);
     }
     return open(
       data.sublist(24),

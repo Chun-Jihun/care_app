@@ -284,7 +284,9 @@ class _LockScreenState extends State<LockScreen> {
                             await c.unlockPin(pin.text);
                           } else {
                             if (pin.text != repeat.text) {
-                              throw const CareError('두 잠금 번호가 일치하지 않습니다.');
+                              throw CareError(
+                                CareErrorCode.pinConfirmationMismatch,
+                              );
                             }
                             await c.setPin(pin.text);
                           }

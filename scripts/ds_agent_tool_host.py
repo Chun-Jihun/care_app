@@ -171,14 +171,14 @@ class HostContractError(ValueError):
         self.error_code = error_code
 
 
-def _canonical_bytes(value: Any) -> bytes:
-    return json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    ).encode("utf-8")
+try:
+    from scripts.evaluation_serialization import (
+        canonical_bytes as _canonical_bytes,
+    )
+except ModuleNotFoundError:  # pragma: no cover - direct script execution
+    from evaluation_serialization import (
+        canonical_bytes as _canonical_bytes,
+    )
 
 
 def _sha256(value: Any) -> str:

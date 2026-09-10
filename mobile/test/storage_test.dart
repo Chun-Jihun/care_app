@@ -76,7 +76,7 @@ void main() {
         occurredAt: original.occurredAt,
       );
       expect(updated.version, 2);
-      expect(db.revisions(a.id, original.id).single['note'], '');
+      expect(db.revisions(a.id, original.id).single.note, '');
       expect(
         () => db.saveEntry(
           a.id,

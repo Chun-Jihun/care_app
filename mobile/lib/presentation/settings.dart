@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/records.dart';
-import '../infrastructure/care_database.dart';
 import 'common.dart';
 import 'editors.dart';
 import 'draft_page.dart';
@@ -20,15 +19,14 @@ Widget contactCard(BuildContext context, CareController c) => Card(
           title: Text(context.tr('저장한 의료기관')),
           subtitle: Text(c.patient.contact),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              attempt(context, () => c.platform.dial(c.patient.contact)),
+          onTap: () => attempt(context, () => c.openDialer(c.patient.contact)),
         ),
       ListTile(
         leading: const Icon(Icons.emergency_outlined, color: Color(0xFFAA5140)),
         title: Text(context.tr('위급할 때 119 (대한민국)')),
         subtitle: Text(context.tr('기록보다 의료기관 연락이 먼저예요.')),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => attempt(context, () => c.platform.dial('119')),
+        onTap: () => attempt(context, () => c.openDialer('119')),
       ),
     ],
   ),
@@ -72,7 +70,7 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
                 ) &&
                 context.mounted) {
               await attempt(context, () async {
-                await c.mutate(() => c.db.deletePatient(p.id));
+                await c.profiles.deletePatient(p.id);
               });
             }
           },
@@ -90,20 +88,15 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
           value: c.notificationsEnabled,
           onChanged: (v) => attempt(context, () => c.enableNotifications(v)),
         ),
-        if (c.db.setting('imported_muted:${c.selectedId}') != null)
+        if (c.hasImportedReminderPolicy(c.selectedId!))
           SwitchListTile(
             title: Text(context.tr('복원한 이 수첩의 알림 허용')),
             subtitle: Text(
               context.tr('약 목록과 할 일의 시각을 검토한 뒤 켜 주세요. 전체 알림 설정도 켜져 있어야 합니다.'),
             ),
-            value: c.db.setting('imported_muted:${c.selectedId}') != 'true',
+            value: c.importedRemindersEnabled(c.selectedId!),
             onChanged: (v) => attempt(context, () async {
-              await c.mutate(
-                () => c.db.setSetting(
-                  'imported_muted:${c.selectedId}',
-                  (!v).toString(),
-                ),
-              );
+              await c.setImportedRemindersEnabled(c.selectedId!, v);
             }),
           ),
         FutureBuilder<bool>(
@@ -133,9 +126,7 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     child: ListTile(
       leading: const Icon(Icons.edit_note, color: forest),
       title: Text(context.tr('작성 중인 초안과 보관기간')),
-      subtitle: Text(
-        context.tr(c.db.draftRetention?.label ?? '처음 기록할 때 선택해요.'),
-      ),
+      subtitle: Text(context.tr(c.drafts.retention?.label ?? '처음 기록할 때 선택해요.')),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => Navigator.push(
         context,
@@ -148,27 +139,22 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     action: context.tr('상태 기록'),
     onAction: () => addCheckin(context, c),
   ),
-  if (c.db.checkins().isEmpty)
+  if (c.checkins.checkins().isEmpty)
     EmptyCard(
       context.tr('나의 상태도 챙겨 주세요'),
       context.tr('수면, 피로, 스트레스와 필요한 도움을 따로 기록할 수 있어요.'),
       icon: Icons.favorite_outline,
     ),
-  ...c.db.checkins().map(
+  ...c.checkins.checkins().map(
     (r) => Card(
       child: ListTile(
-        title: Text(
-          dateText(
-            context,
-            DateTime.fromMillisecondsSinceEpoch(r['occurred_at'] as int),
-          ),
-        ),
+        title: Text(dateText(context, r.occurredAt)),
         subtitle: Text(
           [
-            context.tr('피로: {0}', [r['fatigue']]),
-            context.tr('수면: {0}', [r['sleep']]),
-            context.tr('스트레스: {0}', [r['stress']]),
-            r['note'] as String,
+            context.tr('피로: {0}', [r.fatigue]),
+            context.tr('수면: {0}', [r.sleep]),
+            context.tr('스트레스: {0}', [r.stress]),
+            r.note,
           ].join('\n'),
         ),
         trailing: IconButton(
@@ -182,7 +168,7 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
                 ) &&
                 context.mounted) {
               await attempt(context, () async {
-                await c.mutate(() => c.db.deleteCheckin(r['id'] as String));
+                await c.checkins.deleteCheckin(r.id);
               });
             }
           },
@@ -257,7 +243,7 @@ Future<void> changePin(BuildContext context, CareController c) async {
           ],
           save: () async {
             if (a.text != b.text) {
-              throw const CareError('두 잠금 번호가 일치하지 않습니다.');
+              throw CareError(CareErrorCode.pinConfirmationMismatch);
             }
             await c.setPin(a.text);
           },

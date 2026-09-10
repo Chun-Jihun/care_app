@@ -1,6 +1,5 @@
 import '../l10n/app_strings.dart';
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -21,14 +20,14 @@ class EntryDetails extends StatelessWidget {
       if (!c.unlocked) {
         return const SizedBox.shrink();
       }
-      final e = c.db.entry(pid, id);
+      final e = c.records.entry(pid, id);
       if (e == null) {
         return Scaffold(
           appBar: AppBar(),
           body: Center(child: Text(context.tr('삭제된 기록입니다.'))),
         );
       }
-      final attachments = c.db.attachments(pid, id);
+      final attachments = c.records.attachments(pid, id);
       return Scaffold(
         appBar: AppBar(
           title: Text(context.tr(e.kind.label)),
@@ -126,9 +125,7 @@ class EntryDetails extends StatelessWidget {
                           ) &&
                           context.mounted) {
                         await attempt(context, () async {
-                          await c.mutate(
-                            () => c.db.deleteAttachment(pid, a.id),
-                          );
+                          await c.records.deleteAttachment(pid, a.id);
                         });
                       }
                     },
@@ -138,13 +135,11 @@ class EntryDetails extends StatelessWidget {
             if (e.version > 1)
               ExpansionTile(
                 title: Text(context.tr('수정 전 기록')),
-                children: c.db.revisions(pid, id).map((r) {
+                children: c.records.revisions(pid, id).map((r) {
                   final snapshot = r;
-                  final fields = Map<String, dynamic>.from(
-                    snapshot['fields'] as Map,
-                  );
+                  final fields = snapshot.fields;
                   return ListTile(
-                    title: Text(context.tr('버전 {0}', [r['version']])),
+                    title: Text(context.tr('버전 {0}', [r.version])),
                     subtitle: Text(
                       [
                         ...e.kind.fields
@@ -153,7 +148,7 @@ class EntryDetails extends StatelessWidget {
                               (f) =>
                                   '${context.tr(f.label)}: ${context.strings.fieldValue(f, fields[f.key] as String)}',
                             ),
-                        snapshot['note'] ?? '',
+                        snapshot.note,
                       ].join('\n'),
                     ),
                   );
@@ -171,7 +166,7 @@ class EntryDetails extends StatelessWidget {
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
-                    await c.mutate(() => c.db.deleteEntry(pid, id));
+                    await c.records.deleteEntry(pid, id);
                     if (context.mounted) {
                       Navigator.pop(context);
                     }
@@ -225,10 +220,10 @@ class MedicationDetails extends StatelessWidget {
       if (!c.unlocked) {
         return const SizedBox.shrink();
       }
-      final med = c.db
+      final med = c.medicationBook
           .medications(pid, includeArchived: true)
           .firstWhere((m) => m.id == id);
-      final plans = c.db.medicationPlans(pid, id);
+      final plans = c.medicationBook.medicationPlans(pid, id);
       return Scaffold(
         appBar: AppBar(title: Text(med.name)),
         body: ListView(
@@ -257,12 +252,10 @@ class MedicationDetails extends StatelessWidget {
               (p) => Card(
                 child: ListTile(
                   title: Text(
-                    p['status'] == 'active'
-                        ? context.tr('현재 기록된 지시')
-                        : context.tr('이전 지시'),
+                    p.active ? context.tr('현재 기록된 지시') : context.tr('이전 지시'),
                   ),
                   subtitle: Text(
-                    '${dateText(context, DateTime.fromMillisecondsSinceEpoch(p['created_at'] as int))}\n${p['name']}\n${p['instruction']}\n${(jsonDecode(p['times'] as String) as List).join(' · ')}',
+                    '${dateText(context, p.createdAt)}\n${p.name}\n${p.instruction}\n${p.times.join(' · ')}',
                   ),
                 ),
               ),
@@ -284,8 +277,10 @@ class MedicationDetails extends StatelessWidget {
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
-                    await c.mutate(
-                      () => c.db.archiveMedication(pid, id, med.active),
+                    await c.medicationBook.archiveMedication(
+                      pid,
+                      id,
+                      med.active,
                     );
                   });
                 }
@@ -312,7 +307,7 @@ class VisitDetails extends StatelessWidget {
       if (!c.unlocked) {
         return const SizedBox.shrink();
       }
-      final v = c.db.visits(pid).where((v) => v.id == id).firstOrNull;
+      final v = c.visitBook.visits(pid).where((v) => v.id == id).firstOrNull;
       if (v == null) {
         return Scaffold(
           appBar: AppBar(),
@@ -351,7 +346,7 @@ class VisitDetails extends StatelessWidget {
               style: const TextStyle(fontSize: 17, height: 1.6),
             ),
             Section(context.tr('함께 볼 원본 기록')),
-            ...c.db
+            ...c.visitBook
                 .visitEntries(pid, id)
                 .map(
                   (e) => EntryTile(
@@ -374,7 +369,7 @@ class VisitDetails extends StatelessWidget {
                     ) &&
                     context.mounted) {
                   await attempt(context, () async {
-                    await c.mutate(() => c.db.deleteVisit(pid, id));
+                    await c.visitBook.deleteVisit(pid, id);
                     if (context.mounted) {
                       Navigator.pop(context);
                     }

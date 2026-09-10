@@ -237,6 +237,14 @@ def _runner_source_hashes(root: Path) -> dict[str, str]:
         "scripts/run_ds_agent_model.py",
         "scripts/ds_agent_model_runner.py",
         "scripts/ds_agent_tool_host.py",
+        "scripts/evaluation_serialization.py",
+        "scripts/ds_agent_model_contracts.py",
+        "scripts/ds_agent_role_invocation.py",
+        "scripts/ds_agent_projections.py",
+        "scripts/ds_agent_results.py",
+        "scripts/ds_agent_episode.py",
+        "scripts/ds_agent_episode_stages.py",
+        "scripts/ds_agent_model_backends.py",
     )
     return {relative: _sha256_file(root / relative) for relative in relative_paths}
 

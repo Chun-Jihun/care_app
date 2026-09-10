@@ -12,7 +12,7 @@ class BackupSelection {
   }) : patientIds = Set.unmodifiable(patientIds) {
     if (patientIds.isEmpty ||
         (from != null && until != null && !from!.isBefore(until!))) {
-      throw const CareError('수첩을 하나 이상 선택하고 백업 기간을 확인해 주세요.');
+      throw CareError(CareErrorCode.invalidBackupSelection);
     }
   }
   final Set<String> patientIds;
@@ -30,11 +30,23 @@ class BackupSelection {
   };
 }
 
-typedef BackupRows = Map<String, List<Map<String, Object?>>>;
+enum BackupCategory {
+  notebooks,
+  records,
+  medications,
+  tasks,
+  visits,
+  photos,
+  chats,
+  checkins,
+}
 
 /// Preview contains counts only. Decrypted records are not retained by the UI.
 class BackupPreview {
-  const BackupPreview({required this.legacy, this.counts = const {}});
+  BackupPreview({
+    required this.legacy,
+    Map<BackupCategory, int> counts = const {},
+  }) : counts = Map.unmodifiable(counts);
   final bool legacy;
-  final Map<String, int> counts;
+  final Map<BackupCategory, int> counts;
 }

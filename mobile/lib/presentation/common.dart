@@ -1,4 +1,5 @@
 import '../l10n/app_strings.dart';
+import '../domain/drafts.dart';
 
 import 'package:flutter/material.dart';
 
@@ -289,10 +290,10 @@ class _EditorPageState extends State<EditorPage> {
               if (widget.draft case final draft?)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: ValueListenableBuilder<String>(
+                  child: ValueListenableBuilder<DraftStatus>(
                     valueListenable: draft.status,
                     builder: (_, text, _) => Text(
-                      context.tr(text),
+                      context.strings.draftStatus(text),
                       style: const TextStyle(color: forest),
                     ),
                   ),

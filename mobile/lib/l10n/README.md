@@ -15,6 +15,8 @@ flutter test
 
 사용자 데이터 자체를 번역 키로 전달하지 않는다. 환자 이름은 `context.strings.patient(patient)`, 기록 요약은 `context.strings.summary(entry)`로 표시하여 별칭과 자유 입력은 그대로 유지한다. 선택지·필드명 등 개발자가 정의한 메타데이터만 번역한다. 자리표시자는 한 번만 치환하므로 사용자 원문 안의 `{0}` 등을 다시 해석하지 않는다. `CareError.labels`에는 사용자 입력이 아닌 필드명만 넣는다.
 
+오류는 `CareError(CareErrorCode.requiredField, labels: ['단위'])`처럼 고정 코드로 생성한다. 표시 문구는 `error_messages.dart`에서 번역 키에 연결한다. 코드의 의미를 문구 변경에 맞춰 바꾸지 않으며, 새 코드는 다섯 번역 카탈로그에도 등록한다. `DraftStatus`도 enum으로 유지하고 `AppStrings.draftStatus`에서만 표시 문구로 변환한다.
+
 언어는 `CareController.setLanguage`에서 보안 저장소 `app.language`에 저장한 뒤 적용한다. 기기의 다른 민감정보를 읽거나 앱 잠금을 해제하지 않는다. 언어 설정은 환자 기록과 독립적이며 백업에 포함하지 않는다. 수첩 전체 삭제 이후에도 표시 언어는 유지한다. 기존 설정이 없거나 알 수 없는 값이면 한국어를 사용한다.
 
 향후 예약 알림은 같은 ID와 시각으로 문구를 갱신하며 의료정보를 담지 않는다. 잠긴 상태에서 선택한 언어는 다음 잠금 해제 후 예약에 반영한다. 이미 게시된 알림과 예정 시각이 지났지만 아직 배달되지 않은 알림은 소급 변경하지 않는다. Android 알림 채널의 이름도 갱신한다.

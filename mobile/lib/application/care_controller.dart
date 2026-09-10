@@ -1,78 +1,104 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
-
-import '../l10n/app_strings.dart';
+import 'package:uuid/uuid.dart';
 
 import '../domain/records.dart';
 import '../domain/chat.dart';
-import '../domain/drafts.dart';
 import '../domain/backup.dart';
-import '../infrastructure/care_database.dart';
-import '../infrastructure/crypto.dart';
-import '../infrastructure/platform_services.dart';
-import '../infrastructure/vault_store.dart';
+import '../l10n/app_strings.dart';
+import 'notebook_repository.dart';
+import 'context_tasks.dart';
+import 'ports.dart';
+import 'session_access.dart';
+import 'services/records_service.dart';
+import 'services/medications_service.dart';
+import 'services/tasks_service.dart';
+import 'services/visits_service.dart';
+import 'services/profiles_service.dart';
+import 'services/checkins_service.dart';
+import 'services/drafts_service.dart';
+import 'services/chat_service.dart';
+import 'services/backup_service.dart';
+import 'services/photo_service.dart';
+import 'services/reminder_service.dart';
 
+/// Session lifecycle and composition. Feature services own feature operations.
 class CareController extends ChangeNotifier {
-  CareController(this.vault, this.platform);
-  final VaultStore vault;
-  final PlatformServices platform;
+  CareController(NotebookVault vault, PlatformServices platform)
+    : _vault = vault,
+      _platform = platform;
+  final NotebookVault _vault;
+  final PlatformServices _platform;
+  bool _ready = false, _unlocked = false, _hasPin = false, _busy = false;
+  bool _externalOperation = false, _vaultOpen = false;
+  int _epoch = 0;
+  String? _selectedId, _notice;
   AppLanguage _language = AppLanguage.korean;
+  bool get ready => _ready;
+  bool get unlocked => _unlocked;
+  bool get hasPin => _hasPin;
+  bool get busy => _busy;
+  bool get externalOperation => _externalOperation;
+  String? get selectedId => _selectedId;
+  String? get notice => _notice;
   AppLanguage get language => _language;
   AppStrings get strings => AppStrings(_language);
-  bool ready = false,
-      unlocked = false,
-      hasPin = false,
-      busy = false,
-      externalOperation = false;
-  bool _vaultOpen = false;
-  int _lockEpoch = 0;
-  String? _reminderState;
-  final _draftFlushers = <VoidCallback>{};
-  bool _draftFlushFailed = false;
-  bool _flushingForLock = false;
+  NotebookRepository get _repository {
+    _check(_epoch);
+    return _vault.repository;
+  }
+
+  late final _scope = SessionAccess(
+    repository: () => _repository,
+    patient: () => _selectedId,
+    capture: captureSession,
+    check: _check,
+    run: _exclusive,
+    external: _external,
+    changed: _refresh,
+    newId: () => const Uuid().v7(),
+  );
+  late final records = RecordsService(_scope);
+  late final contextTasks = ContextTasks(_scope);
+
+  void _advanceEpoch() {
+    contextTasks.cancelAll();
+    _epoch++;
+  }
+
+  late final medicationBook = MedicationService(_scope);
+  late final taskBook = TaskService(_scope);
+  late final visitBook = VisitService(_scope);
+  late final profiles = ProfileService(_scope);
+  late final checkins = CheckinService(_scope);
+  late final drafts = DraftService(
+    _scope,
+    busy: () => _busy,
+    notify: draftsChanged,
+  );
+  late final chat = ChatService(_scope);
+  late final backups = BackupService(
+    _scope,
+    _vault,
+    _platform,
+    onReplace: () {
+      _advanceEpoch();
+      chat.clearSession();
+      _selectedId = null;
+      _reminders.invalidate();
+    },
+  );
+  late final photos = PhotoService(_scope, _vault, _platform);
+  late final _reminders = ReminderService(_platform);
+
   int captureSession() {
-    _checkSession(_lockEpoch);
-    return _lockEpoch;
+    _check(_epoch);
+    return _epoch;
   }
 
-  void requireSession(int session) => _checkSession(session);
-
-  void addDraftFlusher(VoidCallback flush) => _draftFlushers.add(flush);
-  void removeDraftFlusher(VoidCallback flush) => _draftFlushers.remove(flush);
-  void draftsChanged() {
-    if (unlocked) notifyListeners();
-  }
-
-  void saveDraftNow({
-    required String id,
-    required String? patientId,
-    required DraftType type,
-    required Map<String, dynamic> values,
-    required int session,
-    required bool create,
-    String? targetId,
-    String? base,
-  }) {
-    _checkSession(session);
-    if (busy && !_flushingForLock) {
-      throw const CareError('진행 중인 작업이 끝난 뒤 다시 시도해 주세요.');
-    }
-    db.saveDraft(
-      id: id,
-      patientId: patientId,
-      type: type,
-      values: values,
-      targetId: targetId,
-      base: base,
-      create: create,
-    );
-  }
-
-  void _checkSession(int epoch, {bool requireUnlock = true}) {
-    if (epoch != _lockEpoch || (requireUnlock && !unlocked)) {
-      throw const CareError('수첩 잠금을 해제한 뒤 다시 시도해 주세요.');
+  void requireSession(int session) => _check(session);
+  void _check(int epoch, {bool requireUnlock = true}) {
+    if (epoch != _epoch || (requireUnlock && !_unlocked)) {
+      throw CareError(CareErrorCode.locked);
     }
   }
 
@@ -80,493 +106,309 @@ class CareController extends ChangeNotifier {
     Future<T> Function(int epoch) action, {
     bool requireUnlock = true,
   }) async {
-    if (busy) {
-      throw const CareError('진행 중인 작업이 끝난 뒤 다시 시도해 주세요.');
-    }
-    final epoch = _lockEpoch;
-    _checkSession(epoch, requireUnlock: requireUnlock);
-    if (requireUnlock) {
-      for (final flush in List<VoidCallback>.of(_draftFlushers)) {
-        flush();
-      }
-    }
-    busy = true;
+    if (_busy) throw CareError(CareErrorCode.busy);
+    final epoch = _epoch;
+    _check(epoch, requireUnlock: requireUnlock);
+    if (requireUnlock) drafts.flushAll();
+    _busy = true;
     notifyListeners();
     try {
       return await action(epoch);
     } finally {
-      busy = false;
-      if (!unlocked) {
-        _closeVault();
-      }
+      _busy = false;
+      if (!_unlocked) _closeVault();
       notifyListeners();
     }
   }
 
   Future<T> _external<T>(Future<T> Function() action) async {
-    externalOperation = true;
+    _externalOperation = true;
     try {
       return await action();
     } finally {
-      externalOperation = false;
+      _externalOperation = false;
     }
   }
 
   void _closeVault() {
-    vault.close();
+    _vault.close();
     _vaultOpen = false;
   }
 
-  final _sessionChats = <String, List<ChatMessage>>{};
-  List<ChatMessage> chatMessages(String pid) {
-    if (!unlocked) {
-      return [];
-    }
-    return [...db.chatMessages(pid), ...?_sessionChats[pid]];
+  void draftsChanged() {
+    if (_unlocked) notifyListeners();
   }
 
-  Future<void> setChatRetention(String pid, ChatRetention value) async {
-    await mutate(() {
-      db.setChatRetention(pid, value);
-      _sessionChats.remove(pid);
-    });
+  void dismissNotice() {
+    _notice = null;
+    notifyListeners();
   }
 
-  Future<void> addChatMessage(String pid, String text) async {
-    await mutate(() {
-      final policy = db.chatRetention(pid);
-      if (policy == null) {
-        throw const CareError('질문 보관 방식을 먼저 선택해 주세요.');
-      }
-      if (text.trim().isEmpty || text.length > 20000) {
-        throw const CareError('질문을 1~20,000자로 입력해 주세요.');
-      }
-      if (policy == ChatRetention.session) {
-        (_sessionChats[pid] ??= []).add(
-          ChatMessage(
-            id: CareDatabase.newId(),
-            patientId: pid,
-            text: text.trim(),
-            createdAt: DateTime.now(),
-          ),
-        );
-      } else {
-        db.addChatMessage(pid, text);
-      }
-    });
-  }
-
-  Future<void> deleteChatMessage(String pid, String id) async {
-    await mutate(() {
-      if (_sessionChats[pid]?.any((m) => m.id == id) ?? false) {
-        _sessionChats[pid]!.removeWhere((m) => m.id == id);
-      } else {
-        db.deleteChatMessage(pid, id);
-      }
-    });
-  }
-
-  Future<void> clearChatMessages(String pid) async {
-    await mutate(() {
-      db.clearChatMessages(pid);
-      _sessionChats.remove(pid);
-    });
-  }
-
-  String? selectedId, notice;
-  CareDatabase get db {
-    _checkSession(_lockEpoch);
-    return vault.db;
-  }
-
-  List<Patient> get patients => unlocked ? db.patients() : [];
-  Patient get patient => patients.firstWhere((p) => p.id == selectedId);
-  List<CareEntry> get entries =>
-      !unlocked || selectedId == null ? [] : db.entries(selectedId!);
-  List<Medication> get medications =>
-      !unlocked || selectedId == null ? [] : db.medications(selectedId!);
-  List<CareTask> get tasks =>
-      !unlocked || selectedId == null ? [] : db.tasks(selectedId!);
-  List<VisitPreparation> get visits =>
-      !unlocked || selectedId == null ? [] : db.visits(selectedId!);
+  List<Patient> get patients => _unlocked ? profiles.patients() : const [];
+  Patient get patient => patients.firstWhere((p) => p.id == _selectedId);
+  List<CareEntry> get entries => _unlocked && _selectedId != null
+      ? records.entries(_selectedId!)
+      : const [];
+  List<Medication> get medications => _unlocked && _selectedId != null
+      ? medicationBook.medications(_selectedId!)
+      : const [];
+  List<CareTask> get tasks => _unlocked && _selectedId != null
+      ? taskBook.tasks(_selectedId!)
+      : const [];
+  List<VisitPreparation> get visits => _unlocked && _selectedId != null
+      ? visitBook.visits(_selectedId!)
+      : const [];
   bool get notificationsEnabled =>
-      unlocked && db.setting('reminders_enabled') == 'true';
+      _unlocked && _repository.setting('reminders_enabled') == 'true';
 
   Future<void> initialize() async {
-    _language = AppLanguage.fromCode(await vault.secrets.read('app.language'));
-    platform.strings = strings;
-    hasPin = await vault.secrets.read('auth.pin') != null;
-    ready = true;
+    _language = AppLanguage.fromCode(await _vault.credentials.language());
+    _platform.strings = strings;
+    _hasPin = await _vault.credentials.hasPin();
+    _ready = true;
     notifyListeners();
   }
 
   Future<void> setLanguage(AppLanguage value) => _exclusive((_) async {
     if (value == _language) return;
     try {
-      await vault.secrets.write('app.language', value.code);
+      await _vault.credentials.setLanguage(value.code);
     } catch (_) {
-      throw const CareError('언어 설정을 저장하지 못했습니다. 다시 시도해 주세요.');
+      throw CareError(CareErrorCode.languageSaveFailed);
     }
     _language = value;
-    platform.strings = strings;
-    _reminderState = null;
+    _platform.strings = strings;
+    _reminders.invalidate();
+    records.invalidate();
     notifyListeners();
-    // Locked records remain inaccessible. Reconcile scheduled copy on unlock.
-    if (unlocked) {
-      try {
-        await _syncReminders();
-      } catch (_) {
-        notice = '기록은 저장되었습니다. 알림 권한과 기기 설정을 확인해 주세요.';
-      }
-    }
+    if (_unlocked) await _syncReminders();
   }, requireUnlock: false);
-
   Future<void> _open(int epoch) async {
-    if (epoch != _lockEpoch) return;
+    if (epoch != _epoch) return;
     if (!_vaultOpen) {
-      await vault.open();
+      await _vault.open();
       _vaultOpen = true;
     }
-    if (epoch != _lockEpoch) return;
-    final db = vault.db;
-    if (db.patients().isEmpty) {
-      db.createPatient();
+    if (epoch != _epoch) return;
+    final repository = _vault.repository;
+    if (repository.patients().isEmpty) repository.createPatient();
+    _selectedId = repository.setting('selected_patient');
+    if (!repository.patients().any((p) => p.id == _selectedId)) {
+      _selectedId = repository.patients().first.id;
     }
-    selectedId = db.setting('selected_patient');
-    if (!db.patients().any((p) => p.id == selectedId)) {
-      selectedId = db.patients().first.id;
-    }
-    db.setSetting('selected_patient', selectedId!);
-    if (epoch != _lockEpoch) {
-      return;
-    }
-    unlocked = true;
-    await _refresh();
+    repository.setSetting('selected_patient', _selectedId!);
+    _unlocked = true;
+    await _refresh(ChangeImpact.all);
   }
 
   Future<void> setPin(String pin) => _exclusive((epoch) async {
-    if (hasPin && !unlocked) {
-      throw const CareError('기존 잠금 번호로 수첩을 먼저 열어 주세요.');
+    if (_hasPin && !_unlocked) {
+      throw CareError(CareErrorCode.existingPinRequired);
     }
-    if (!RegExp(r'^\d{6}$').hasMatch(pin)) {
-      throw const CareError('잠금 번호는 숫자 6자리로 입력해 주세요.');
-    }
-    final salt = base64Encode(VaultCrypto.randomBytes(16));
-    final hash = await VaultCrypto.pinHash(pin, salt);
-    _checkSession(epoch, requireUnlock: hasPin);
-    await vault.secrets.write(
-      'auth.pin',
-      jsonEncode({'salt': salt, 'hash': hash}),
+    await _vault.credentials.setPin(
+      pin,
+      beforeCommit: () => _check(epoch, requireUnlock: _hasPin),
     );
-    await vault.secrets.write('auth.failures', '0');
-    await vault.secrets.write('auth.until', '0');
-    hasPin = true;
+    _hasPin = true;
     await _open(epoch);
-  }, requireUnlock: hasPin);
-
+  }, requireUnlock: _hasPin);
   Future<void> unlockPin(String pin) => _exclusive((epoch) async {
-    final until =
-        int.tryParse(await vault.secrets.read('auth.until') ?? '0') ?? 0;
-    if (DateTime.now().millisecondsSinceEpoch < until) {
-      throw const CareError('잠시 후 다시 시도해 주세요.');
-    }
-    final encoded = await vault.secrets.read('auth.pin');
-    final config = encoded == null
-        ? <String, dynamic>{}
-        : jsonDecode(encoded) as Map<String, dynamic>;
-    final salt = config['salt'] as String?;
-    final expected = config['hash'] as String?;
-    if (salt == null || expected == null) {
-      throw const CareError('잠금 번호 설정을 확인해 주세요.');
-    }
-    if (!VaultCrypto.equal(await VaultCrypto.pinHash(pin, salt), expected)) {
-      final fails =
-          (int.tryParse(await vault.secrets.read('auth.failures') ?? '0') ??
-              0) +
-          1;
-      await vault.secrets.write('auth.failures', '$fails');
-      if (fails >= 5) {
-        await vault.secrets.write(
-          'auth.until',
-          '${DateTime.now().add(Duration(seconds: min(600, 30 * pow(2, (fails - 5) ~/ 5).toInt()))).millisecondsSinceEpoch}',
-        );
-      }
-      throw const CareError('잠금 번호가 일치하지 않습니다.');
-    }
-    await vault.secrets.write('auth.failures', '0');
-    await vault.secrets.write('auth.until', '0');
+    await _vault.credentials.verifyPin(pin);
     await _open(epoch);
   }, requireUnlock: false);
-
   Future<void> unlockDevice() => _exclusive((epoch) async {
-    if (await vault.secrets.read('auth.device') != 'true') {
-      throw const CareError('설정에서 기기 인증을 먼저 켜 주세요.');
+    if (!await _vault.credentials.deviceEnabled()) {
+      throw CareError(CareErrorCode.deviceAuthDisabled);
     }
-    if (await _external(platform.authenticate)) {
+    if (await _external(_platform.authenticate)) {
       await _open(epoch);
     } else {
-      throw const CareError('기기 인증을 완료하지 못했습니다. 잠금 번호로 열어 주세요.');
+      throw CareError(CareErrorCode.deviceAuthFallback);
     }
   }, requireUnlock: false);
-
-  Future<bool> get deviceAuthEnabled async =>
-      await vault.secrets.read('auth.device') == 'true';
+  Future<bool> get deviceAuthEnabled => _vault.credentials.deviceEnabled();
   Future<void> enableDeviceAuth(bool value) => _exclusive((epoch) async {
-    if (value) {
-      if (!await _external(platform.authenticate)) {
-        throw const CareError('기기 인증을 완료하지 못했습니다.');
-      }
+    if (value && !await _external(_platform.authenticate)) {
+      throw CareError(CareErrorCode.deviceAuthIncomplete);
     }
-    _checkSession(epoch);
-    await vault.secrets.write('auth.device', value.toString());
-    notifyListeners();
+    _check(epoch);
+    await _vault.credentials.setDeviceEnabled(value);
   });
-
   void lock() {
-    if (unlocked) {
-      _flushingForLock = true;
-      try {
-        for (final flush in List<VoidCallback>.of(_draftFlushers)) {
-          try {
-            flush();
-          } catch (_) {
-            _draftFlushFailed = true;
-          }
-        }
-      } finally {
-        _flushingForLock = false;
-      }
-    }
-    _sessionChats.clear();
-    _lockEpoch++;
-    unlocked = false;
-    if (!busy) _closeVault();
+    if (_unlocked) drafts.flushAll(locking: true);
+    chat.clearSession();
+    _advanceEpoch();
+    _unlocked = false;
+    _invalidate(ChangeImpact.all);
+    if (!_busy) _closeVault();
     notifyListeners();
   }
 
-  Future<void> selectPatient(String id) => _exclusive((epoch) async {
+  Future<void> selectPatient(String id) => _exclusive((_) async {
     if (!patients.any((p) => p.id == id)) {
-      throw const CareError('돌봄 대상을 찾을 수 없습니다.');
+      throw CareError(CareErrorCode.patientNotFound);
     }
-    selectedId = id;
-    db.setSetting('selected_patient', id);
-    await _refresh();
+    _repository.setSetting('selected_patient', id);
+    if (_selectedId != id) _advanceEpoch();
+    _selectedId = id;
+    await _refresh(ChangeImpact.all);
   });
-
   Future<void> refresh() async {
-    if (busy || !unlocked) return;
-    await _exclusive((_) => _refresh());
+    if (_busy || !_unlocked) return;
+    await _exclusive((_) => _refresh(ChangeImpact.all));
   }
 
-  Future<void> _refresh() async {
-    if (!_vaultOpen || !unlocked) {
-      return;
+  void _invalidate(ChangeImpact impact) {
+    final all = impact == ChangeImpact.all || impact == ChangeImpact.profiles;
+    if (all) profiles.invalidate();
+    if (all ||
+        impact == ChangeImpact.records ||
+        impact == ChangeImpact.photos) {
+      records.invalidate();
     }
-    db.pruneChats();
-    db.pruneDrafts();
-    _sessionChats.removeWhere((pid, _) => !patients.any((p) => p.id == pid));
-    if (!patients.any((p) => p.id == selectedId)) {
-      if (patients.isEmpty) {
-        db.createPatient();
+    if (all || impact == ChangeImpact.medications) medicationBook.invalidate();
+    if (all || impact == ChangeImpact.tasks) taskBook.invalidate();
+    if (all ||
+        impact == ChangeImpact.visits ||
+        impact == ChangeImpact.records) {
+      visitBook.invalidate();
+    }
+    if (all || impact == ChangeImpact.checkins) checkins.invalidate();
+  }
+
+  Future<void> _refresh(ChangeImpact impact) async {
+    if (!_vaultOpen || !_unlocked) return;
+    if ({
+      ChangeImpact.all,
+      ChangeImpact.profiles,
+      ChangeImpact.records,
+      ChangeImpact.medications,
+    }.contains(impact)) {
+      contextTasks.cancelAll();
+    }
+    _invalidate(impact);
+    if (impact == ChangeImpact.all) {
+      _repository.pruneChats();
+      _repository.pruneDrafts();
+    }
+    var current = patients;
+    chat.retainPatients(current.map((p) => p.id).toSet());
+    if (!current.any((p) => p.id == _selectedId)) {
+      if (current.isEmpty) {
+        _repository.createPatient();
+        profiles.invalidate();
+        current = patients;
       }
-      selectedId = patients.first.id;
-      db.setSetting('selected_patient', selectedId!);
+      _advanceEpoch();
+      _selectedId = current.first.id;
+      _repository.setSetting('selected_patient', _selectedId!);
     }
-    notice = vault.maintenancePending
+    _notice = _vault.maintenancePending
         ? '기록은 열렸습니다. 저장소 정리는 다음 실행 때 다시 시도합니다.'
         : null;
-    if (_draftFlushFailed) {
-      notice = '잠금 전 초안 저장에 실패했습니다. 마지막으로 저장된 초안부터 확인해 주세요.';
-      _draftFlushFailed = false;
+    if (drafts.takeFlushFailure()) {
+      _notice = '잠금 전 초안 저장에 실패했습니다. 마지막으로 저장된 초안부터 확인해 주세요.';
     }
-    try {
-      await vault.cleanup(removeOrphans: false);
-    } catch (_) {
-      notice = '기록은 저장되었습니다. 첨부파일 정리는 다음 실행 때 다시 시도합니다.';
+    if ({
+      ChangeImpact.all,
+      ChangeImpact.profiles,
+      ChangeImpact.records,
+      ChangeImpact.photos,
+    }.contains(impact)) {
+      try {
+        await _vault.cleanup(removeOrphans: false);
+      } catch (_) {
+        _notice = '기록은 저장되었습니다. 첨부파일 정리는 다음 실행 때 다시 시도합니다.';
+      }
     }
-    if (!unlocked) return;
-    try {
+    if (!_unlocked) return;
+    if ({
+      ChangeImpact.all,
+      ChangeImpact.profiles,
+      ChangeImpact.medications,
+      ChangeImpact.tasks,
+    }.contains(impact)) {
       await _syncReminders();
-    } catch (_) {
-      notice = '기록은 저장되었습니다. 알림 권한과 기기 설정을 확인해 주세요.';
     }
     notifyListeners();
   }
 
-  Future<T> mutate<T>(T Function() action) => _exclusive((_) async {
-    final result = action();
-    await _refresh();
-    return result;
-  });
-
-  Future<void> enableNotifications(bool enabled) => _exclusive((epoch) async {
-    if (enabled) {
-      if (!await _external(platform.requestNotifications)) {
-        throw const CareError('기기 설정에서 알림을 허용해 주세요.');
-      }
-    }
-    _checkSession(epoch);
-    db.setSetting('reminders_enabled', enabled.toString());
-    await _refresh();
-  });
-
   Future<void> _syncReminders() async {
-    final reminders = <Reminder>[];
-    final now = DateTime.now();
-    final definitions = <String>[];
-    if (notificationsEnabled) {
-      for (final p in patients) {
-        if (db.setting('imported_muted:${p.id}') == 'true') continue;
-        for (final t in db.tasks(p.id).where((t) => !t.done && t.reminder)) {
-          final source = 'task:${p.id}:${t.id}';
-          definitions.add('$source:${t.dueAt.millisecondsSinceEpoch}');
-          reminders.add(Reminder(Reminder.idFor(source), t.dueAt));
-        }
-        for (final med in db.medications(p.id)) {
-          for (final time in med.times) {
-            final parts = time.split(':').map(int.parse).toList();
-            var at = DateTime(now.year, now.month, now.day, parts[0], parts[1]);
-            if (!at.isAfter(now)) {
-              at = DateTime(
-                now.year,
-                now.month,
-                now.day + 1,
-                parts[0],
-                parts[1],
-              );
-            }
-            final source = 'med:${p.id}:${med.id}:$time';
-            definitions.add(source);
-            reminders.add(Reminder(Reminder.idFor(source), at, daily: true));
-          }
-        }
-      }
-      reminders.sort((a, b) => a.at.compareTo(b.at));
-      if (reminders.where((r) => r.at.isAfter(now)).length > 60) {
-        notice = '기록은 저장되었습니다. 가까운 일정부터 최대 60개 알림을 예약했습니다.';
-      }
+    try {
+      _notice = await _reminders.sync(_repository, () => _unlocked) ?? _notice;
+    } catch (_) {
+      _notice = '기록은 저장되었습니다. 알림 권한과 기기 설정을 확인해 주세요.';
     }
-    if (reminders.map((r) => r.id).toSet().length != reminders.length) {
-      throw const CareError('알림 식별자가 충돌했습니다. 일정을 확인해 주세요.');
-    }
-    definitions.sort();
-    final state = jsonEncode([
-      notificationsEnabled,
-      await platform.timeZone(),
-      definitions,
-      reminders
-          .where((r) => r.at.isAfter(now))
-          .take(60)
-          .map((r) => r.id)
-          .toList(),
-    ]);
-    if (!unlocked || state == _reminderState) return;
-    await platform.schedule(reminders);
-    _reminderState = state;
   }
 
+  Future<void> enableNotifications(bool enabled) => _exclusive((epoch) async {
+    if (enabled && !await _external(_platform.requestNotifications)) {
+      throw CareError(CareErrorCode.notificationPermissionDenied);
+    }
+    _check(epoch);
+    _repository.setSetting('reminders_enabled', enabled.toString());
+    await _syncReminders();
+  });
+  bool hasImportedReminderPolicy(String pid) {
+    _scope.requirePatient(pid);
+    return _repository.setting('imported_muted:$pid') != null;
+  }
+
+  bool importedRemindersEnabled(String pid) {
+    _scope.requirePatient(pid);
+    return _repository.setting('imported_muted:$pid') != 'true';
+  }
+
+  Future<void> setImportedRemindersEnabled(String pid, bool value) =>
+      _scope.write(
+        pid,
+        ChangeImpact.tasks,
+        (repository) =>
+            repository.setSetting('imported_muted:$pid', (!value).toString()),
+      );
+  Future<void> openDialer(String number) =>
+      _external(() => _platform.dial(number));
+
+  // Small navigation facade. All operations delegate to feature services.
+  List<ChatMessage> chatMessages(String pid) =>
+      _unlocked ? chat.messages(pid) : const [];
+  Future<void> setChatRetention(String pid, ChatRetention value) =>
+      chat.setRetention(pid, value);
+  Future<void> addChatMessage(String pid, String text) => chat.add(pid, text);
+  Future<void> deleteChatMessage(String pid, String id) => chat.delete(pid, id);
+  Future<void> clearChatMessages(String pid) => chat.clear(pid);
   Future<void> addPhoto(String pid, String eid, {bool camera = false}) =>
-      _exclusive((epoch) async {
-        final data = await _external(() => platform.pickPhoto(camera: camera));
-        _checkSession(epoch);
-        if (data != null) {
-          await vault.addPhoto(
-            pid,
-            eid,
-            data,
-            beforeCommit: () => _checkSession(epoch),
-          );
-          await _refresh();
-        }
-      });
-
+      photos.add(pid, eid, camera: camera);
   Future<Uint8List> photo(String pid, String eid, String id) =>
-      _exclusive((epoch) async {
-        final data = await vault.photo(pid, eid, id);
-        _checkSession(epoch);
-        return data;
-      });
-
-  Future<void> exportBackup(String password) => _exclusive((epoch) async {
-    final data = await vault.backup(password);
-    _checkSession(epoch);
-    await _external(() => platform.saveBackup(data));
-  });
-
+      photos.open(pid, eid, id);
+  Future<void> exportBackup(String password) => backups.exportLegacy(password);
   Future<void> exportSelection(String password, BackupSelection selection) =>
-      _exclusive((epoch) async {
-        final data = await vault.backupSelection(password, selection);
-        _checkSession(epoch);
-        await _external(() => platform.saveBackup(data));
-      });
-
+      backups.export(password, selection);
   Future<BackupPreview> inspectBackup(Uint8List data, String password) =>
-      _exclusive((epoch) async {
-        final result = await vault.inspectBackup(data, password);
-        _checkSession(epoch);
-        return result;
-      });
-
+      backups.inspect(data, password);
   Future<void> importSelection(Uint8List data, String password) =>
-      _exclusive((epoch) async {
-        await vault.importSelection(
-          data,
-          password,
-          beforeCommit: () => _checkSession(epoch),
-        );
-        await _refresh();
-      });
-
-  Future<Uint8List?> chooseBackup() => _exclusive((epoch) async {
-    final data = await _external(platform.pickBackup);
-    _checkSession(epoch);
-    return data;
-  });
-
+      backups.importSelection(data, password);
+  Future<Uint8List?> chooseBackup() => backups.choose();
   Future<void> restoreBackup(Uint8List data, String password) =>
-      _exclusive((epoch) async {
-        await vault.restore(
-          data,
-          password,
-          beforeCommit: () => _checkSession(epoch),
-        );
-        _sessionChats.clear();
-        selectedId = null;
-        _reminderState = null;
-        await _refresh();
-      });
-
-  // Also available from the explicit forgotten-PIN reset confirmation.
+      backups.restore(data, password);
   Future<void> deleteAll() => _exclusive((_) async {
     lock();
     try {
-      await platform.schedule([]);
+      await _platform.schedule([]);
     } catch (_) {
-      /* Local erasure must remain available when notification services fail. */
+      /* Erasure remains available. */
     }
-    await vault.wipe();
-    _sessionChats.clear();
+    await _vault.wipe();
     _vaultOpen = false;
-    for (final key in [
-      'auth.pin',
-      'auth.hash',
-      'auth.salt',
-      'auth.failures',
-      'auth.until',
-      'auth.device',
-    ]) {
-      await vault.secrets.delete(key);
-    }
-    unlocked = false;
-    hasPin = false;
-    selectedId = null;
-    _reminderState = null;
-    notifyListeners();
+    await _vault.credentials.clearAuthentication();
+    _hasPin = false;
+    _selectedId = null;
+    _reminders.invalidate();
   }, requireUnlock: false);
-
   @override
   void dispose() {
-    vault.close();
+    contextTasks.cancelAll();
+    _vault.close();
     super.dispose();
   }
 }

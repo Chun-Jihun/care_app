@@ -1,4 +1,11 @@
-part of 'care_database.dart';
+import '../backup_document.dart';
+
+import 'dart:convert';
+
+import '../../domain/records.dart';
+import '../../domain/backup.dart';
+import '../../application/notebook_repository.dart';
+import '../sqlite_session.dart';
 
 /// The allowlist is also the insertion order for a self-contained snapshot.
 const _backupTables = [
@@ -17,11 +24,17 @@ const _backupTables = [
   'caregiver_checkin',
 ];
 
-extension SelectiveBackupStorage on CareDatabase {
+final class SqliteBackup {
+  SqliteBackup(this._store, this._repository, this._verify);
+  final SqliteSession _store;
+  final NotebookRepository _repository;
+  final void Function() _verify;
+
   bool hasImportedBackup(String id) {
-    final imported = _db.select('SELECT * FROM imported_backup WHERE id=?', [
-      id,
-    ]).firstOrNull;
+    final imported = _store.connection.select(
+      'SELECT * FROM imported_backup WHERE id=?',
+      [id],
+    ).firstOrNull;
     if (imported == null) return false;
     final pids = Set<String>.from(
       jsonDecode(imported['patient_ids'] as String) as List,
@@ -29,27 +42,22 @@ extension SelectiveBackupStorage on CareDatabase {
     final checkinIds = Set<String>.from(
       jsonDecode(imported['checkin_ids'] as String) as List,
     );
-    return patients().any((p) => pids.contains(p.id)) ||
-        checkins().any((r) => checkinIds.contains(r['id']));
+    return _repository.patients().any((p) => pids.contains(p.id)) ||
+        _repository.checkins().any((r) => checkinIds.contains(r.id));
   }
 
-  /// Import IDs and links together. Existing records are never updated.
   Map<String, String> importBackupRows(
     BackupRows rows,
     String backupId,
     Map<String, String> ids,
   ) {
     if (hasImportedBackup(backupId)) {
-      throw const CareError('이미 복원한 백업입니다. 중복 추가하지 않았습니다.');
+      throw CareError(CareErrorCode.duplicateBackup);
     }
-    final tables = [..._backupTables, ...EntryKind.values.map((k) => k.table)];
-    if (rows.length != tables.length ||
-        tables.any((t) => !rows.containsKey(t))) {
-      throw const CareError('백업의 기록 종류가 올바르지 않습니다.');
-    }
+    BackupDocument.validate(rows);
     String mapped(Object? id) {
       if (id is! String || !ids.containsKey(id)) {
-        throw const CareError('백업의 원본 연결이 누락되었습니다.');
+        throw CareError(CareErrorCode.backupSourceMissing);
       }
       return ids[id]!;
     }
@@ -58,12 +66,10 @@ extension SelectiveBackupStorage on CareDatabase {
     final headings = {for (final r in rows['care_entry']!) r['id']: r['kind']};
     for (final kind in EntryKind.values) {
       if (rows[kind.table]!.any((r) => headings[r['entry_id']] != kind.name)) {
-        throw const CareError('백업의 기록 종류와 상세 내용이 일치하지 않습니다.');
+        throw CareError(CareErrorCode.backupKindMismatch);
       }
     }
-    return _transaction(() {
-      // Detail tables precede revision/visit/attachment rows only for clarity;
-      // all references are checked again before this transaction commits.
+    return _store.transaction(() {
       final order = [
         'patient_context',
         'identity.patient_identity',
@@ -82,40 +88,9 @@ extension SelectiveBackupStorage on CareDatabase {
         ),
       ];
       for (final table in order) {
-        final parts = table.split('.');
-        final columnInfo = _db.select(
-          'PRAGMA ${parts.length == 2 ? '${parts.first}.' : ''}table_info(${parts.last})',
-        );
-        final columns = columnInfo.map((r) => r['name'] as String).toList();
+        final columns = backupColumnsV1[table]!.keys.toList();
         for (final source in rows[table]!) {
-          if (source.length != columns.length ||
-              columns.any((c) => !source.containsKey(c)) ||
-              source.values.any(
-                (v) => v != null && v is! String && v is! int,
-              )) {
-            throw const CareError('백업 항목의 형식이 올바르지 않습니다.');
-          }
           final row = Map<String, Object?>.from(source);
-          for (final info in columnInfo) {
-            final name = info['name'] as String, value = row[name];
-            final integer = info['type'] == 'INTEGER';
-            if ((value == null && (info['notnull'] == 1 || info['pk'] != 0)) ||
-                (value != null &&
-                    (integer ? value is! int : value is! String))) {
-              throw const CareError('백업 항목의 값 형식이 올바르지 않습니다.');
-            }
-            if (integer && value is int) {
-              if (name.endsWith('_at') &&
-                  (value < DateTime(1900).millisecondsSinceEpoch ||
-                      value >= DateTime(2201).millisecondsSinceEpoch)) {
-                throw const CareError('백업의 기록 시각이 올바르지 않습니다.');
-              }
-              if (['version', 'revision', 'entry_version'].contains(name) &&
-                  value < 1) {
-                throw const CareError('백업의 수정 버전이 올바르지 않습니다.');
-              }
-            }
-          }
           for (final key in [
             'id',
             'patient_id',
@@ -133,7 +108,7 @@ extension SelectiveBackupStorage on CareDatabase {
               'cohabitant',
               'caregiver',
             ].contains(row['role'])) {
-              throw const CareError('수첩 역할 정보가 올바르지 않습니다.');
+              throw CareError(CareErrorCode.invalidBackupRole);
             }
             patients[source['id'] as String] = row['id'] as String;
           }
@@ -143,7 +118,7 @@ extension SelectiveBackupStorage on CareDatabase {
           }
           if (table == 'care_entry') {
             if (!EntryKind.values.any((k) => k.name == row['kind'])) {
-              throw const CareError('지원하지 않는 간병기록 종류입니다.');
+              throw CareError(CareErrorCode.unsupportedEntryKind);
             }
           }
           if (table == 'medication_plan') {
@@ -154,7 +129,7 @@ extension SelectiveBackupStorage on CareDatabase {
                       t is! String ||
                       !RegExp(r'^([01]\d|2[0-3]):[0-5]\d$').hasMatch(t),
                 )) {
-              throw const CareError('처방 시각 정보가 올바르지 않습니다.');
+              throw CareError(CareErrorCode.invalidPlanTimes);
             }
           }
           if (table == 'care_entry_revision') {
@@ -163,7 +138,7 @@ extension SelectiveBackupStorage on CareDatabase {
             );
             revision['id'] = mapped(revision['id']);
             if (revision['id'] != row['entry_id']) {
-              throw const CareError('수정 이력의 원본 연결이 일치하지 않습니다.');
+              throw CareError(CareErrorCode.revisionSourceMismatch);
             }
             final fields = Map<String, dynamic>.from(revision['fields'] as Map);
             for (final key in ['medication_id', 'plan_id']) {
@@ -174,29 +149,28 @@ extension SelectiveBackupStorage on CareDatabase {
             revision['fields'] = fields;
             row['snapshot'] = jsonEncode(revision);
           }
-          _db.execute(
+          _store.connection.execute(
             'INSERT INTO $table(${columns.join(',')}) VALUES(${List.filled(columns.length, '?').join(',')})',
             columns.map((c) => row[c]).toList(),
           );
         }
       }
       for (final pid in patients.values) {
-        for (final entry in entries(pid)) {
+        for (final entry in _repository.entries(pid)) {
           validateEntry(entry.kind, entry.fields, entry.note);
         }
-        final meds = _db.select(
+        final meds = _store.connection.select(
           'SELECT id FROM medication WHERE patient_id=?',
           [pid],
         );
-        if (medications(pid, includeArchived: true).length != meds.length) {
-          throw const CareError('약 목록의 현재 처방 연결이 누락되었습니다.');
+        if (_repository.medications(pid, includeArchived: true).length !=
+            meds.length) {
+          throw CareError(CareErrorCode.currentPlanMissing);
         }
-        // Imported reminders require review. Keep their original instructions,
-        // times and task flags intact while suppressing scheduling per notebook.
-        setSetting('imported_muted:$pid', 'true');
+        _repository.setSetting('imported_muted:$pid', 'true');
       }
-      verifyIntegrity();
-      _db.execute(
+      _verify();
+      _store.connection.execute(
         'INSERT INTO imported_backup VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET imported_at=excluded.imported_at,patient_ids=excluded.patient_ids,checkin_ids=excluded.checkin_ids',
         [
           backupId,
@@ -213,11 +187,14 @@ extension SelectiveBackupStorage on CareDatabase {
 
   BackupRows selectBackup(BackupSelection selection) {
     for (final pid in selection.patientIds) {
-      _patient(pid);
+      _store.patient(pid);
     }
     final result = <String, List<Map<String, Object?>>>{};
-    List<Map<String, Object?>> select(String sql, List<Object?> args) =>
-        _db.select(sql, args).map((r) => Map<String, Object?>.from(r)).toList();
+    List<Map<String, Object?>> select(String sql, List<Object?> args) => _store
+        .connection
+        .select(sql, args)
+        .map((r) => Map<String, Object?>.from(r))
+        .toList();
     final dates = <Object?>[
       if (selection.from != null) selection.from!.millisecondsSinceEpoch,
       if (selection.until != null) selection.until!.millisecondsSinceEpoch,
@@ -231,7 +208,6 @@ extension SelectiveBackupStorage on CareDatabase {
     ]) {
       result[table] = [];
     }
-    // Work per patient so large archives do not exceed SQLite parameter limits.
     for (final pid in pids) {
       result['patient_context']!.addAll(
         select('SELECT * FROM patient_context WHERE id=?', [pid]),
@@ -313,6 +289,6 @@ extension SelectiveBackupStorage on CareDatabase {
         ),
       );
     }
-    return result;
+    return BackupDocument.project(result);
   }
 }

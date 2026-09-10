@@ -16,7 +16,7 @@ void main() {
     root = await Directory.systemTemp.createTemp('care-controller-');
     secrets = MemorySecrets();
     platform = FakePlatform();
-    c = CareController(VaultStore(root, secrets), platform);
+    c = testController(VaultStore(root, secrets), platform);
     await c.initialize();
   });
   tearDown(() async {
@@ -45,7 +45,7 @@ void main() {
         await expectLater(c.unlockPin('000000'), throwsA(isA<CareError>()));
       }
       c.dispose();
-      c = CareController(VaultStore(root, secrets), platform);
+      c = testController(VaultStore(root, secrets), platform);
       await c.initialize();
       expect(c.hasPin, true);
       await expectLater(c.unlockPin('123456'), throwsA(isA<CareError>()));
@@ -63,13 +63,11 @@ void main() {
     () async {
       await c.setPin('123456');
       final pid = c.selectedId!;
-      await c.mutate(
-        () => c.db.saveMedication(
-          pid,
-          name: '사용자가 적은 약',
-          instruction: '원문',
-          times: ['08:00'],
-        ),
+      await c.medicationBook.saveMedication(
+        pid,
+        name: '사용자가 적은 약',
+        instruction: '원문',
+        times: ['08:00'],
       );
       platform.permission = false;
       await expectLater(c.enableNotifications(true), throwsA(isA<CareError>()));
@@ -80,24 +78,20 @@ void main() {
       expect(platform.reminders, hasLength(1));
       expect(c.entries, isEmpty);
       platform.scheduleFails = true;
-      await c.mutate(
-        () => c.db.saveEntry(
-          pid,
-          kind: EntryKind.generalNote,
-          note: '저장 성공',
-          occurredAt: DateTime.now(),
-        ),
+      await c.records.saveEntry(
+        pid,
+        kind: EntryKind.generalNote,
+        note: '저장 성공',
+        occurredAt: DateTime.now(),
       );
       expect(c.entries.single.note, '저장 성공');
       // Unrelated records do not touch the notification service anymore.
       expect(c.notice, isNull);
-      await c.mutate(
-        () => c.db.saveTask(
-          pid,
-          title: '알림 실패 시험',
-          dueAt: DateTime.now().add(const Duration(hours: 1)),
-          reminder: true,
-        ),
+      await c.taskBook.saveTask(
+        pid,
+        title: '알림 실패 시험',
+        dueAt: DateTime.now().add(const Duration(hours: 1)),
+        reminder: true,
       );
       expect(c.notice, isNotNull);
       platform.scheduleFails = false;

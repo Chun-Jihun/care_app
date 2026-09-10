@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 import '../application/care_controller.dart';
 import '../domain/drafts.dart';
 import '../domain/records.dart';
-import '../infrastructure/care_database.dart';
 import 'common.dart';
 import 'draft_support.dart';
 import 'editors.dart';
 
 String draftLabel(BuildContext context, CareDraft draft) =>
-    draft.type == DraftType.entry
-    ? context.tr(EntryKind.values.byName(draft.values['kind'] as String).label)
-    : context.tr(draft.type.label);
+    switch (draft.payload) {
+      EntryDraftPayload value => context.tr(value.kind.label),
+      UnreadableDraftPayload() => context.tr('이 초안을 읽을 수 없어요'),
+      _ => context.tr(draft.type.label),
+    };
 
 Future<void> resumeDraft(
   BuildContext context,
@@ -21,12 +22,39 @@ Future<void> resumeDraft(
   CareDraft draft,
 ) async {
   if (draft.patientId != null && draft.patientId != c.selectedId) {
-    throw const CareError('초안이 속한 수첩으로 전환해 주세요.');
+    throw CareError(CareErrorCode.draftPatientMismatch);
+  }
+  if (draft.payload case UnreadableDraftPayload(:final raw)) {
+    await showDialog<void>(
+      context: context,
+      useRootNavigator: false,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        title: Text(context.tr('이 초안을 읽을 수 없어요')),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr('지원하지 않는 형식이거나 내용이 손상되었습니다. 원문을 보관했으니 확인하거나 삭제해 주세요.'),
+            ),
+            const SizedBox(height: 16),
+            SelectableText(raw),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('확인')),
+          ),
+        ],
+      ),
+    );
+    return;
   }
   var matches = false;
   try {
     matches =
-        c.db.draftBase(draft.type, draft.patientId, draft.targetId) ==
+        c.drafts.base(draft.type, draft.patientId, draft.targetId) ==
         draft.base;
   } catch (_) {
     /* Deleted source. */
@@ -65,10 +93,10 @@ Future<void> resumeDraft(
       await editEntry(
         context,
         c,
-        EntryKind.values.byName(draft.values['kind'] as String),
+        (draft.payload as EntryDraftPayload).kind,
         entry: draft.targetId == null
             ? null
-            : c.db.entry(draft.patientId!, draft.targetId!),
+            : c.records.entry(draft.patientId!, draft.targetId!),
         restored: draft,
       );
     case DraftType.medication:
@@ -77,7 +105,7 @@ Future<void> resumeDraft(
         c,
         medication: draft.targetId == null
             ? null
-            : c.db
+            : c.medicationBook
                   .medications(draft.patientId!, includeArchived: true)
                   .firstWhere((m) => m.id == draft.targetId),
         restored: draft,
@@ -86,7 +114,7 @@ Future<void> resumeDraft(
       await recordIntake(
         context,
         c,
-        c.db
+        c.medicationBook
             .medications(draft.patientId!, includeArchived: true)
             .firstWhere((m) => m.id == draft.targetId),
         restored: draft,
@@ -97,7 +125,7 @@ Future<void> resumeDraft(
         c,
         task: draft.targetId == null
             ? null
-            : c.db
+            : c.taskBook
                   .tasks(draft.patientId!)
                   .firstWhere((t) => t.id == draft.targetId),
         restored: draft,
@@ -108,7 +136,7 @@ Future<void> resumeDraft(
         c,
         visit: draft.targetId == null
             ? null
-            : c.db
+            : c.visitBook
                   .visits(draft.patientId!)
                   .firstWhere((v) => v.id == draft.targetId),
         restored: draft,
@@ -119,6 +147,7 @@ Future<void> resumeDraft(
 }
 
 String _draftText(BuildContext context, CareDraft draft) {
+  if (draft.payload case UnreadableDraftPayload(:final raw)) return raw;
   final labels = <String, String>{
     'note': context.tr('메모'),
     'name': context.tr('약 이름'),
@@ -141,7 +170,7 @@ String _draftText(BuildContext context, CareDraft draft) {
           : value;
     }
     if (draft.type == DraftType.entry) {
-      final kind = EntryKind.values.byName(draft.values['kind'] as String);
+      final kind = (draft.payload as EntryDraftPayload).kind;
       for (final field in kind.fields) {
         if (field.key == key) return context.strings.fieldValue(field, value);
       }
@@ -172,7 +201,7 @@ class DraftPage extends StatelessWidget {
     animation: c,
     builder: (context, _) {
       if (!c.unlocked) return const SizedBox.shrink();
-      final drafts = [...c.db.drafts(c.selectedId), ...c.db.drafts(null)];
+      final drafts = [...c.drafts.list(c.selectedId), ...c.drafts.list(null)];
       return Scaffold(
         appBar: AppBar(title: Text(context.tr('작성 중인 초안'))),
         body: ListView(
@@ -187,7 +216,7 @@ class DraftPage extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               title: Text(
                 context.tr('보관기간: {0}', [
-                  context.tr(c.db.draftRetention?.label ?? '선택 필요'),
+                  context.tr(c.drafts.retention?.label ?? '선택 필요'),
                 ]),
               ),
               subtitle: Text(context.tr('마지막 자동 저장 시각부터 계산해요.')),
@@ -233,9 +262,7 @@ class DraftPage extends StatelessWidget {
                           ) &&
                           context.mounted) {
                         await attempt(context, () async {
-                          await c.mutate(
-                            () => c.db.deleteDraft(d.patientId, d.id),
-                          );
+                          await c.drafts.delete(d.patientId, d.id);
                         });
                       }
                     },

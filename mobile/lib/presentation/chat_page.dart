@@ -61,7 +61,7 @@ class _ChatBodyState extends State<ChatBody> {
   ChatRetention? policy;
   List<ChatMessage> messages = [];
   void loadMessages() {
-    policy = widget.c.db.chatRetention(widget.pid);
+    policy = widget.c.chat.retention(widget.pid);
     messages = widget.c.chatMessages(widget.pid);
   }
 

@@ -1,3 +1,6 @@
+import 'sections/today.dart';
+import 'sections/medications.dart';
+import 'sections/visits.dart';
 import '../l10n/app_strings.dart';
 
 import 'dart:async';
@@ -6,7 +9,6 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/records.dart';
-import '../infrastructure/care_database.dart';
 import 'common.dart';
 import 'details.dart';
 import 'editors.dart';
@@ -168,8 +170,8 @@ class _CareShellState extends State<CareShell> {
                   key: ValueKey('$tab-${c.selectedId}'),
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
-                    if (c.db.draftCount(c.selectedId) > 0 ||
-                        c.db.draftCount(null) > 0)
+                    if (c.drafts.count(c.selectedId) > 0 ||
+                        c.drafts.count(null) > 0)
                       Card(
                         child: ListTile(
                           leading: const Icon(Icons.edit_note, color: forest),
@@ -192,15 +194,21 @@ class _CareShellState extends State<CareShell> {
                           trailing: IconButton(
                             tooltip: context.tr('안내 닫기'),
                             icon: const Icon(Icons.close),
-                            onPressed: () => setState(() => c.notice = null),
+                            onPressed: c.dismissNotice,
                           ),
                         ),
                       ),
                     ...switch (tab) {
-                      0 => today(),
+                      0 => todayContent(context, c, openEntry),
                       1 => journal(),
-                      2 => meds(),
-                      3 => visits(),
+                      2 => medicationContent(
+                        context,
+                        c,
+                        archived: archived,
+                        onArchiveChanged: (value) =>
+                            setState(() => archived = value),
+                      ),
+                      3 => visitContent(context, c),
                       _ => settingsContent(context, c),
                     },
                   ],
@@ -260,204 +268,9 @@ class _CareShellState extends State<CareShell> {
       );
     },
   );
-  List<Widget> today() {
-    final now = DateTime.now();
-    final entries = c.db.entries(c.selectedId!, day: now);
-    final recent = c.db.entries(c.selectedId!, limit: 5);
-    final tasks = c.tasks;
-    final water = entries
-        .where((e) => e.kind == EntryKind.meal)
-        .fold<double>(
-          0,
-          (sum, e) => sum + (double.tryParse(e.fields['water_ml'] ?? '') ?? 0),
-        );
-    final taken = entries
-        .where(
-          (e) =>
-              e.kind == EntryKind.medicationIntake &&
-              e.fields['status'] == 'taken',
-        )
-        .length;
-    return [
-      Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.strings.day(now),
-              style: const TextStyle(color: Color(0xFF68796E)),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.tr('오늘의 돌봄'),
-              style: Theme.of(context).textTheme.headlineLarge
-                  ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1),
-            ),
-          ],
-        ),
-      ),
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: forest,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.spa_outlined, color: Color(0xFFBDDAB9)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.tr('차곡차곡, 오늘의 기록'),
-                    style: TextStyle(color: Color(0xFFD5E8CE)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              entries.isEmpty
-                  ? context.tr('작은 변화부터\n편하게 남겨 보세요.')
-                  : context.tr('오늘 {0}개의 기록을\n차곡차곡 남겼어요.', [entries.length]),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 25,
-                height: 1.4,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: stat(
-                    context.tr('수분 기록'),
-                    '${water.toStringAsFixed(water % 1 == 0 ? 0 : 1)} mL',
-                  ),
-                ),
-                Container(width: 1, height: 42, color: Colors.white24),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: stat(
-                      context.tr('복용함 기록'),
-                      context.tr('{0}건', [taken]),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              context.tr('입력된 기록의 합계입니다.'),
-              style: TextStyle(color: Color(0xFFD5E8CE), fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-      Section(context.tr('빠르게 남기기')),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children:
-            [
-                  EntryKind.meal,
-                  EntryKind.medicationIntake,
-                  EntryKind.symptom,
-                  EntryKind.activity,
-                ]
-                .map(
-                  (k) => ActionChip(
-                    avatar: Icon(kindIcon(k), size: 18, color: forest),
-                    label: Text(context.tr(k.label)),
-                    onPressed: () => editEntry(context, c, k),
-                  ),
-                )
-                .toList(),
-      ),
-      Section(
-        context.tr('할 일'),
-        action: context.tr('추가'),
-        onAction: () => editTask(context, c),
-      ),
-      if (tasks.isEmpty)
-        EmptyCard(
-          context.tr('기억할 일을 적어 두세요'),
-          context.tr('진료 일정, 준비물, 생활 속 할 일을 관리할 수 있어요.'),
-          icon: Icons.check_circle_outline,
-        ),
-      ...tasks.map(taskCard),
-      Section(context.tr('최근 기록')),
-      if (recent.isEmpty)
-        EmptyCard(
-          context.tr('첫 기록을 기다리고 있어요'),
-          context.tr('아래 기록하기를 눌러 식사나 오늘의 상태를 남겨 보세요.'),
-        ),
-      ...recent.map((e) => EntryTile(e, onTap: () => openEntry(e))),
-      Section(context.tr('연락이 필요할 때')),
-      contactCard(context, c),
-    ];
-  }
 
-  Widget stat(String label, String value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: const TextStyle(color: Color(0xFFD5E8CE), fontSize: 12),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 23,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    ],
-  );
-  Widget taskCard(CareTask task) => Card(
-    child: ListTile(
-      leading: Semantics(
-        label: context.tr('{0} 완료', [task.title]),
-        child: Checkbox(
-          value: task.done,
-          onChanged: (v) => attempt(context, () async {
-            await c.mutate(() => c.db.completeTask(c.selectedId!, task.id, v!));
-          }),
-        ),
-      ),
-      title: Text(
-        task.title,
-        style: TextStyle(
-          decoration: task.done ? TextDecoration.lineThrough : null,
-        ),
-      ),
-      subtitle: Text(
-        '${dateText(context, task.dueAt)} ${timeText(context, task.dueAt)}${task.reminder ? context.tr(' · 알림') : ''}${task.note.isEmpty ? '' : '\n${task.note}'}',
-      ),
-      onTap: () => editTask(context, c, task: task),
-      trailing: IconButton(
-        tooltip: context.tr('할 일 삭제'),
-        icon: const Icon(Icons.close, size: 19),
-        onPressed: () async {
-          if (await confirm(context, context.tr('할 일을 삭제할까요?'), task.title) &&
-              mounted) {
-            await attempt(context, () async {
-              await c.mutate(() => c.db.deleteTask(c.selectedId!, task.id));
-            });
-          }
-        },
-      ),
-    ),
-  );
   List<Widget> journal() {
-    final entries = c.db.entries(
+    final entries = c.records.entries(
       c.selectedId!,
       kind: filter,
       query: query,
@@ -561,132 +374,4 @@ class _CareShellState extends State<CareShell> {
         ),
     ];
   }
-
-  List<Widget> meds() {
-    final meds = c.db.medications(c.selectedId!, includeArchived: archived);
-    return [
-      Section(context.tr('약과 복약 기록')),
-      Text(
-        context.tr('처방받은 내용과 실제 복용 상태를 함께 관리해요.'),
-        style: TextStyle(color: Color(0xFF68796E), height: 1.5),
-      ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(context.tr('보관한 약도 보기')),
-        value: archived,
-        onChanged: (v) => setState(() => archived = v),
-      ),
-      if (meds.isEmpty)
-        EmptyCard(
-          context.tr('약 목록을 만들어 보세요'),
-          context.tr('약 이름과 전달받은 지시, 확인할 시각을 직접 적을 수 있어요.'),
-          icon: Icons.medication_outlined,
-        ),
-      ...meds.map(
-        (m) => Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.medication_outlined, color: forest),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${m.name}${m.active ? '' : context.tr(' · 보관됨')}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.tr('약 상세'),
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              MedicationDetails(c, c.selectedId!, m.id),
-                        ),
-                      ),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
-                ),
-                if (m.instruction.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(m.instruction),
-                  ),
-                Text(
-                  m.times.isEmpty
-                      ? context.tr('정해둔 시각 없음')
-                      : m.times.join(' · '),
-                  style: const TextStyle(color: forest),
-                ),
-                if (m.active)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: () => recordIntake(context, c, m),
-                      icon: const Icon(Icons.add_task, size: 18),
-                      label: Text(context.tr('실제 복약 기록')),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  List<Widget> visits() => [
-    Section(context.tr('진료를 준비해요')),
-    Text(
-      context.tr('물어볼 질문과 보여줄 기록을 한곳에 모아 두세요.'),
-      style: TextStyle(color: Color(0xFF68796E), height: 1.5),
-    ),
-    const SizedBox(height: 16),
-    if (c.visits.isEmpty)
-      EmptyCard(
-        context.tr('진료실에서 기억하기 쉽도록'),
-        context.tr('직접 고른 기록의 원문을 질문 목록과 함께 볼 수 있어요.'),
-        icon: Icons.assignment_outlined,
-      ),
-    ...c.visits.map(
-      (v) => Card(
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(16),
-          leading: const Icon(Icons.assignment_outlined, color: forest),
-          title: Text(v.title),
-          subtitle: Text(
-            v.stale
-                ? context.tr('원본이 변경되었어요 · 다시 검토해 주세요')
-                : v.questions.isEmpty
-                ? context.tr('선택한 기록을 확인하세요')
-                : v.questions,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => VisitDetails(c, c.selectedId!, v.id),
-            ),
-          ),
-        ),
-      ),
-    ),
-    Section(context.tr('진료 후 남기기')),
-    Card(
-      child: ListTile(
-        leading: const Icon(Icons.edit_note, color: forest),
-        title: Text(context.tr('의료진의 설명과 다음 할 일')),
-        subtitle: Text(context.tr('들은 내용을 직접 기록해 두세요.')),
-        trailing: const Icon(Icons.add),
-        onTap: () => editEntry(context, c, EntryKind.medicalContact),
-      ),
-    ),
-  ];
 }

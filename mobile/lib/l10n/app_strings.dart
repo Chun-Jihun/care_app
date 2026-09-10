@@ -1,8 +1,11 @@
+import 'error_messages.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 import '../domain/records.dart';
+import '../domain/drafts.dart';
 import 'catalogs.g.dart';
 
 enum AppLanguage {
@@ -43,6 +46,14 @@ enum AppLanguage {
 class AppStrings {
   const AppStrings(this.language);
   final AppLanguage language;
+  String draftStatus(DraftStatus status) => text(switch (status) {
+    DraftStatus.waiting => '입력하면 기기에 암호화 초안으로 보관해요.',
+    DraftStatus.restored => '암호화 초안을 불러왔어요. 확인 후 저장해 주세요.',
+    DraftStatus.saving => '초안을 저장하고 있어요…',
+    DraftStatus.saved => '기기에 암호화 초안으로 보관했어요. 기록 확정은 저장을 눌러 주세요.',
+    DraftStatus.failed =>
+      '초안 저장에 실패했어요. 저장 공간을 확인해 주세요. 이전 자동 저장 이후 입력은 복구되지 않을 수 있어요.',
+  });
   static final _placeholder = RegExp(r'\{(\d+)\}');
   String get intlLocale => switch (language) {
     AppLanguage.simplifiedChinese => 'zh_CN',
@@ -64,11 +75,11 @@ class AppStrings {
 
   String error(Object error) {
     const fallback = '작업을 완료하지 못했습니다. 입력 내용과 기기 저장 공간을 확인하고 다시 시도해 주세요.';
-    if (error is! CareError ||
-        !translationCatalogs['ko']!.containsKey(error.message)) {
-      return text(fallback);
-    }
-    return text(error.message, error.labels.map(text).toList());
+    if (error is! CareError) return text(fallback);
+    return text(
+      errorMessages[error.code] ?? fallback,
+      error.labels.map(text).toList(),
+    );
   }
 
   String patient(Patient patient) => patient.alias.trim().isNotEmpty

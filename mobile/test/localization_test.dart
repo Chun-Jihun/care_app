@@ -8,7 +8,6 @@ import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/drafts.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
-import 'package:care_notebook/infrastructure/care_database.dart';
 import 'package:care_notebook/l10n/app_strings.dart';
 import 'package:care_notebook/l10n/catalogs.g.dart';
 import 'package:care_notebook/presentation/app.dart';
@@ -86,7 +85,7 @@ void main() {
         isNot(contains('sensitive')),
       );
       expect(
-        s.error(const CareError('필수 항목을 입력해 주세요: {0}', labels: ['단위'])),
+        s.error(CareError(CareErrorCode.requiredField, labels: ['단위'])),
         contains(s.text('단위')),
       );
     }
@@ -119,7 +118,7 @@ void main() {
     root = await Directory.systemTemp.createTemp('care-l10n-');
     secrets = MemorySecrets();
     platform = FakePlatform();
-    c = CareController(VaultStore(root, secrets), platform);
+    c = testController(VaultStore(root, secrets), platform);
     await c.initialize();
   });
   tearDown(() async {
@@ -141,7 +140,7 @@ void main() {
       expect(c.language, AppLanguage.traditionalChinese);
       expect(platform.strings.language, AppLanguage.traditionalChinese);
       c.dispose();
-      c = CareController(VaultStore(root, secrets), FakePlatform());
+      c = testController(VaultStore(root, secrets), FakePlatform());
       await c.initialize();
       expect(c.language, AppLanguage.traditionalChinese);
       expect(c.unlocked, isFalse);
@@ -150,9 +149,9 @@ void main() {
 
   test('L10N-04 language changes preserve encrypted records, plans, drafts and authentication', () async {
     await c.setPin('123456');
-    c.db.setDraftRetention(DraftRetention.month);
+    testRepository(c).setDraftRetention(DraftRetention.month);
     final pid = c.selectedId!;
-    final record = c.db.saveEntry(
+    final record = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.meal,
       occurredAt: DateTime.now(),
@@ -160,7 +159,7 @@ void main() {
       note: '저장',
     );
     await c.enableNotifications(true);
-    c.db.saveTask(
+    testRepository(c).saveTask(
       pid,
       title: 'private task',
       note: 'private note',
@@ -177,7 +176,7 @@ void main() {
       await c.setLanguage(language);
       expect(c.unlocked, isTrue);
       expect(c.selectedId, pid);
-      expect(c.db.draftRetention, DraftRetention.month);
+      expect(testRepository(c).draftRetention, DraftRetention.month);
       expect(
         jsonEncode(c.entries.map((e) => e.toJson()).toList()),
         recordsBefore,
@@ -190,7 +189,7 @@ void main() {
         reminders,
       );
       expect(
-        c.db
+        testRepository(c)
             .entries(
               pid,
               query: c.strings.text('전부'),
@@ -247,7 +246,7 @@ void main() {
   ) async {
     await tester.runAsync(() async {
       await c.setPin('123456');
-      c.db.setDraftRetention(DraftRetention.month);
+      testRepository(c).setDraftRetention(DraftRetention.month);
       await c.setLanguage(AppLanguage.english);
     });
     await smallScreen(tester);
@@ -284,7 +283,7 @@ void main() {
       (tester) async {
         await tester.runAsync(() async {
           await c.setPin('123456');
-          c.db.setDraftRetention(DraftRetention.month);
+          testRepository(c).setDraftRetention(DraftRetention.month);
           await c.setLanguage(language);
         });
         await smallScreen(tester);
@@ -329,7 +328,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 500));
         final draftBefore = jsonEncode(
-          c.db.drafts(c.selectedId!).single.values,
+          testRepository(c).drafts(c.selectedId!).single.values,
         );
         await tester.runAsync(() => c.setLanguage(AppLanguage.english));
         await tester.pumpAndSettle();
@@ -341,7 +340,7 @@ void main() {
         );
         expect(find.text('저장 {0} 日本語 简体 繁體'), findsOneWidget);
         expect(
-          jsonEncode(c.db.drafts(c.selectedId!).single.values),
+          jsonEncode(testRepository(c).drafts(c.selectedId!).single.values),
           draftBefore,
         );
         await tester.scrollUntilVisible(

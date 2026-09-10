@@ -5,20 +5,19 @@ import 'package:flutter/material.dart';
 import '../application/care_controller.dart';
 import '../domain/backup.dart';
 import '../domain/records.dart';
-import '../infrastructure/care_database.dart';
 import 'common.dart';
 
-String backupCounts(BuildContext context, Map<String, int> counts) => [
+String backupCounts(BuildContext context, Map<BackupCategory, int> counts) => [
   for (final e in {
-    'patient_context': context.tr('수첩'),
-    'care_entry': context.tr('간병일기'),
-    'medication': context.tr('약 목록'),
+    BackupCategory.notebooks: context.tr('수첩'),
+    BackupCategory.records: context.tr('간병일기'),
+    BackupCategory.medications: context.tr('약 목록'),
     'medication_plan': context.tr('처방 이력'),
-    'care_task': context.tr('할 일'),
-    'visit_preparation': context.tr('진료 준비'),
-    'attachment': context.tr('사진'),
-    'chat_message': context.tr('보관한 대화'),
-    'caregiver_checkin': context.tr('돌보는 나의 상태'),
+    BackupCategory.tasks: context.tr('할 일'),
+    BackupCategory.visits: context.tr('진료 준비'),
+    BackupCategory.photos: context.tr('사진'),
+    BackupCategory.chats: context.tr('보관한 대화'),
+    BackupCategory.checkins: context.tr('돌보는 나의 상태'),
   }.entries)
     context.tr('{0} {1}개', [e.value, counts[e.key] ?? 0]),
 ].join('\n');
@@ -129,9 +128,11 @@ Future<void> backupFlow(BuildContext context, CareController c) async {
           ],
           save: () async {
             if (a.text.length < 12) {
-              throw const CareError('백업 비밀번호는 12자 이상으로 입력해 주세요.');
+              throw CareError(CareErrorCode.backupPasswordTooShort);
             }
-            if (a.text != b.text) throw const CareError('두 비밀번호가 일치하지 않습니다.');
+            if (a.text != b.text) {
+              throw CareError(CareErrorCode.passwordMismatch);
+            }
             final selection = BackupSelection(
               patientIds: selected,
               from: range?.start,
@@ -147,9 +148,7 @@ Future<void> backupFlow(BuildContext context, CareController c) async {
               checkins: checkins,
               identities: identities,
             );
-            final counts = c.db
-                .selectBackup(selection)
-                .map((k, v) => MapEntry(k, v.length));
+            final counts = c.backups.preview(selection).counts;
             final ok = await confirm(
               context,
               context.tr('이 범위로 백업할까요?'),

@@ -17,7 +17,9 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/records.dart';
+import '../application/ports.dart';
 import 'vault_store.dart';
+export '../application/ports.dart' show PlatformServices, Reminder;
 
 class DeviceSecretStore implements SecretStore {
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
@@ -35,33 +37,6 @@ class DeviceSecretStore implements SecretStore {
   Future<void> delete(String key) => _storage.delete(key: 'care.$key');
 }
 
-abstract class PlatformServices {
-  AppStrings strings = const AppStrings(AppLanguage.korean);
-  Future<String> timeZone() async => '';
-  Future<bool> authenticate() => Future.value(false);
-  Future<bool> requestNotifications() => Future.value(false);
-  Future<void> schedule(List<Reminder> reminders) async {}
-  Future<Uint8List?> pickPhoto({bool camera = false}) async => null;
-  Future<void> saveBackup(Uint8List data) async {}
-  Future<Uint8List?> pickBackup() async => null;
-  Future<void> dial(String number) async {}
-}
-
-class Reminder {
-  const Reminder(this.id, this.at, {this.daily = false});
-  final int id;
-  final DateTime at;
-  final bool daily;
-  static int idFor(String source) {
-    // Stable across process restarts and independent of list order.
-    var hash = 0x811c9dc5;
-    for (final unit in source.codeUnits) {
-      hash = ((hash ^ unit) * 0x01000193) & 0x7fffffff;
-    }
-    return hash;
-  }
-}
-
 class DevicePlatformServices extends PlatformServices {
   static const privacy = MethodChannel('org.carenotebook/privacy');
   final _notifications = FlutterLocalNotificationsPlugin();
@@ -71,7 +46,7 @@ class DevicePlatformServices extends PlatformServices {
   @override
   Future<String> timeZone() async {
     final zone = await privacy.invokeMethod<String>('timeZone');
-    if (zone == null) throw const CareError('기기 시간대를 확인할 수 없습니다.');
+    if (zone == null) throw CareError(CareErrorCode.timeZoneUnavailable);
     return zone;
   }
 
@@ -256,7 +231,7 @@ class DevicePlatformServices extends PlatformServices {
     }
     try {
       if (await photo.length() > 20 * 1024 * 1024) {
-        throw const CareError('사진은 20MB 이하로 선택해 주세요.');
+        throw CareError(CareErrorCode.photoTooLarge);
       }
       return await photo.readAsBytes();
     } finally {
@@ -280,7 +255,7 @@ class DevicePlatformServices extends PlatformServices {
       bytes: data,
     );
     if (result == null) {
-      throw const CareError('백업 저장을 취소했습니다.');
+      throw CareError(CareErrorCode.backupSaveCancelled);
     }
   }
 
@@ -295,7 +270,7 @@ class DevicePlatformServices extends PlatformServices {
         return null;
       }
       if (await file.length() > VaultStore.maxBackupBytes + 128) {
-        throw const CareError('백업 파일이 너무 큽니다.');
+        throw CareError(CareErrorCode.backupFileTooLarge);
       }
       return await file.readAsBytes();
     } finally {

@@ -25,10 +25,10 @@ void main() {
   setUp(() async {
     root = await Directory.systemTemp.createTemp('care-drafts-backup-');
     secrets = MemorySecrets();
-    c = CareController(VaultStore(root, secrets), FakePlatform());
+    c = testController(VaultStore(root, secrets), FakePlatform());
     await c.initialize();
     await c.setPin('123456');
-    c.db.setDraftRetention(DraftRetention.month);
+    testRepository(c).setDraftRetention(DraftRetention.month);
   });
   tearDown(() async {
     c.dispose();
@@ -46,6 +46,44 @@ void main() {
       );
 
   test(
+    'ARCH-06 frozen format 2 backup imports after a SQL-only column is added',
+    () async {
+      withFixtureSql(
+        root,
+        secrets,
+        (sql) => sql.execute(
+          "ALTER TABLE care_entry ADD COLUMN internal_marker TEXT NOT NULL DEFAULT 'local-only'",
+        ),
+      );
+      final fixture = await File('test/fixtures/legacy_selective_v2.carebackup')
+          .readAsBytes();
+      const fixturePassword = 'synthetic-fixture-password';
+      final preview = await c.inspectBackup(fixture, fixturePassword);
+      expect(preview.counts[BackupCategory.records], 1);
+      await c.importSelection(fixture, fixturePassword);
+      final restored = c.patients.singleWhere((p) => p.id != c.selectedId);
+      expect(
+        testRepository(c).entries(restored.id).single.note,
+        'legacy-v2-record',
+      );
+      final bytes = await testVault(
+        c,
+      ).backupSelection(password, BackupSelection(patientIds: {restored.id}));
+      final document = await decode(bytes);
+      expect(document['format'], 3);
+      expect(document['document_version'], 1);
+      expect(document.containsKey('schema'), false);
+      expect(jsonEncode(document), isNot(contains('internal_marker')));
+      document['document_version'] = 999;
+      await expectLater(
+        c.importSelection(await encode(document), password),
+        throwsA(isA<CareError>()),
+      );
+      expect(c.patients, hasLength(2));
+    },
+  );
+
+  test(
     'DRAFT-01/02 lock flush survives reopen without confirming any record',
     () async {
       final pid = c.selectedId!;
@@ -54,19 +92,22 @@ void main() {
         c,
         patientId: pid,
         type: DraftType.entry,
-        snapshot: () => {'kind': 'generalNote', 'note': text, 'at': 12345},
+        snapshot: () => DraftPayload.fromFields(DraftType.entry, {
+          'kind': 'generalNote',
+          ...{'kind': 'generalNote', 'note': text, 'at': 12345},
+        }),
       );
       text = 'ENCRYPTED_DRAFT_SENTINEL';
       draft.changed();
       c.lock(); // Before the 400ms timer fires.
       draft.dispose();
       c.dispose();
-      c = CareController(VaultStore(root, secrets), FakePlatform());
+      c = testController(VaultStore(root, secrets), FakePlatform());
       await c.initialize();
       await c.unlockPin('123456');
-      expect(c.db.drafts(pid).single.values['note'], text);
-      expect(c.db.entries(pid), isEmpty);
-      expect(c.db.tasks(pid), isEmpty);
+      expect(testRepository(c).drafts(pid).single.values['note'], text);
+      expect(testRepository(c).entries(pid), isEmpty);
+      expect(testRepository(c).tasks(pid), isEmpty);
       for (final file
           in await root
               .list(recursive: true)
@@ -84,37 +125,34 @@ void main() {
       c,
       patientId: pid,
       type: DraftType.entry,
-      snapshot: () => {'kind': 'generalNote', 'note': '확인할 내용'},
+      snapshot: () => DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'kind': 'generalNote', 'note': '확인할 내용'},
+      }),
     );
     addTearDown(draft.dispose);
-    await expectLater(
-      draft.complete(() {
-        c.db.saveEntry(
-          pid,
-          kind: EntryKind.generalNote,
-          note: '실패한 저장',
-          occurredAt: DateTime.now(),
-        );
-        throw const CareError('주입한 저장 실패');
-      }),
-      throwsA(isA<CareError>()),
-    );
-    expect(c.entries, isEmpty);
-    expect(c.db.drafts(pid), hasLength(1));
-    await draft.complete(
-      () => c.db.saveEntry(
-        pid,
-        kind: EntryKind.generalNote,
-        note: '확인할 내용',
-        occurredAt: DateTime.now(),
+    withFixtureSql(
+      root,
+      secrets,
+      (sql) => sql.execute(
+        "CREATE TRIGGER fail_draft_delete BEFORE DELETE ON record_draft BEGIN SELECT RAISE(ABORT, 'injected draft delete failure'); END",
       ),
     );
-    expect(c.db.drafts(pid), isEmpty);
+    await expectLater(draft.complete(), throwsA(isA<SqliteException>()));
+    expect(c.entries, isEmpty);
+    expect(testRepository(c).drafts(pid), hasLength(1));
+    withFixtureSql(
+      root,
+      secrets,
+      (sql) => sql.execute('DROP TRIGGER fail_draft_delete'),
+    );
+    await draft.complete();
+    expect(testRepository(c).drafts(pid), isEmpty);
     expect(c.entries.single.note, '확인할 내용');
     c.lock();
     await c.unlockPin('123456');
     expect(c.entries, hasLength(1));
-    expect(c.db.drafts(pid), isEmpty);
+    expect(testRepository(c).drafts(pid), isEmpty);
   });
 
   test(
@@ -135,43 +173,38 @@ void main() {
         c,
         patientId: pid,
         type: DraftType.entry,
-        snapshot: () => values,
+        snapshot: () => DraftPayload.fromFields(DraftType.entry, {
+          'kind': 'generalNote',
+          ...values,
+        }),
       );
       addTearDown(draft.dispose);
-      await draft.complete(
-        () => c.db.saveEntry(
-          pid,
-          kind: EntryKind.symptom,
-          fields: fields,
-          note: note,
-          occurredAt: DateTime.now(),
-        ),
-      );
+      await draft.complete();
       expect(c.entries.single.note, note);
-      expect(c.db.drafts(pid), isEmpty);
+      expect(testRepository(c).drafts(pid), isEmpty);
     },
   );
 
   test('DRAFT-03 cross-patient access and changed prescriptions cannot be confirmed', () async {
-    final pid = c.selectedId!, other = c.db.createPatient().id;
-    final med = c.db.saveMedication(
-      pid,
-      name: '처방 이름',
-      instruction: '원래 지시',
-      times: [],
-    );
+    final pid = c.selectedId!, other = testRepository(c).createPatient().id;
+    final med = testRepository(c)
+        .saveMedication(pid, name: '처방 이름', instruction: '원래 지시', times: []);
     final draft = DraftSession(
       c,
       patientId: pid,
       type: DraftType.intake,
       targetId: med.id,
-      snapshot: () => {'status': 'taken'},
+      snapshot: () =>
+          DraftPayload.fromFields(DraftType.intake, {'status': 'taken'}),
     );
     addTearDown(draft.dispose);
     draft.flush(force: true);
-    expect(c.db.drafts(other), isEmpty);
-    expect(() => c.db.deleteDraft(other, draft.id), throwsA(isA<CareError>()));
-    c.db.saveMedication(
+    expect(testRepository(c).drafts(other), isEmpty);
+    expect(
+      () => testRepository(c).deleteDraft(other, draft.id),
+      throwsA(isA<CareError>()),
+    );
+    testRepository(c).saveMedication(
       pid,
       id: med.id,
       expectedVersion: med.version,
@@ -179,34 +212,35 @@ void main() {
       instruction: '새 지시',
       times: [],
     );
-    await expectLater(
-      draft.complete(
-        () => c.db.recordIntake(pid, med.id, 'taken', DateTime.now()),
-      ),
-      throwsA(isA<CareError>()),
-    );
+    await expectLater(draft.complete(), throwsA(isA<CareError>()));
     expect(c.entries, isEmpty);
-    expect(c.db.drafts(pid), hasLength(1));
+    expect(testRepository(c).drafts(pid), hasLength(1));
   });
 
   test('DRAFT-04 shortened retention, deletion and old sessions cannot resurrect drafts', () async {
     final pid = c.selectedId!, id = CareDatabase.newId(), now = DateTime.now();
-    c.db.saveDraft(
+    testRepository(c).saveDraft(
       id: id,
       patientId: pid,
       type: DraftType.entry,
-      values: {'note': '지난 초안'},
+      payload: DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'note': '지난 초안'},
+      }),
       now: now.subtract(const Duration(days: 8)),
     );
-    expect(c.db.drafts(pid), hasLength(1));
-    c.db.setDraftRetention(DraftRetention.week);
-    expect(c.db.drafts(pid), isEmpty);
+    expect(testRepository(c).drafts(pid), hasLength(1));
+    testRepository(c).setDraftRetention(DraftRetention.week);
+    expect(testRepository(c).drafts(pid), isEmpty);
     expect(
-      () => c.db.saveDraft(
+      () => testRepository(c).saveDraft(
         id: id,
         patientId: pid,
         type: DraftType.entry,
-        values: {},
+        payload: DraftPayload.fromFields(DraftType.entry, {
+          'kind': 'generalNote',
+          ...{},
+        }),
         create: false,
       ),
       throwsA(isA<CareError>()),
@@ -215,30 +249,36 @@ void main() {
       c,
       patientId: pid,
       type: DraftType.entry,
-      snapshot: () => {'note': '삭제할 초안'},
+      snapshot: () => DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'note': '삭제할 초안'},
+      }),
     );
     addTearDown(draft.dispose);
     draft.flush(force: true);
-    c.db.deleteDraft(pid, draft.id);
+    testRepository(c).deleteDraft(pid, draft.id);
     expect(() => draft.flush(force: true), throwsA(isA<CareError>()));
     c.lock();
     await c.unlockPin('123456');
     expect(() => draft.flush(force: true), throwsA(isA<CareError>()));
-    c.db.saveDraft(
+    testRepository(c).saveDraft(
       id: CareDatabase.newId(),
       patientId: pid,
       type: DraftType.entry,
-      values: {'note': '연쇄 삭제'},
+      payload: DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'note': '연쇄 삭제'},
+      }),
     );
-    c.db.deletePatient(pid);
-    c.db.verifyIntegrity();
-    expect(c.db.drafts(null), isEmpty);
+    testRepository(c).deletePatient(pid);
+    testRepository(c).verifyIntegrity();
+    expect(testRepository(c).drafts(null), isEmpty);
   });
 
   test('BACKUP-01/02 selected rows exclude other patients, dates, drafts, identifiers and optional data', () async {
     final pid = c.selectedId!,
-        other = c.db.createPatient(alias: 'OTHER_ALIAS').id;
-    c.db.updatePatient(
+        other = testRepository(c).createPatient(alias: 'OTHER_ALIAS').id;
+    testRepository(c).updatePatient(
       pid,
       alias: 'PRIVATE_ALIAS',
       role: 'family',
@@ -246,32 +286,29 @@ void main() {
       contact: 'PRIVATE_CONTACT',
     );
     final start = DateTime(2026, 1, 2), end = DateTime(2026, 1, 3);
-    final before = c.db.saveEntry(
+    final before = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       note: 'BEFORE_RANGE',
       occurredAt: start.subtract(const Duration(milliseconds: 1)),
     );
-    c.db.saveEntry(
+    testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       note: 'AFTER_RANGE',
       occurredAt: end,
     );
-    c.db.saveEntry(
+    testRepository(c).saveEntry(
       other,
       kind: EntryKind.generalNote,
       note: 'OTHER_PATIENT',
       occurredAt: start,
     );
-    final med = c.db.saveMedication(
-      pid,
-      name: '백업 약',
-      instruction: '당시 처방',
-      times: ['08:00'],
-    );
-    final intake = c.db.recordIntake(pid, med.id, 'taken', start);
-    c.db.saveMedication(
+    final med = testRepository(
+      c,
+    ).saveMedication(pid, name: '백업 약', instruction: '당시 처방', times: ['08:00']);
+    final intake = testRepository(c).recordIntake(pid, med.id, 'taken', start);
+    testRepository(c).saveMedication(
       pid,
       id: med.id,
       expectedVersion: med.version,
@@ -279,21 +316,25 @@ void main() {
       instruction: '현재 처방',
       times: ['09:00'],
     );
-    c.db.setChatRetention(pid, ChatRetention.forever);
-    c.db.addChatMessage(pid, 'PRIVATE_CHAT');
-    c.db.addCheckin(fatigue: 'PRIVATE_CHECKIN', sleep: '', stress: '');
-    c.db.saveDraft(
+    testRepository(c).setChatRetention(pid, ChatRetention.forever);
+    testRepository(c).addChatMessage(pid, 'PRIVATE_CHAT');
+    testRepository(c)
+        .addCheckin(fatigue: 'PRIVATE_CHECKIN', sleep: '', stress: '');
+    testRepository(c).saveDraft(
       id: CareDatabase.newId(),
       patientId: pid,
       type: DraftType.entry,
-      values: {'note': 'PRIVATE_DRAFT'},
+      payload: DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'note': 'PRIVATE_DRAFT'},
+      }),
     );
-    await c.vault.addPhoto(
+    await testVault(c).addPhoto(
       pid,
       intake.id,
       Uint8List.fromList(img.encodePng(img.Image(width: 2, height: 2))),
     );
-    final bytes = await c.vault.backupSelection(
+    final bytes = await testVault(c).backupSelection(
       password,
       BackupSelection(
         patientIds: {pid},
@@ -324,25 +365,25 @@ void main() {
     expect(rows['care_entry'], hasLength(1));
     expect(rows['medication_plan'], hasLength(2));
     expect((rows['medication_intake'] as List).single['plan_id'], med.planId);
-    expect(c.db.entries(pid).any((e) => e.id == before.id), true);
-    expect(c.db.attachments(pid, intake.id), hasLength(1));
+    expect(testRepository(c).entries(pid).any((e) => e.id == before.id), true);
+    expect(testRepository(c).attachments(pid, intake.id), hasLength(1));
 
     // A visit created now links to both a current and an out-of-range record.
     final today = DateTime.now(),
         from = DateTime(today.year, today.month, today.day);
-    final recent = c.db.saveEntry(
+    final recent = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       note: '최근 기록',
       occurredAt: today,
     );
-    c.db.saveVisit(
+    testRepository(c).saveVisit(
       pid,
       title: '진료 준비',
       questions: '질문',
       entryIds: [before.id, recent.id],
     );
-    final selection = c.db.selectBackup(
+    final selection = testRepository(c).selectBackup(
       BackupSelection(
         patientIds: {pid},
         from: from,
@@ -355,15 +396,13 @@ void main() {
 
   test('BACKUP-03/05 additive restore remaps history/photos, preserves drafts and mutes only imported reminders', () async {
     final pid = c.selectedId!;
-    final med = c.db.saveMedication(
-      pid,
-      name: '합성 약',
-      instruction: '원 지시',
-      times: ['08:00'],
-    );
-    final intake = c.db.recordIntake(pid, med.id, 'unknown', DateTime.now());
-    final current = c.db.entry(pid, intake.id)!;
-    c.db.saveEntry(
+    final med = testRepository(
+      c,
+    ).saveMedication(pid, name: '합성 약', instruction: '원 지시', times: ['08:00']);
+    final intake = testRepository(c)
+        .recordIntake(pid, med.id, 'unknown', DateTime.now());
+    final current = testRepository(c).entry(pid, intake.id)!;
+    testRepository(c).saveEntry(
       pid,
       id: current.id,
       expectedVersion: current.version,
@@ -372,23 +411,21 @@ void main() {
       note: '수정한 관찰',
       fields: {...current.fields, 'status': 'taken'},
     );
-    c.db.saveVisit(
-      pid,
-      title: '원본 연결',
-      questions: '합성 질문',
-      entryIds: [intake.id],
-    );
-    c.db.setChatRetention(pid, ChatRetention.month);
-    c.db.addChatMessage(pid, '보관한 질문');
-    c.db.addCheckin(fatigue: '내 피로', sleep: '내 수면', stress: '내 상태');
-    await c.vault.addPhoto(
+    testRepository(
+      c,
+    ).saveVisit(pid, title: '원본 연결', questions: '합성 질문', entryIds: [intake.id]);
+    testRepository(c).setChatRetention(pid, ChatRetention.month);
+    testRepository(c).addChatMessage(pid, '보관한 질문');
+    testRepository(c)
+        .addCheckin(fatigue: '내 피로', sleep: '내 수면', stress: '내 상태');
+    await testVault(c).addPhoto(
       pid,
       intake.id,
       Uint8List.fromList(img.encodePng(img.Image(width: 3, height: 3))),
     );
-    final originalPhoto = c.db.attachments(pid, intake.id).single;
-    final pixels = await c.vault.photo(pid, intake.id, originalPhoto.id);
-    final bytes = await c.vault.backupSelection(
+    final originalPhoto = testRepository(c).attachments(pid, intake.id).single;
+    final pixels = await testVault(c).photo(pid, intake.id, originalPhoto.id);
+    final bytes = await testVault(c).backupSelection(
       password,
       BackupSelection(
         patientIds: {pid},
@@ -397,86 +434,95 @@ void main() {
         identities: true,
       ),
     );
-    c.db.saveDraft(
+    testRepository(c).saveDraft(
       id: CareDatabase.newId(),
       patientId: pid,
       type: DraftType.entry,
-      values: {'note': '복원 중에도 보존'},
+      payload: DraftPayload.fromFields(DraftType.entry, {
+        'kind': 'generalNote',
+        ...{'note': '복원 중에도 보존'},
+      }),
     );
     await c.enableNotifications(true);
-    final originalReminders = (c.platform as FakePlatform).reminders
+    final originalReminders = (testPlatform(c) as FakePlatform).reminders
         .map((r) => r.id)
         .toList();
     await c.importSelection(bytes, password);
     expect(c.selectedId, pid);
-    expect(c.db.drafts(pid).single.values['note'], '복원 중에도 보존');
-    expect(c.db.entries(pid), hasLength(1));
+    expect(testRepository(c).drafts(pid).single.values['note'], '복원 중에도 보존');
+    expect(testRepository(c).entries(pid), hasLength(1));
     final restored = c.patients.singleWhere((p) => p.id != pid);
     expect(restored.label, contains('(복원)'));
-    final entry = c.db.entries(restored.id).single;
+    final entry = testRepository(c).entries(restored.id).single;
     expect(entry.id, isNot(intake.id));
-    final restoredMed = c.db.medications(restored.id).single;
+    final restoredMed = testRepository(c).medications(restored.id).single;
     expect(entry.fields['medication_id'], restoredMed.id);
     expect(entry.fields['plan_id'], restoredMed.planId);
-    expect(c.db.revisions(restored.id, entry.id).single['id'], entry.id);
     expect(
-      (c.db.revisions(restored.id, entry.id).single['fields']
-          as Map)['medication_id'],
+      testRepository(c).revisions(restored.id, entry.id).single.id,
+      entry.id,
+    );
+    expect(
+      testRepository(c)
+          .revisions(restored.id, entry.id)
+          .single
+          .fields['medication_id'],
       restoredMed.id,
     );
     expect(
-      c.db
-          .visitEntries(restored.id, c.db.visits(restored.id).single.id)
+      testRepository(c)
+          .visitEntries(
+            restored.id,
+            testRepository(c).visits(restored.id).single.id,
+          )
           .single
           .id,
       entry.id,
     );
-    expect(c.db.chatMessages(restored.id).single.text, '보관한 질문');
-    expect(c.db.checkins(), hasLength(2));
+    expect(testRepository(c).chatMessages(restored.id).single.text, '보관한 질문');
+    expect(testRepository(c).checkins(), hasLength(2));
     expect(
-      (c.platform as FakePlatform).reminders.map((r) => r.id),
+      (testPlatform(c) as FakePlatform).reminders.map((r) => r.id),
       originalReminders,
     );
-    expect(c.db.setting('imported_muted:${restored.id}'), 'true');
-    final photo = c.db.attachments(restored.id, entry.id).single;
+    expect(testRepository(c).setting('imported_muted:${restored.id}'), 'true');
+    final photo = testRepository(c).attachments(restored.id, entry.id).single;
     expect(photo.id, isNot(originalPhoto.id));
-    expect(await c.vault.photo(restored.id, entry.id, photo.id), pixels);
+    expect(await testVault(c).photo(restored.id, entry.id, photo.id), pixels);
     c.lock();
     await c.unlockPin('123456');
-    expect(await c.vault.photo(restored.id, entry.id, photo.id), pixels);
+    expect(await testVault(c).photo(restored.id, entry.id, photo.id), pixels);
     await expectLater(
       c.importSelection(bytes, password),
       throwsA(isA<CareError>()),
     );
     expect(c.patients, hasLength(2));
-    expect(c.db.checkins(), hasLength(2));
+    expect(testRepository(c).checkins(), hasLength(2));
     // A backup may be used again after every copy it added was deleted.
-    c.db.deletePatient(restored.id);
-    for (final row in c.db.checkins()) {
-      c.db.deleteCheckin(row['id'] as String);
+    testRepository(c).deletePatient(restored.id);
+    for (final row in testRepository(c).checkins()) {
+      testRepository(c).deleteCheckin(row.id);
     }
     await c.importSelection(bytes, password);
     expect(c.patients, hasLength(2));
-    expect(c.db.checkins(), hasLength(1));
+    expect(testRepository(c).checkins(), hasLength(1));
   });
 
   test('BACKUP-04 password, tamper, bad links, missing photos and cancelled commit preserve current generation', () async {
     final pid = c.selectedId!;
-    final entry = c.db.saveEntry(
+    final entry = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       note: '보존할 원본',
       occurredAt: DateTime.now(),
     );
-    await c.vault.addPhoto(
+    await testVault(c).addPhoto(
       pid,
       entry.id,
       Uint8List.fromList(img.encodePng(img.Image(width: 2, height: 2))),
     );
-    final bytes = await c.vault.backupSelection(
-      password,
-      BackupSelection(patientIds: {pid}),
-    );
+    final bytes = await testVault(c)
+        .backupSelection(password, BackupSelection(patientIds: {pid}));
     final originalKeys = Map<String, String>.from(secrets.values);
     await expectLater(
       c.importSelection(bytes, 'incorrect-password'),
@@ -515,17 +561,17 @@ void main() {
       throwsA(isA<CareError>()),
     );
     await expectLater(
-      c.vault.importSelection(
+      testVault(c).importSelection(
         bytes,
         password,
-        beforeCommit: () => throw const CareError('잠금 직전 중단'),
+        beforeCommit: () => throw CareError(CareErrorCode.unknownFailure),
       ),
       throwsA(isA<CareError>()),
     );
     expect(c.patients, hasLength(1));
     expect(c.entries.single.note, '보존할 원본');
     expect(secrets.values, originalKeys);
-    c.db.verifyIntegrity();
+    testRepository(c).verifyIntegrity();
     expect(
       await root
           .list()

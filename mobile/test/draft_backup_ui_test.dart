@@ -8,12 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/domain/drafts.dart';
 import 'package:care_notebook/domain/records.dart';
-import 'package:care_notebook/infrastructure/care_database.dart';
 import 'package:care_notebook/infrastructure/crypto.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/app.dart';
 import 'package:care_notebook/presentation/backup_page.dart';
 import 'package:care_notebook/presentation/editors.dart';
+import 'package:care_notebook/presentation/draft_page.dart';
 
 import 'support.dart';
 
@@ -37,7 +37,7 @@ void main() {
     root = await Directory.systemTemp.createTemp('care-draft-ui-');
     secrets = MemorySecrets();
     platform = BackupPlatform();
-    c = CareController(VaultStore(root, secrets), platform);
+    c = testController(VaultStore(root, secrets), platform);
     await c.initialize();
   });
   tearDown(() async {
@@ -50,7 +50,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(() => c.setPin('123456'));
-    c.db.setDraftRetention(DraftRetention.month);
+    testRepository(c).setDraftRetention(DraftRetention.month);
     await tester.pumpWidget(CareApp(controller: c));
     await tester.pumpAndSettle();
   }
@@ -75,6 +75,47 @@ void main() {
   }
 
   testWidgets(
+    'ARCH-04 malformed draft is isolated and raw text stays available',
+    (tester) async {
+      await start(tester);
+      final pid = c.selectedId!;
+      for (final id in ['valid-draft', 'invalid-draft']) {
+        testRepository(c).saveDraft(
+          id: id,
+          patientId: pid,
+          type: DraftType.entry,
+          payload: EntryDraftPayload(
+            kind: EntryKind.generalNote,
+            note: 'recoverable note',
+          ),
+        );
+      }
+      const raw = '{"kind":"unknown_kind","note":"preserved raw text"}';
+      withFixtureSql(
+        root,
+        secrets,
+        (sql) => sql.execute('UPDATE record_draft SET payload=? WHERE id=?', [
+          raw,
+          'invalid-draft',
+        ]),
+      );
+      unawaited(
+        Navigator.of(tester.element(find.text('오늘의 돌봄')))
+            .push(MaterialPageRoute<void>(builder: (_) => DraftPage(c))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('이 초안을 읽을 수 없어요'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('이 초안을 읽을 수 없어요'));
+      await tester.pumpAndSettle();
+      expect(find.text(raw), findsOneWidget);
+      expect(testRepository(c).drafts(pid), hasLength(2));
+      expect(testRepository(c).entries(pid), isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'DRAFT-01/02 restarting the app offers the encrypted draft and saves it once',
     (tester) async {
       await start(tester);
@@ -89,7 +130,7 @@ void main() {
       expect(find.text('재시작 후 복구할 합성 메모'), findsNothing);
       await tester.pumpWidget(const SizedBox());
       c.dispose();
-      c = CareController(VaultStore(root, secrets), platform);
+      c = testController(VaultStore(root, secrets), platform);
       await tester.runAsync(() async {
         await c.initialize();
         await c.unlockPin('123456');
@@ -104,8 +145,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('재시작 후 복구할 합성 메모'), findsOneWidget);
       await tapIO(tester, find.text('저장'));
-      expect(c.db.entries(pid).single.note, '재시작 후 복구할 합성 메모');
-      expect(c.db.drafts(pid), isEmpty);
+      expect(testRepository(c).entries(pid).single.note, '재시작 후 복구할 합성 메모');
+      expect(testRepository(c).drafts(pid), isEmpty);
       expect(tester.takeException(), isNull);
     },
   );
@@ -115,12 +156,8 @@ void main() {
     (tester) async {
       await start(tester);
       final pid = c.selectedId!;
-      final med = c.db.saveMedication(
-        pid,
-        name: '합성 약',
-        instruction: '받은 지시',
-        times: [],
-      );
+      final med = testRepository(c)
+          .saveMedication(pid, name: '합성 약', instruction: '받은 지시', times: []);
       final context = tester.element(find.text('오늘의 돌봄'));
       unawaited(recordIntake(context, c, med));
       await tester.pumpAndSettle();
@@ -133,7 +170,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.runAsync(() => c.unlockPin('123456'));
       await tester.pumpAndSettle();
-      final savedAt = c.db.drafts(pid).single.values['at'];
+      final savedAt = testRepository(c).drafts(pid).single.values['at'];
       expect(c.entries, isEmpty);
       await tester.tap(find.text('작성 중인 초안이 있어요'));
       await tester.pumpAndSettle();
@@ -145,7 +182,7 @@ void main() {
       expect(c.entries.single.fields['status'], 'refused');
       expect(c.entries.single.occurredAt.millisecondsSinceEpoch, savedAt);
       expect(c.entries.single.fields['plan_id'], med.planId);
-      expect(c.db.drafts(pid), isEmpty);
+      expect(testRepository(c).drafts(pid), isEmpty);
       expect(tester.takeException(), isNull);
     },
   );
@@ -155,7 +192,7 @@ void main() {
   ) async {
     await start(tester);
     final pid = c.selectedId!;
-    final entry = c.db.saveEntry(
+    final entry = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       note: '나중에 삭제될 원본',
@@ -169,7 +206,7 @@ void main() {
     c.lock();
     await tester.pumpAndSettle();
     await tester.runAsync(() => c.unlockPin('123456'));
-    c.db.deleteEntry(pid, entry.id);
+    testRepository(c).deleteEntry(pid, entry.id);
     await tester.pumpAndSettle();
     await tester.tap(find.text('작성 중인 초안이 있어요'));
     await tester.pumpAndSettle();
@@ -182,8 +219,8 @@ void main() {
     await tester.tap(find.text('삭제된 원본 연결 제외'));
     await tapIO(tester, find.text('저장'));
     expect(c.visits.single.title, '초안의 진료 제목');
-    expect(c.db.visitEntries(pid, c.visits.single.id), isEmpty);
-    expect(c.db.drafts(pid), isEmpty);
+    expect(testRepository(c).visitEntries(pid, c.visits.single.id), isEmpty);
+    expect(testRepository(c).drafts(pid), isEmpty);
     expect(tester.takeException(), isNull);
   });
 
@@ -192,13 +229,14 @@ void main() {
     (tester) async {
       await start(tester);
       final pid = c.selectedId!;
-      c.db.createPatient(alias: '제외할 수첩');
-      c.db.saveEntry(
+      testRepository(c).createPatient(alias: '제외할 수첩');
+      testRepository(c).saveEntry(
         pid,
         kind: EntryKind.generalNote,
         note: '선택한 합성 기록',
         occurredAt: DateTime.now(),
       );
+      await tester.runAsync(c.refresh); // Publish the directly seeded fixture.
       unawaited(backupFlow(tester.element(find.text('오늘의 돌봄')), c));
       await tester.pumpAndSettle();
       expect(
@@ -256,7 +294,10 @@ void main() {
         ),
       ) as Map;
       expect((archive['rows'] as Map)['patient_context'], hasLength(1));
-      expect(c.db.drafts(pid), isEmpty); // Passwords never become drafts.
+      expect(
+        testRepository(c).drafts(pid),
+        isEmpty,
+      ); // Passwords never become drafts.
       unawaited(restoreFlow(tester.element(find.text('오늘의 돌봄')), c));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -268,7 +309,7 @@ void main() {
       expect(c.patients, hasLength(2));
       await tapIO(tester, find.text('수첩 추가 복원'));
       expect(c.patients, hasLength(3));
-      expect(c.db.entries(pid).single.note, '선택한 합성 기록');
+      expect(testRepository(c).entries(pid).single.note, '선택한 합성 기록');
       expect(c.selectedId, pid);
       expect(tester.takeException(), isNull);
     },

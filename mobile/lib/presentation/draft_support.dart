@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/drafts.dart';
-import '../infrastructure/care_database.dart';
 import 'common.dart';
 
 Future<bool> chooseDraftRetention(
@@ -12,8 +11,8 @@ Future<bool> chooseDraftRetention(
   CareController c, {
   bool onlyIfUnset = false,
 }) async {
-  if (onlyIfUnset && c.db.draftRetention != null) return true;
-  final current = c.db.draftRetention;
+  if (onlyIfUnset && c.drafts.retention != null) return true;
+  final current = c.drafts.retention;
   final choice = await showDialog<DraftRetention>(
     context: context,
     useRootNavigator: false,
@@ -52,6 +51,6 @@ Future<bool> chooseDraftRetention(
       return false;
     }
   }
-  await c.mutate(() => c.db.setDraftRetention(choice));
+  await c.drafts.setRetention(choice);
   return true;
 }

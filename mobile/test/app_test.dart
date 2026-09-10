@@ -12,7 +12,6 @@ import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/app.dart';
 import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/drafts.dart';
-import 'package:care_notebook/infrastructure/care_database.dart';
 
 import 'support.dart';
 
@@ -21,7 +20,7 @@ void main() {
   late CareController c;
   setUp(() async {
     root = await Directory.systemTemp.createTemp('care-ui-');
-    c = CareController(VaultStore(root, MemorySecrets()), FakePlatform());
+    c = testController(VaultStore(root, MemorySecrets()), FakePlatform());
     await c.initialize();
   });
   tearDown(() async {
@@ -34,7 +33,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(() => c.setPin('123456'));
-    c.db.setDraftRetention(DraftRetention.month);
+    testRepository(c).setDraftRetention(DraftRetention.month);
     await tester.pumpWidget(CareApp(controller: c));
     await tester.pumpAndSettle();
   }
@@ -178,7 +177,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('오늘의 돌봄'), findsOneWidget);
     expect(c.entries, isEmpty);
-    expect(c.db.drafts(c.selectedId), isEmpty);
+    expect(testRepository(c).drafts(c.selectedId), isEmpty);
   });
   testWidgets(
     'CHAT-01/02/05 chat UI needs policy, requires visit confirmation and clears private routes',
@@ -225,7 +224,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('취소'));
       await tester.pumpAndSettle();
-      expect(c.db.chatRetention(c.selectedId!), ChatRetention.week);
+      expect(
+        testRepository(c).chatRetention(c.selectedId!),
+        ChatRetention.week,
+      );
       expect(find.text('7일'), findsOneWidget);
       c.lock();
       await tester.pumpAndSettle();
@@ -247,7 +249,7 @@ void main() {
         await loader.load();
       }
       final pid = c.selectedId!;
-      c.db.updatePatient(
+      testRepository(c).updatePatient(
         pid,
         alias: '엄마의 수첩',
         role: 'family',
@@ -255,20 +257,20 @@ void main() {
         contact: '',
       );
       final now = DateTime.now();
-      c.db.saveEntry(
+      testRepository(c).saveEntry(
         pid,
         kind: EntryKind.meal,
         occurredAt: now,
         note: '편안하게 식사를 마쳤어요.',
         fields: {'food': '야채죽', 'amount': 'most', 'water_ml': '200'},
       );
-      c.db.saveEntry(
+      testRepository(c).saveEntry(
         pid,
         kind: EntryKind.activity,
         occurredAt: now.subtract(const Duration(hours: 1)),
         fields: {'activity': '집 앞 산책', 'minutes': '15'},
       );
-      c.db.saveTask(
+      testRepository(c).saveTask(
         pid,
         title: '다음 진료 때 물어볼 질문 정리',
         dueAt: now.add(const Duration(hours: 2)),

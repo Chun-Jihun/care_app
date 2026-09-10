@@ -1,18 +1,20 @@
-enum EntryKind {
-  meal('식사·수분', 'meal_entry'),
-  medicationIntake('복약', 'medication_intake'),
-  symptom('증상', 'symptom_entry'),
-  activity('활동·재활', 'activity_entry'),
-  measurement('측정', 'measurement_entry'),
-  dailyLiving('생활', 'daily_living_entry'),
-  incident('사건', 'incident_entry'),
-  medicalContact('진료·연락', 'medical_contact_entry'),
-  handoff('인계', 'handoff_entry'),
-  generalNote('자유 메모', 'general_note_entry');
+import 'errors.dart';
+export 'errors.dart';
 
-  const EntryKind(this.label, this.table);
+enum EntryKind {
+  meal('식사·수분'),
+  medicationIntake('복약'),
+  symptom('증상'),
+  activity('활동·재활'),
+  measurement('측정'),
+  dailyLiving('생활'),
+  incident('사건'),
+  medicalContact('진료·연락'),
+  handoff('인계'),
+  generalNote('자유 메모');
+
+  const EntryKind(this.label);
   final String label;
-  final String table;
   List<RecordField> get fields => recordFields[this]!;
 }
 
@@ -132,42 +134,33 @@ const recordFields = <EntryKind, List<RecordField>>{
   EntryKind.generalNote: [],
 };
 
-class CareError implements Exception {
-  const CareError(this.message, {this.labels = const []});
-  final String message;
-  // Arguments here are field metadata, never patient-entered content.
-  final List<String> labels;
-  @override
-  String toString() => message;
-}
-
 void validateEntry(EntryKind kind, Map<String, String> fields, String note) {
   if (note.length > 20000) {
-    throw const CareError('메모는 20,000자 이내로 입력해 주세요.');
+    throw CareError(CareErrorCode.noteTooLong);
   }
   for (final field in kind.fields) {
     final value = (fields[field.key] ?? '').trim();
     if (field.required && value.isEmpty) {
-      throw CareError('필수 항목을 입력해 주세요: {0}', labels: [field.label]);
+      throw CareError(CareErrorCode.requiredField, labels: [field.label]);
     }
     if (value.length > 4000) {
-      throw CareError('{0}은 4,000자 이내로 입력해 주세요.', labels: [field.label]);
+      throw CareError(CareErrorCode.fieldTooLong, labels: [field.label]);
     }
     if (field.numeric &&
         value.isNotEmpty &&
         (double.tryParse(value) == null ||
             !double.parse(value).isFinite ||
             double.parse(value) < 0)) {
-      throw CareError('{0}은 0 이상의 숫자로 입력해 주세요.', labels: [field.label]);
+      throw CareError(CareErrorCode.invalidNumber, labels: [field.label]);
     }
     if (field.choices.isNotEmpty &&
         value.isNotEmpty &&
         !field.choices.containsKey(value)) {
-      throw CareError('항목을 다시 선택해 주세요: {0}', labels: [field.label]);
+      throw CareError(CareErrorCode.invalidChoice, labels: [field.label]);
     }
   }
   if (kind == EntryKind.generalNote && note.trim().isEmpty) {
-    throw const CareError('메모 내용을 입력해 주세요.');
+    throw CareError(CareErrorCode.noteRequired);
   }
 }
 
@@ -179,21 +172,36 @@ class Patient {
 }
 
 class CareEntry {
-  const CareEntry({
+  CareEntry({
     required this.id,
     required this.patientId,
     required this.kind,
     required this.occurredAt,
     required this.offsetMinutes,
     required this.note,
-    required this.fields,
+    required Map<String, String> fields,
     required this.version,
-  });
+  }) : fields = Map.unmodifiable(fields);
   final String id, patientId, note;
   final EntryKind kind;
   final DateTime occurredAt;
   final int offsetMinutes, version;
   final Map<String, String> fields;
+  factory CareEntry.fromSnapshot(
+    String patientId,
+    Map<String, dynamic> value,
+  ) => CareEntry(
+    id: value['id'] as String,
+    patientId: patientId,
+    kind: EntryKind.values.byName(value['kind'] as String),
+    occurredAt: DateTime.fromMillisecondsSinceEpoch(
+      value['occurred_at'] as int,
+    ),
+    offsetMinutes: value['offset_minutes'] as int,
+    note: value['note'] as String,
+    fields: Map<String, String>.from(value['fields'] as Map),
+    version: value['version'] as int,
+  );
   String get summary {
     final values = kind.fields
         .where((f) => (fields[f.key] ?? '').isNotEmpty)
@@ -207,21 +215,21 @@ class CareEntry {
     'occurred_at': occurredAt.toUtc().millisecondsSinceEpoch,
     'offset_minutes': offsetMinutes,
     'note': note,
-    'fields': fields,
+    'fields': Map<String, String>.of(fields),
     'version': version,
   };
 }
 
 class Medication {
-  const Medication(
+  Medication(
     this.id,
     this.name,
     this.instruction,
-    this.times,
+    List<String> times,
     this.active,
     this.planId,
     this.version,
-  );
+  ) : times = List.unmodifiable(times);
   final String id, name, instruction, planId;
   final List<String> times;
   final bool active;
@@ -259,4 +267,32 @@ class Attachment {
   const Attachment(this.id, this.entryId, this.wrappedKey, this.bytes);
   final String id, entryId, wrappedKey;
   final int bytes;
+}
+
+class MedicationPlan {
+  MedicationPlan({
+    required this.id,
+    required this.name,
+    required this.instruction,
+    required List<String> times,
+    required this.active,
+    required this.createdAt,
+  }) : times = List.unmodifiable(times);
+  final String id, name, instruction;
+  final List<String> times;
+  final bool active;
+  final DateTime createdAt;
+}
+
+class CaregiverCheckin {
+  const CaregiverCheckin({
+    required this.id,
+    required this.occurredAt,
+    required this.fatigue,
+    required this.sleep,
+    required this.stress,
+    required this.note,
+  });
+  final String id, fatigue, sleep, stress, note;
+  final DateTime occurredAt;
 }

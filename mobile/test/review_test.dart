@@ -43,7 +43,7 @@ void main() {
   setUp(() async {
     root = await Directory.systemTemp.createTemp('care-review-');
     platform = DelayedPlatform();
-    c = CareController(VaultStore(root, MemorySecrets()), platform);
+    c = testController(VaultStore(root, MemorySecrets()), platform);
     await c.initialize();
     await c.setPin('123456');
   });
@@ -59,7 +59,7 @@ void main() {
       c.lock();
       expect(c.patients, isEmpty);
       expect(c.entries, isEmpty);
-      expect(() => c.db, throwsA(isA<CareError>()));
+      expect(() => c.records.entries(pid), throwsA(isA<CareError>()));
       await expectLater(c.enableDeviceAuth(false), throwsA(isA<CareError>()));
       await expectLater(
         c.enableNotifications(false),
@@ -95,23 +95,18 @@ void main() {
       final pid = c.selectedId!;
       await c.enableNotifications(true);
       platform.scheduleResult = Completer<void>();
-      final saving = c.mutate(
-        () => c.db.saveTask(
-          pid,
-          title: '합성 일정',
-          dueAt: DateTime.now().add(const Duration(hours: 1)),
-          reminder: true,
-        ),
+      final saving = c.taskBook.saveTask(
+        pid,
+        title: '합성 일정',
+        dueAt: DateTime.now().add(const Duration(hours: 1)),
+        reminder: true,
       );
-      await expectLater(
-        c.mutate(() => c.db.createPatient()),
-        throwsA(isA<CareError>()),
-      );
+      await expectLater(c.profiles.createPatient(), throwsA(isA<CareError>()));
       platform.scheduleResult!.complete();
       await saving;
       expect(c.busy, false);
       await expectLater(
-        c.mutate(() => throw const CareError('합성 실패')),
+        c.taskBook.saveTask(pid, title: '', dueAt: DateTime.now()),
         throwsA(isA<CareError>()),
       );
       expect(c.busy, false);
@@ -123,30 +118,26 @@ void main() {
     () async {
       final pid = c.selectedId!;
       final due = DateTime.now().add(const Duration(hours: 3));
-      await c.mutate(
-        () => c.db.saveTask(pid, title: '먼 일정', dueAt: due, reminder: true),
-      );
+      await c.taskBook.saveTask(pid, title: '먼 일정', dueAt: due, reminder: true);
       await c.enableNotifications(true);
       final id = platform.reminders.single.id;
       final calls = platform.scheduleCalls;
+      final zoneCalls = platform.timeZoneCalls;
       await c.setChatRetention(pid, ChatRetention.week);
       await c.addChatMessage(pid, '합성 질문');
-      await c.mutate(
-        () => c.db.saveEntry(
-          pid,
-          kind: EntryKind.generalNote,
-          occurredAt: DateTime.now(),
-          note: '합성 메모',
-        ),
+      await c.records.saveEntry(
+        pid,
+        kind: EntryKind.generalNote,
+        occurredAt: DateTime.now(),
+        note: '합성 메모',
       );
       expect(platform.scheduleCalls, calls);
-      await c.mutate(
-        () => c.db.saveTask(
-          pid,
-          title: '가까운 일정',
-          dueAt: due.subtract(const Duration(hours: 1)),
-          reminder: true,
-        ),
+      expect(platform.timeZoneCalls, zoneCalls);
+      await c.taskBook.saveTask(
+        pid,
+        title: '가까운 일정',
+        dueAt: due.subtract(const Duration(hours: 1)),
+        reminder: true,
       );
       expect(
         platform.reminders
@@ -160,7 +151,7 @@ void main() {
   );
   test('REVIEW-01 camera response after lock cannot save a photo', () async {
     final pid = c.selectedId!;
-    final e = c.db.saveEntry(
+    final e = testRepository(c).saveEntry(
       pid,
       kind: EntryKind.generalNote,
       occurredAt: DateTime.now(),
@@ -173,7 +164,7 @@ void main() {
     platform.photoResult!.complete(Uint8List.fromList([1, 2, 3]));
     await rejected;
     await c.unlockPin('123456');
-    expect(c.db.attachments(pid, e.id), isEmpty);
+    expect(testRepository(c).attachments(pid, e.id), isEmpty);
     expect(c.busy, false);
   });
 
@@ -187,10 +178,10 @@ void main() {
   test(
     'REVIEW-06 bounded queries preserve scope, search and order across batches',
     () {
-      final pid = c.selectedId!, other = c.db.createPatient().id;
+      final pid = c.selectedId!, other = testRepository(c).createPatient().id;
       final at = DateTime(2026, 1, 1);
       for (var i = 0; i < 450; i++) {
-        c.db.saveEntry(
+        testRepository(c).saveEntry(
           pid,
           kind: i.isEven ? EntryKind.generalNote : EntryKind.meal,
           note: '합성 $i',
@@ -198,23 +189,26 @@ void main() {
           fields: i.isEven ? {} : {'food': '밥'},
         );
       }
-      final foreign = c.db.saveEntry(
+      final foreign = testRepository(c).saveEntry(
         other,
         kind: EntryKind.generalNote,
         occurredAt: at,
         note: '다른 수첩',
       );
-      final all = c.db.entries(pid);
+      final all = testRepository(c).entries(pid);
       expect(all, hasLength(450));
       expect(
-        c.db.entries(pid, limit: 5).map((e) => e.id),
+        testRepository(c).entries(pid, limit: 5).map((e) => e.id),
         all.take(5).map((e) => e.id),
       );
-      expect(c.db.entries(pid, query: '음식: 밥', limit: 7), hasLength(7));
-      expect(c.db.entries(pid, query: '합성 0').single.note, '합성 0');
-      expect(c.db.entry(pid, all.last.id)?.note, '합성 0');
-      expect(c.db.entry(pid, foreign.id), isNull);
-      expect(c.db.entries(pid, limit: 0), isEmpty);
+      expect(
+        testRepository(c).entries(pid, query: '음식: 밥', limit: 7),
+        hasLength(7),
+      );
+      expect(testRepository(c).entries(pid, query: '합성 0').single.note, '합성 0');
+      expect(testRepository(c).entry(pid, all.last.id)?.note, '합성 0');
+      expect(testRepository(c).entry(pid, foreign.id), isNull);
+      expect(testRepository(c).entries(pid, limit: 0), isEmpty);
     },
   );
 }
