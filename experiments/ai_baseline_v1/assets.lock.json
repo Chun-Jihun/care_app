@@ -1,0 +1,447 @@
+{
+  "schema_version": 1,
+  "result_scope": "automated_development_diagnostic_not_medical_performance",
+  "evaluation_eligible": false,
+  "medical_release_gate_result": false,
+  "models": {
+    "ppocr5_det": {
+      "status": "downloaded",
+      "repository_id": "PaddlePaddle/PP-OCRv5_mobile_det",
+      "revision": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/ppocr5_det",
+      "files": [
+        {
+          "path": "config.json",
+          "bytes": 2871,
+          "sha256": "7ac1c33f377ba58561f4b89d3180b6add2b7c5c60a4edac90fa4e0ceccdc6665"
+        },
+        {
+          "path": "inference.json",
+          "bytes": 229777,
+          "sha256": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c"
+        },
+        {
+          "path": "inference.pdiparams",
+          "bytes": 4692937,
+          "sha256": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b"
+        },
+        {
+          "path": "inference.yml",
+          "bytes": 903,
+          "sha256": "98069072e1b6b37d727fd9d9f11725faa46d6ea0de012f2ed26caea011c37699"
+        },
+        {
+          "path": "README.md",
+          "bytes": 16243,
+          "sha256": "4cc20ad6d41af86b3ce9885ffb0956e152574a2eb14179aeb07fd2d3956161ca"
+        }
+      ]
+    },
+    "ppocr5_ko": {
+      "status": "downloaded",
+      "repository_id": "PaddlePaddle/korean_PP-OCRv5_mobile_rec",
+      "revision": "c02ecaf1f22bfd1c618cce154fd19185b47e663a",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/ppocr5_ko",
+      "files": [
+        {
+          "path": "config.json",
+          "bytes": 229129,
+          "sha256": "c86a49d6301e6c4ff3398a87a2a1926b3521a46e90042833e18bbfa8ba6165c2"
+        },
+        {
+          "path": "inference.json",
+          "bytes": 217724,
+          "sha256": "562404e3c590c50c93778d5f0a94df21b47b5ab8f3ea6d47c7f8a7930c3bc844"
+        },
+        {
+          "path": "inference.pdiparams",
+          "bytes": 13342671,
+          "sha256": "cac3e5f12cf04aaa77f6a5bc704e4e736ef2908476551891d84b41b4e9090462"
+        },
+        {
+          "path": "inference.yml",
+          "bytes": 96039,
+          "sha256": "f757fa1c40e99edcf27e9cce879b93eb2a51fa46f5ef39095689b8c37dd75998"
+        },
+        {
+          "path": "README.md",
+          "bytes": 7110,
+          "sha256": "0524f6bd8681b9b37f817a11a0bdd8cc99d5a4968b65b693baf532fb73f8a99b"
+        }
+      ]
+    },
+    "ppocr5_multi": {
+      "status": "downloaded",
+      "repository_id": "PaddlePaddle/PP-OCRv5_mobile_rec",
+      "revision": "682f20538d8c086cb2128e5cfac775e6c4904e85",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/ppocr5_multi",
+      "files": [
+        {
+          "path": "config.json",
+          "bytes": 352253,
+          "sha256": "6df1587ae056f0b987125fc894b17f62ae3a12644fa2488d108f19377da9c1a8"
+        },
+        {
+          "path": "inference.json",
+          "bytes": 217724,
+          "sha256": "24587345250c7332d0fc6f9a44e794d078cdaeb64c302fef906f325619de2569"
+        },
+        {
+          "path": "inference.pdiparams",
+          "bytes": 16458665,
+          "sha256": "2460da90875937c94db97eba74ae3d9e5d4c4c57c42f1f41531c09a26bcc771a"
+        },
+        {
+          "path": "inference.yml",
+          "bytes": 148345,
+          "sha256": "5dfeb2777f6d0db8177d8128a8acfcf6e6276dc4ac73ea3bf0dc06d6a5e85d8e"
+        },
+        {
+          "path": "README.md",
+          "bytes": 16075,
+          "sha256": "b02727443cef4904a9ee12accdfaf66fcbada7b93a1a05c40dde7582291ba28c"
+        }
+      ]
+    },
+    "whisper_base": {
+      "status": "downloaded",
+      "repository_id": "openai/whisper-base",
+      "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/whisper_base",
+      "files": [
+        {
+          "path": "added_tokens.json",
+          "bytes": 34604,
+          "sha256": "9715fd2243b6f06a5858b5e32950d2853f73dd5bc201aafcf76f5082a2d8acd1"
+        },
+        {
+          "path": "config.json",
+          "bytes": 1983,
+          "sha256": "a153c53883a6799b6f056b4a8d1a515c9926d03994682ba88a7616618d7da0c1"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 3807,
+          "sha256": "444b3f636d2fff89dd9ecf549e2a085b61f7ff0fa0246d4628bac6a3b8cc9ba4"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 493869,
+          "sha256": "2df2990a395e35e8dfbc7511e08c12d56018d8d04691e0133e5d63b21e154dc6"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 290403936,
+          "sha256": "07cadb9f25677c8d50df603e66a98fbd842cce45047139baeb16e6219a1e807b"
+        },
+        {
+          "path": "normalizer.json",
+          "bytes": 52666,
+          "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 184990,
+          "sha256": "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666"
+        },
+        {
+          "path": "README.md",
+          "bytes": 19811,
+          "sha256": "72895b74a093b6a84ded3eecb5d9c8ebaa2d271d16d37ee0fb0115b6fe62c36c"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 2194,
+          "sha256": "e67ae3a0aaa99abcd9f187138e12db1f65c16a14761c50ef10eef2c174a7a691"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 2480466,
+          "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 282683,
+          "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 835550,
+          "sha256": "8f680bba319e01a653d2e8a5dbc17a9157179e0576e6ce74ce0c06356c6e24f9"
+        }
+      ]
+    },
+    "whisper_small": {
+      "status": "downloaded",
+      "repository_id": "openai/whisper-small",
+      "revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/whisper_small",
+      "files": [
+        {
+          "path": "added_tokens.json",
+          "bytes": 34604,
+          "sha256": "9715fd2243b6f06a5858b5e32950d2853f73dd5bc201aafcf76f5082a2d8acd1"
+        },
+        {
+          "path": "config.json",
+          "bytes": 1967,
+          "sha256": "e6a2b489da1b5aed65a8eb8d1e7466fa867ad5643a8bc138ba708bd56b2875c4"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 3868,
+          "sha256": "71565b8ef50d0bf7a1193ed4bbed195b94e70c18894d81bba2f1233dcec3ab53"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 493869,
+          "sha256": "2df2990a395e35e8dfbc7511e08c12d56018d8d04691e0133e5d63b21e154dc6"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 966995080,
+          "sha256": "1d7734884874f1a1513ed9aa760a4f8e97aaa02fd6d93a3a85d27b2ae9ca596b"
+        },
+        {
+          "path": "normalizer.json",
+          "bytes": 52666,
+          "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 184990,
+          "sha256": "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666"
+        },
+        {
+          "path": "README.md",
+          "bytes": 20153,
+          "sha256": "967fa44eefe5d3436e040b0f171fc54da67aad96923bae10af37dac9be5bb6b0"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 2194,
+          "sha256": "e67ae3a0aaa99abcd9f187138e12db1f65c16a14761c50ef10eef2c174a7a691"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 2480466,
+          "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 282683,
+          "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 835550,
+          "sha256": "8f680bba319e01a653d2e8a5dbc17a9157179e0576e6ce74ce0c06356c6e24f9"
+        }
+      ]
+    },
+    "qwen3_asr_06b": {
+      "status": "downloaded",
+      "repository_id": "Qwen/Qwen3-ASR-0.6B-hf",
+      "revision": "7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/qwen3_asr_06b",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "bytes": 1434,
+          "sha256": "f50e6b694fbf4a683206e37869990d68333fe95d285730f084c838a34b0d98c2"
+        },
+        {
+          "path": "config.json",
+          "bytes": 2398,
+          "sha256": "9eecf6f1b383e343889c2e6010e632590fa57d4bc678e151c7d6a160a0dfb04a"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 165,
+          "sha256": "9939fc9388b79bd70757f938b87381e817173d6a6158f5af6506c0b73e775c3c"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 1564928088,
+          "sha256": "d3f212dd20abecd315d830bc54ae3865e56ebfc3276484e57b771288ba27fd35"
+        },
+        {
+          "path": "processor_config.json",
+          "bytes": 487,
+          "sha256": "bc0b230081b44e629dd5b9045b78495615c1831b4b9f4cffe97bd37e82a6156a"
+        },
+        {
+          "path": "README.md",
+          "bytes": 16538,
+          "sha256": "742006d0f99ce6475b1c5e7b66e4a2f166cce836dd7ce3d7f20707252859195a"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 11429653,
+          "sha256": "fe1fad59be22a41ee293363fcf95fdedbc7c93f3b49270b1d2e18bd1399a7a05"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 998,
+          "sha256": "945e980986de2ca7768f3326bfdbb4fbea3406f972b8ae0be233089f2b253c11"
+        }
+      ]
+    },
+    "qwen35_2b": {
+      "status": "downloaded",
+      "repository_id": "Qwen/Qwen3.5-2B",
+      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/qwen35_2b",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "bytes": 7755,
+          "sha256": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+        },
+        {
+          "path": "config.json",
+          "bytes": 2908,
+          "sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11544,
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a"
+        },
+        {
+          "path": "merges.txt",
+          "bytes": 3353259,
+          "sha256": "a9d356d7bdf1ef4949e3e748e95b8e10ad9d4e2e838eddc38a0a7b6b94d1db8d"
+        },
+        {
+          "path": "model.safetensors-00001-of-00001.safetensors",
+          "bytes": 4548221488,
+          "sha256": "aa33250c4fc64891ddfaba3a314fd9542ea371843c387178b425fbcc5ed680b1"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 64460,
+          "sha256": "aca8afed9da75b0f050b408d270766fd77627f1af401e240f61c3b47d0db02f9"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516"
+        },
+        {
+          "path": "README.md",
+          "bytes": 62814,
+          "sha256": "c0e83a849c776e6fa843d011f023132d942a0f0140d903205bf1c363adad2275"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 12807982,
+          "sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 16709,
+          "sha256": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c"
+        },
+        {
+          "path": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": "7768af27c1fafa9cc9011c1dc20067e03f8915e03b63504550e11d5066986d13"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 6722759,
+          "sha256": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+        }
+      ]
+    },
+    "gemma4_e2b": {
+      "status": "downloaded",
+      "repository_id": "google/gemma-4-E2B-it",
+      "revision": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+      "license_metadata": "apache-2.0",
+      "local_path": "models/ai-baseline-v1/gemma4_e2b",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "bytes": 18569,
+          "sha256": "0a2c8073c878ab1da004bee933a998606537bbb62016310352c7285c3f01c5b5"
+        },
+        {
+          "path": "config.json",
+          "bytes": 4954,
+          "sha256": "1b28f3d2c3100f6c594754b81107428bd7b822a7f48272ca681dae9d2ec38330"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 10246621918,
+          "sha256": "2db5482b20d746879bb3ef79b5203e9075a2e2b98f54ec7c2f281c1477ddc550"
+        },
+        {
+          "path": "processor_config.json",
+          "bytes": 1689,
+          "sha256": "32bdf45d2ad4cc29a0822ddd157a182de76644f0419a6228d151495256e9813c"
+        },
+        {
+          "path": "README.md",
+          "bytes": 27955,
+          "sha256": "3e0608a6be80e3eb040a5aa6c76707809503deb85be6360184a118fb6156526c"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 3082,
+          "sha256": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633"
+        }
+      ]
+    }
+  },
+  "datasets": {
+    "fleurs": {
+      "repository_id": "google/fleurs",
+      "revision": "168de341b3db6859a9bac1c50a2ef5e3b47647e0",
+      "source_split": "validation",
+      "selection": "first 50 rows per language",
+      "local_path": "data/ai-baseline-v1/sources/fleurs",
+      "files": [
+        {
+          "path": "cmn_hans_cn/validation/0000.parquet",
+          "bytes": 287985961,
+          "sha256": "18698ffdd46c36c54af641821684d3f0313a7b64e0a49615597ec61a98f2b57e"
+        },
+        {
+          "path": "en_us/validation/0000.parquet",
+          "bytes": 236549523,
+          "sha256": "7c3eeb11a9597bd52cdc1b0d637e85389fe094cfd8763913e7bf4fdf7a853959"
+        },
+        {
+          "path": "ja_jp/validation/0000.parquet",
+          "bytes": 215814170,
+          "sha256": "4636065a2eb7d1bb07007d3193092eb1856cf101360831c61d6dfa611e579071"
+        },
+        {
+          "path": "ko_kr/validation/0000.parquet",
+          "bytes": 170237617,
+          "sha256": "fe165251431a7376f43502f326f636cc9c8c51d0584b9a21b880e359f2d4893b"
+        }
+      ]
+    }
+  },
+  "updated_at": "2026-09-10T11:31:07.697940+00:00"
+}

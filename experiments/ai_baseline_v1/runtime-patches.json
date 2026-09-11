@@ -1,0 +1,13 @@
+{
+  "patches": [
+    {
+      "package": "paddlepaddle",
+      "version": "3.3.1",
+      "path": ".tools/ai-baseline-venv/Lib/site-packages/paddle/dataset/common.py",
+      "before_sha256": "758b6a54576d065444a3569c98e26bc6759d43c263df3f273eeb824ea7204b7c",
+      "after_sha256": "4aed8f2dae2b17dcb9db1bd86189c9e7ef3860b16615e62000b9875bdb3a15c7",
+      "purpose": "Honor PADDLE_DATA_HOME in the import-time dataset cache; inference kernels unchanged.",
+      "upstream_license": "Apache-2.0"
+    }
+  ]
+}

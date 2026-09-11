@@ -1,0 +1,18 @@
+{
+  "python_executable": "E:/project/care_app/.tools/ai-training-venv/Scripts/python.exe",
+  "packages": {
+    "peft": "0.20.0",
+    "torch": "2.12.1+cu126",
+    "transformers": "5.16.1",
+    "bitsandbytes": "0.50.2",
+    "paddlepaddle": "3.3.1",
+    "paddleocr": "3.7.0",
+    "numpy": "2.3.5",
+    "pyarrow": "25.0.1"
+  },
+  "dependency_strategy": "isolated venv plus read-only .pth imports from prior local experimental environments; PEFT installed only in new venv",
+  "gpu_memory_fraction": 0.5,
+  "cpu_threads": 2,
+  "source_base": "experiments/ai_baseline_v1/assets.lock.json",
+  "notes": "Qwen4B uses prior model_comparison_v1 M1 lock. OCR imports official pinned source with bytecode-cache exception; all listed source/model hashes verified."
+}

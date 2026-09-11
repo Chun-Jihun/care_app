@@ -1,0 +1,23 @@
+{
+  "captured_after_preparation": true,
+  "notes": "Generator scripts have not changed since their respective successful preparations; prepared input files remain sealed. Supporting common helper is retained in the early OCR run source snapshot.",
+  "datasets": {
+    "chat": {
+      "manifest_sha256": "5aab9ac74de7853bd1d9e3e4c3a43e57c2a66669187b83e3cf76c4aeb9c3e983",
+      "generator": "scripts/prepare_ai_training_chat.py",
+      "generator_sha256": "c1be93d8c43cfa0cd8eba6bd96ea53daa6acc26e6589eb419e0e4ef090fe61d6"
+    },
+    "ocr": {
+      "manifest_sha256": "524fee2a49f454c98370006ac14efa995ffdc2e84071ae350d2d4425ff78547c",
+      "generator": "scripts/prepare_ai_training_ocr.py",
+      "generator_sha256": "a8e1d4a17a978906001ee024396487f7fb1d516a322240d9d1e38fae6580c867"
+    },
+    "asr": {
+      "manifest_sha256": "fff5d97c0fa946dce0335dc3f1361b24b73837ca8ccc3ea7f902cd76af11a1e0",
+      "generator": "scripts/prepare_ai_training_asr.py",
+      "generator_sha256": "20a6f9f6c33301183aac8eb39eb1c123dea11ebf475a350036646c07cc121c7f"
+    }
+  },
+  "common_helper_snapshot": "data/ai-training-v1/runs/ocr-ko-head-sft-v1/source/ai_training_common.py",
+  "common_helper_sha256": "b50a7ba16ad7ae56ca2b5289b30362ba4d12059b2ce3f5abe162d2081b9f8ba1"
+}

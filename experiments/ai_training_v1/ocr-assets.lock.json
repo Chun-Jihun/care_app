@@ -1,0 +1,3603 @@
+{
+  "task": "ocr",
+  "evaluation_eligible": false,
+  "assets": [
+    {
+      "url": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_pretrained_model/korean_PP-OCRv5_mobile_rec_pretrained.pdparams",
+      "bytes": 110996478,
+      "sha256": "8975dede5e0c2f47e0a7712b3d79ffdc766972f872fd0441ebcccd9d77cd52a3",
+      "downloaded_at": "2026-09-10T14:55:47.321668+00:00",
+      "name": "korean_PP-OCRv5_mobile_rec",
+      "path": "E:/project/care_app/data/ai-training-v1/sources/paddleocr/korean_PP-OCRv5_mobile_rec_pretrained.pdparams"
+    },
+    {
+      "url": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_pretrained_model/PP-OCRv5_mobile_rec_pretrained.pdparams",
+      "bytes": 133890015,
+      "sha256": "04745475b97a1faf029c7442a4c4421b156249b9395814e509bf4a9804e37750",
+      "downloaded_at": "2026-09-10T14:57:25.339977+00:00",
+      "name": "PP-OCRv5_mobile_rec",
+      "path": "E:/project/care_app/data/ai-training-v1/sources/paddleocr/PP-OCRv5_mobile_rec_pretrained.pdparams"
+    }
+  ],
+  "source": {
+    "url": "https://codeload.github.com/PaddlePaddle/PaddleOCR/zip/2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+    "bytes": 118704753,
+    "sha256": "ef2c41e3739753bd9dcb83ac3ead3d295b51139c76a8b0698680f88627eeb56a",
+    "downloaded_at": "2026-09-10T14:57:32.540052+00:00",
+    "revision": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854",
+    "directory": "E:/project/care_app/data/ai-training-v1/sources/paddleocr/code",
+    "files": [
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/arabic_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2935,
+        "sha256": "72e4624e087b14f18d4ed9f24f27551144b7d4bef40f869e9d5fe3ff849b4461"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/cyrillic_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2943,
+        "sha256": "649abeff2fd61d2527f3663d3a3c72f2f7baa6e1a69a3ea0fda2476172e9b1fe"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/devanagari_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2951,
+        "sha256": "028201702b4e1ae5a3a571ae797c770025ae53c36ea4df1a882d66c0c4bfabf5"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/el_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2919,
+        "sha256": "c51bebbb6e9afe037e7be73f117cf9ad592e9b8941a0668bdb8f60e58194c9e8"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/en_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2919,
+        "sha256": "19ccdc0fdb0632ef20438584a609c63f40ba347233b7164fd04f3453a47ab50d"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/eslav_PP-OCRv5_mobile_rec.yml",
+        "bytes": 2925,
+        "sha256": "580fd1319489939c736cbb0043cba0be8947fc0ace7bf8088350bac3991f9330"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/korean_PP-OCRv5_mobile_rec.yml",
+        "bytes": 2928,
+        "sha256": "c7aaf8d53df433865a76d7f8af417a0416c2902fbc073f51d98b45629fcd64ea"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/latin_PP-OCRv5_mobile_rec.yml",
+        "bytes": 2979,
+        "sha256": "643f51bf382e9f6e4a1dec9bebe6c9aa063d2c7c5086f0f6294a0b5914a6d14b"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/ta_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2919,
+        "sha256": "a38cb0f8645bd3cea4f08978f7a0ad771f3d18fd22a96b413222921aad892327"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/te_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2919,
+        "sha256": "84b73d270edc2bda7a051b80d503b5f789e34f80b4aaeddaac146d6619538444"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/multi_language/th_PP-OCRv5_mobile_rec.yaml",
+        "bytes": 2919,
+        "sha256": "5cd6d34927608f37a19a6b59c75213ba8b54d035b710606cc4884eb8745bc23c"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/PP-OCRv5_mobile_rec.yml",
+        "bytes": 2921,
+        "sha256": "833ffa1b802beb9d89115f8bb9695533c3231ea551b0b8acd5efd19eb4320151"
+      },
+      {
+        "path": "configs/rec/PP-OCRv5/PP-OCRv5_server_rec.yml",
+        "bytes": 2818,
+        "sha256": "d38c678ec4075aa0c65750d2759ac4396694f6ffb29004b127e0e8b3d11fcef3"
+      },
+      {
+        "path": "LICENSE",
+        "bytes": 11376,
+        "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+      },
+      {
+        "path": "ppocr/__init__.py",
+        "bytes": 610,
+        "sha256": "5a0df9248353c020ab5ed83e8f2bd499e9b515361260ae5a5eb85646efa70136"
+      },
+      {
+        "path": "ppocr/data/__init__.py",
+        "bytes": 5328,
+        "sha256": "452c568125581b514f06bdd9fce3dae4c38bfc426fa7243e6efbc0fbfe119054"
+      },
+      {
+        "path": "ppocr/data/collate_fn.py",
+        "bytes": 5700,
+        "sha256": "0076f365e3c91e0468ee68a6ba806d9f51aa476237d6b7cd157d65cb7bc6d74a"
+      },
+      {
+        "path": "ppocr/data/imaug/__init__.py",
+        "bytes": 2764,
+        "sha256": "46809a18e259aad4e3ce5623a813396b2d42d63eba86d8c1e20ef747feb40422"
+      },
+      {
+        "path": "ppocr/data/imaug/abinet_aug.py",
+        "bytes": 17942,
+        "sha256": "89ad4af8623cf64d6f843a4cfe6af5305908714034a9c8a3b6cb49015ab6f162"
+      },
+      {
+        "path": "ppocr/data/imaug/ColorJitter.py",
+        "bytes": 1028,
+        "sha256": "5ed1ed017811014997f8d977e6381c1e16c138b6e2c6b6363d9b3a59dfd8bfa4"
+      },
+      {
+        "path": "ppocr/data/imaug/copy_paste.py",
+        "bytes": 6659,
+        "sha256": "d5c044cffb9227233031375a8fa25c5fa095dc1d9bb2bfb6d6ebe56efa5342b5"
+      },
+      {
+        "path": "ppocr/data/imaug/ct_process.py",
+        "bytes": 11857,
+        "sha256": "cba5dd48258f64accccbcbecadd111d67ef10b436c1667a786e01eafac314d08"
+      },
+      {
+        "path": "ppocr/data/imaug/drrg_targets.py",
+        "bytes": 29635,
+        "sha256": "ce71f4c2b3a24e57ea09308965de4f9983014603f7685fcf0a9958f9cbabc725"
+      },
+      {
+        "path": "ppocr/data/imaug/east_process.py",
+        "bytes": 17123,
+        "sha256": "899af9e85ca3fc3ab42fd2b2b4ed26757a099736a522eee4c00f8f1508dec1ab"
+      },
+      {
+        "path": "ppocr/data/imaug/fce_aug.py",
+        "bytes": 20760,
+        "sha256": "3f8eba5895273a7252b203b90a7c75c93954ea37bc391bf601e37a723eae5cb1"
+      },
+      {
+        "path": "ppocr/data/imaug/fce_targets.py",
+        "bytes": 26535,
+        "sha256": "1b4b014a9e7589025d3696548d65626b9e7d7abf700aaf403d08e80edc6a91c6"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost1.jpg",
+        "bytes": 279928,
+        "sha256": "aebc8aae10bb92ac70b911533491aad9bda23adbcdcbe8f2de95af627b01e037"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost2.png",
+        "bytes": 299002,
+        "sha256": "fe211a89b336999c207a852ce05818d4545d0b57c5beadd824b4cc9d9a9b6137"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost3.png",
+        "bytes": 299002,
+        "sha256": "2d0d50b4a9bb213f38b024ef7768731bb83cc08d2f26b5766bbc167cdfa0e504"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost4.jpg",
+        "bytes": 36734,
+        "sha256": "3f8b91ca1a9fa7167b09e773da53f5ae60d0a1fd88f02a783f6e328a72887f6e"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost5.jpg",
+        "bytes": 155150,
+        "sha256": "5fc6a19df4a429ba68abdcc8f8a4278d4c9f81c9ccafd2c92ab0c8cf8992ebd2"
+      },
+      {
+        "path": "ppocr/data/imaug/frost_img/frost6.jpg",
+        "bytes": 90185,
+        "sha256": "1f92b2f48408748085b68dd81d816ef239f42cef3029c25d041fcb6760fb4f25"
+      },
+      {
+        "path": "ppocr/data/imaug/iaa_augment.py",
+        "bytes": 9219,
+        "sha256": "79d7dcc66833a778c7374641db5c7aa47931a8900b7cdc69a4ca85dd9a64e954"
+      },
+      {
+        "path": "ppocr/data/imaug/label_ops.py",
+        "bytes": 75167,
+        "sha256": "89c75bfb515c0d8ea3e8ebb5728335fcb8032e8d2e3e3060eb059527e7df61c7"
+      },
+      {
+        "path": "ppocr/data/imaug/latex_ocr_aug.py",
+        "bytes": 6310,
+        "sha256": "a1ede294da0a18ac1cdb26aaf8b52bd3df966649fef87fd48c6cb2a57477b703"
+      },
+      {
+        "path": "ppocr/data/imaug/make_border_map.py",
+        "bytes": 6885,
+        "sha256": "4e66acf6645cee91bd771c506d4869623b702365a227604a425c7e9b9faffd1f"
+      },
+      {
+        "path": "ppocr/data/imaug/make_pse_gt.py",
+        "bytes": 3774,
+        "sha256": "8eb700c54198e7bfd9083c08a59fc7a606fc38078cb360e0cfac7348353c09d3"
+      },
+      {
+        "path": "ppocr/data/imaug/make_shrink_map.py",
+        "bytes": 5007,
+        "sha256": "9a4ec56d114a2bf540cf0092f3efbb999b3a4f0737291f13da23696f8e9bd47f"
+      },
+      {
+        "path": "ppocr/data/imaug/operators.py",
+        "bytes": 23106,
+        "sha256": "46190b708d4044ba282dabd08dd78b8ab67f0580372a3f5d6fad08f5d0dbabf6"
+      },
+      {
+        "path": "ppocr/data/imaug/pg_process.py",
+        "bytes": 40535,
+        "sha256": "6b48d48ab920fb1027fad3939726dcb44991834fa8b2dd36309870d2158513f5"
+      },
+      {
+        "path": "ppocr/data/imaug/randaugment.py",
+        "bytes": 5168,
+        "sha256": "15c7bacebbf1ed7f84c2cd8645982285ad88156aa888f6ddb684f2b8d0fbfe98"
+      },
+      {
+        "path": "ppocr/data/imaug/random_crop_data.py",
+        "bytes": 20615,
+        "sha256": "25576d1deb46951641bffc183bd94b86bafce68bcf83b92976f81b008ac8581e"
+      },
+      {
+        "path": "ppocr/data/imaug/rec_img_aug.py",
+        "bytes": 29050,
+        "sha256": "77607eb2a5e6e5d01829565a97161845ecd85a35a4d827435198f3ed4a32f9ad"
+      },
+      {
+        "path": "ppocr/data/imaug/sast_process.py",
+        "bytes": 29197,
+        "sha256": "26f787b61ea05246a186400dd95e24b4edf05e5a8a24fc59f8221db6fd00a61a"
+      },
+      {
+        "path": "ppocr/data/imaug/ssl_img_aug.py",
+        "bytes": 1996,
+        "sha256": "f8a29310785f0186b29964afbff8e3efd41db3cb890a716aa8044441190fc22c"
+      },
+      {
+        "path": "ppocr/data/imaug/table_ops.py",
+        "bytes": 8754,
+        "sha256": "0be69fe04e4ff6d41601a2fa5d81f4c55e45c49184c49b88a917edd4968aa5ac"
+      },
+      {
+        "path": "ppocr/data/imaug/text_image_aug/__init__.py",
+        "bytes": 733,
+        "sha256": "a274da16e32b483e87f13a5d9bfe431f889474fd188188fe95430c5c5490dc0b"
+      },
+      {
+        "path": "ppocr/data/imaug/text_image_aug/augment.py",
+        "bytes": 3496,
+        "sha256": "203d177f39e8ebbf2880ea25fcce83e2963420641948da82fddd8d814c94a288"
+      },
+      {
+        "path": "ppocr/data/imaug/text_image_aug/warp_mls.py",
+        "bytes": 6810,
+        "sha256": "6657555474613243d539673136fc4f4016a7e57193769453a2716e156756cef8"
+      },
+      {
+        "path": "ppocr/data/imaug/unimernet_aug.py",
+        "bytes": 28879,
+        "sha256": "03a18292349999aa775439f731074e509943c9cdac67fc9b081a83846e284e36"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/__init__.py",
+        "bytes": 889,
+        "sha256": "6374e0659707b64e36704ed58360f14e3fe6787a7045e6adf70812c983c28094"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/augment.py",
+        "bytes": 1188,
+        "sha256": "9d4d9bec9ba13fc5a63ca68f7aee7b5b8920eb084816e7ca79cbef30df4e3739"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/token/__init__.py",
+        "bytes": 817,
+        "sha256": "bc7ab8e121eedda893617d0420dae694d1afcfb52b295a3c454b68e5ae23fb3a"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/token/vqa_re_convert.py",
+        "bytes": 1992,
+        "sha256": "f344999da0aee9036d8206fb18336943e3d2ff3075cc121141f3b14d4877f6c4"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/token/vqa_token_chunk.py",
+        "bytes": 5191,
+        "sha256": "dd060f0afe74ddc7f3787eb68f3994be09bd9216e0314f9001070b95c82d0f78"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/token/vqa_token_pad.py",
+        "bytes": 4854,
+        "sha256": "60e8c8a0000dfd1968a67992ea8bc3548271106ffd60d6110ac9419ef6c37be9"
+      },
+      {
+        "path": "ppocr/data/imaug/vqa/token/vqa_token_relation.py",
+        "bytes": 2650,
+        "sha256": "e5391e1f8c648c862c62a05e251b8d22c957e0c3ac8cd4823dd68e86c81a5847"
+      },
+      {
+        "path": "ppocr/data/latexocr_dataset.py",
+        "bytes": 7449,
+        "sha256": "eecb8e78799ca4c08384dc0b3f2f8bcad5f81429d2cda63e8a3e3eae08269d05"
+      },
+      {
+        "path": "ppocr/data/lmdb_dataset.py",
+        "bytes": 11625,
+        "sha256": "2050eecf14af9e1b8191e21e38245a49f1a601e5d89507a6ad7ea9b7cf5ce8bd"
+      },
+      {
+        "path": "ppocr/data/multi_scale_sampler.py",
+        "bytes": 6580,
+        "sha256": "a55394c3c16cb4ed2a4c3e342eec34ba46333ce80a209d90c15db5548d7d2552"
+      },
+      {
+        "path": "ppocr/data/pgnet_dataset.py",
+        "bytes": 4185,
+        "sha256": "1b1dfa0a7b816a9038c2b61a2e8d6a245efe88c9f8b194b32917765e552a211b"
+      },
+      {
+        "path": "ppocr/data/pubtab_dataset.py",
+        "bytes": 5145,
+        "sha256": "b00e7ad763cddb93286f8e9ac49c7207e2fc59116645c572d4b40990d0514e5b"
+      },
+      {
+        "path": "ppocr/data/simple_dataset.py",
+        "bytes": 21738,
+        "sha256": "f876a3aa926743e76ecddb995e7fee5cc252a4b88fe1a2d4076b30fb6947f86d"
+      },
+      {
+        "path": "ppocr/ext_op/__init__.py",
+        "bytes": 65,
+        "sha256": "b8892bd64d64fa39cc13e4aa986c930ef8c874c60f451e854212f0264d16711f"
+      },
+      {
+        "path": "ppocr/ext_op/roi_align_rotated/roi_align_rotated.cc",
+        "bytes": 19806,
+        "sha256": "ea065e7f82a80c82ab13fc9a54bf3f3f4f708964baa8001c9e3d22133fc95901"
+      },
+      {
+        "path": "ppocr/ext_op/roi_align_rotated/roi_align_rotated.cu",
+        "bytes": 14363,
+        "sha256": "305250820ff82541d7db5be559124fdaf0d5682149381d0858191ca2d4db55d3"
+      },
+      {
+        "path": "ppocr/ext_op/roi_align_rotated/roi_align_rotated.py",
+        "bytes": 2184,
+        "sha256": "004e369fc87d46629f6c0686bc2d819217e7bd79b28a4288b49c65c53080babe"
+      },
+      {
+        "path": "ppocr/losses/__init__.py",
+        "bytes": 3426,
+        "sha256": "be4785c99e0daa3e32a938c37ae61a73d6f2dac42f68755aff4dd5488370fcf5"
+      },
+      {
+        "path": "ppocr/losses/ace_loss.py",
+        "bytes": 1720,
+        "sha256": "ab3878fbaf481e71341027da4bee5ae4a2e92e54d8824867f0cd0cd1b7b7b63b"
+      },
+      {
+        "path": "ppocr/losses/basic_loss.py",
+        "bytes": 8021,
+        "sha256": "ad468de3171779c4b1f6f25634b31c901b38cf1a66dfeb783d57574fa52c52c8"
+      },
+      {
+        "path": "ppocr/losses/center_loss.py",
+        "bytes": 3380,
+        "sha256": "93a3ca79b2e8211114bd9294841f7ce6c477658da864064d69e5bcecd4958932"
+      },
+      {
+        "path": "ppocr/losses/cls_loss.py",
+        "bytes": 1076,
+        "sha256": "ba76192e12a9da937b7399410532a6bd80982f7bfa69332fa268b44e9a1e5d5d"
+      },
+      {
+        "path": "ppocr/losses/combined_loss.py",
+        "bytes": 2855,
+        "sha256": "0a7070713f26bf73642d118cc34c0c1db9c69e2b188640140516bfe9499ae739"
+      },
+      {
+        "path": "ppocr/losses/det_basic_loss.py",
+        "bytes": 10809,
+        "sha256": "7b778bc96dd553c57f8d6cb1670814b233a2fc3353acaf624492e85f9b673eaf"
+      },
+      {
+        "path": "ppocr/losses/det_ct_loss.py",
+        "bytes": 9479,
+        "sha256": "68a174d7e0eeffa46e0d9567ab604875f63c2b348e8c73e93998327cd0de1d3a"
+      },
+      {
+        "path": "ppocr/losses/det_db_loss.py",
+        "bytes": 5133,
+        "sha256": "785725c8fe61a3c66f78dc51c16e8e4e1e2bad75d17f4bd1ad4249c4f1276d2e"
+      },
+      {
+        "path": "ppocr/losses/det_drrg_loss.py",
+        "bytes": 8603,
+        "sha256": "4a26493cb637bae85a64564a6bc18a2c74b53e72ef11fcb8d7b33e0e273a7eb1"
+      },
+      {
+        "path": "ppocr/losses/det_east_loss.py",
+        "bytes": 2248,
+        "sha256": "0e5b9d639820d04104bbd0c7e45057e41eeda0439fb58e1686dd5ae0ef14b043"
+      },
+      {
+        "path": "ppocr/losses/det_fce_loss.py",
+        "bytes": 9247,
+        "sha256": "df1b73be4e4267e37ccf5ca788edf1908ff9cd0f84a5b6326a507de714df7d04"
+      },
+      {
+        "path": "ppocr/losses/det_pse_loss.py",
+        "bytes": 5646,
+        "sha256": "9f119849993d9d378e54d32e7300ae46a038ebe9d83a51ef39780429d75cc75a"
+      },
+      {
+        "path": "ppocr/losses/det_sast_loss.py",
+        "bytes": 5147,
+        "sha256": "834b6ee0f79001aa6426a1f7f73304a10192058df1976630028f2af5975b3970"
+      },
+      {
+        "path": "ppocr/losses/distillation_loss.py",
+        "bytes": 41264,
+        "sha256": "3f470cf8220e486ca3fb6ee0cadfb5b26a3084d2eec1ac7adb5063414f7ccd64"
+      },
+      {
+        "path": "ppocr/losses/e2e_pg_loss.py",
+        "bytes": 6653,
+        "sha256": "b59876aa158f9ef52505c5da00c0e931e8b8567bb60170d48da2f60192dc402e"
+      },
+      {
+        "path": "ppocr/losses/kie_sdmgr_loss.py",
+        "bytes": 4690,
+        "sha256": "50b70e8156cdba394bf7ce15bbbe33f4adf606a571d71bab50b1774d2d76bc13"
+      },
+      {
+        "path": "ppocr/losses/rec_aster_loss.py",
+        "bytes": 3688,
+        "sha256": "a6cc458eb2b82b715ebad38bde983515528815d5dde2a3b353b96b88cb837733"
+      },
+      {
+        "path": "ppocr/losses/rec_att_loss.py",
+        "bytes": 1575,
+        "sha256": "c3ffabdc4be82722bab944b25c36192c9738e75e1332a15f8bdf12d467ca2794"
+      },
+      {
+        "path": "ppocr/losses/rec_can_loss.py",
+        "bytes": 2799,
+        "sha256": "5d4407d233df85bcd8b5024d98e1c77af47dc431c41e30ffa6f6cc0f88b2a4a5"
+      },
+      {
+        "path": "ppocr/losses/rec_ce_loss.py",
+        "bytes": 2582,
+        "sha256": "c558ac833ea5fad3258ce91f7aac8f28f7a8c1bfad0ebc9c31f9f2eef1febc67"
+      },
+      {
+        "path": "ppocr/losses/rec_cppd_loss.py",
+        "bytes": 2874,
+        "sha256": "7392e8f1de411c4bc94d9f4089540dacfe1cd7fd9e1ac7bc62f09b8cdec0fb2b"
+      },
+      {
+        "path": "ppocr/losses/rec_ctc_loss.py",
+        "bytes": 1764,
+        "sha256": "55d9d23b0da3fc81475aae7bf049a34d55713f03a79b4ce0b7e1c6c96ddca6c6"
+      },
+      {
+        "path": "ppocr/losses/rec_enhanced_ctc_loss.py",
+        "bytes": 2485,
+        "sha256": "3719a817c481ed13e2b77287d769f6e48ddee15333bd3714bc988edb82df90b1"
+      },
+      {
+        "path": "ppocr/losses/rec_latexocr_loss.py",
+        "bytes": 1456,
+        "sha256": "7fe97409c1addf1e0746743c08b01057161f01e945c7cd4e804053837c4b6747"
+      },
+      {
+        "path": "ppocr/losses/rec_multi_loss.py",
+        "bytes": 2493,
+        "sha256": "d6e82ca7eeec42d29fd207b0e05e34320722f3e78c27758c718feb90a0f1b2e8"
+      },
+      {
+        "path": "ppocr/losses/rec_nrtr_loss.py",
+        "bytes": 1193,
+        "sha256": "30e85721c34eaaa177613a49bfee82836a96a3486c4cd1750b9fe321b6fc7914"
+      },
+      {
+        "path": "ppocr/losses/rec_parseq_loss.py",
+        "bytes": 1752,
+        "sha256": "335d6c5e521a1ed087568e94c37973c0f8c5d51aa52198d8918a00333f857804"
+      },
+      {
+        "path": "ppocr/losses/rec_ppformulanet_loss.py",
+        "bytes": 2381,
+        "sha256": "c444c546d784f85bfc13862fde83ccb281da2fe2bc303c05dae64b92fa8dcd4a"
+      },
+      {
+        "path": "ppocr/losses/rec_pren_loss.py",
+        "bytes": 1093,
+        "sha256": "67e5fc04a8e423656897a049fec10c9f8386097160292ef7193586009a1f14cf"
+      },
+      {
+        "path": "ppocr/losses/rec_rfl_loss.py",
+        "bytes": 2624,
+        "sha256": "ca56b1cd55e794f915149e2ee93e11782cac1e3b28af698b16e08f37f2c4e666"
+      },
+      {
+        "path": "ppocr/losses/rec_sar_loss.py",
+        "bytes": 1212,
+        "sha256": "9bde5620275863ece212421928979333b3e325164a41a8deebe599a49766c7ee"
+      },
+      {
+        "path": "ppocr/losses/rec_satrn_loss.py",
+        "bytes": 1964,
+        "sha256": "d81b9f17951005003c013078cd059d607d4cff32c99d5f8f25bc3bb433db509a"
+      },
+      {
+        "path": "ppocr/losses/rec_spin_att_loss.py",
+        "bytes": 1800,
+        "sha256": "42081f3d72db03d3c09475c0e1c2bc8bcc95c28688a221c50d2d5b2099478cb7"
+      },
+      {
+        "path": "ppocr/losses/rec_srn_loss.py",
+        "bytes": 1817,
+        "sha256": "e0e1f7028fed576475187965b758fc2a22de7429cb27f79fb70fee7cfd94d70e"
+      },
+      {
+        "path": "ppocr/losses/rec_unimernet_loss.py",
+        "bytes": 2073,
+        "sha256": "5c673ec8b8b55cd989becf28eac3a5237c89c1545ee9f2618f62f845e0eb6203"
+      },
+      {
+        "path": "ppocr/losses/rec_vl_loss.py",
+        "bytes": 2872,
+        "sha256": "2351ab05c9920f4d9458f7ba367cb1d882e9b7671b9945a7248ccf4c6bafd0ac"
+      },
+      {
+        "path": "ppocr/losses/stroke_focus_loss.py",
+        "bytes": 2237,
+        "sha256": "92755e8fc4cb592deed8982433ce903c571ae12b0af3d7e3cb11974cf609cdd1"
+      },
+      {
+        "path": "ppocr/losses/table_att_loss.py",
+        "bytes": 3742,
+        "sha256": "c7240a67516a162a55752ecc6eea330de185c58b91c66f5571a06004ccb4432f"
+      },
+      {
+        "path": "ppocr/losses/table_master_loss.py",
+        "bytes": 2807,
+        "sha256": "cb0fcfaf89f21a462217071629b9efc23a8362468b2e641158df68bb63898924"
+      },
+      {
+        "path": "ppocr/losses/text_focus_loss.py",
+        "bytes": 3293,
+        "sha256": "55c5ad3a9b09cdf7dbd4f738f39c2827b946e3d2c098c9387611a2542bc21b90"
+      },
+      {
+        "path": "ppocr/losses/vqa_token_layoutlm_loss.py",
+        "bytes": 2059,
+        "sha256": "ed3889b458b7f6a9eb6c187e4ad6d0d0ced5d141da82ad85692d2f145f1119ce"
+      },
+      {
+        "path": "ppocr/metrics/__init__.py",
+        "bytes": 1935,
+        "sha256": "e4785c6cf508bf555b2ca6eb0705423ccb91cfb961e95117a67cd0f34c465c3d"
+      },
+      {
+        "path": "ppocr/metrics/bleu.py",
+        "bytes": 8139,
+        "sha256": "23dc18bde355352277303331242c41934218c4a1805b633d60a1b10fe86a002d"
+      },
+      {
+        "path": "ppocr/metrics/cls_metric.py",
+        "bytes": 1523,
+        "sha256": "f05f3f6f47db3262d50a5f285083130ff24c052f5d7044ac48b9f2c8675ee5e7"
+      },
+      {
+        "path": "ppocr/metrics/ct_metric.py",
+        "bytes": 1757,
+        "sha256": "3728320b0adda56638b536a776cff0a4380e0c4da83d4a9ba6d778d9395319f0"
+      },
+      {
+        "path": "ppocr/metrics/det_metric.py",
+        "bytes": 5718,
+        "sha256": "9ea9d2f63ac01d6c86e633658d1ae5758e665951ef2e5855410a8e28b5b56a05"
+      },
+      {
+        "path": "ppocr/metrics/distillation_metric.py",
+        "bytes": 2434,
+        "sha256": "be1de346c14beff834b5dc06e506904daa43c75c6982540c877dede1c85eaa9c"
+      },
+      {
+        "path": "ppocr/metrics/e2e_metric.py",
+        "bytes": 3122,
+        "sha256": "200266c01b88881fdad57f18dd84408eb67b58e5851d2a9b374951f8c82b6aa1"
+      },
+      {
+        "path": "ppocr/metrics/eval_det_iou.py",
+        "bytes": 8147,
+        "sha256": "5d80facb77bca0ca2a561b6488a84e14cf06a173a6dec5cc22a4d01209e6b700"
+      },
+      {
+        "path": "ppocr/metrics/kie_metric.py",
+        "bytes": 2507,
+        "sha256": "f568981c579b50f8b8a65af732d0b1bde37296cb4ad25cf5ef0a86a245b60b5d"
+      },
+      {
+        "path": "ppocr/metrics/rec_metric.py",
+        "bytes": 9636,
+        "sha256": "5046bc1f7a55e9dd586593f1a4708ba9deff4de6091ba407e02ee74c094758d1"
+      },
+      {
+        "path": "ppocr/metrics/sr_metric.py",
+        "bytes": 5224,
+        "sha256": "c834b39264624a8741e54096402ffdb576e098afb4f819cbfe4863b9e348e105"
+      },
+      {
+        "path": "ppocr/metrics/table_metric.py",
+        "bytes": 5723,
+        "sha256": "865e13af560ed006575d95a2d79b3c02a04df4a1c993421d2287f75beb93951b"
+      },
+      {
+        "path": "ppocr/metrics/vqa_token_re_metric.py",
+        "bytes": 7503,
+        "sha256": "ad73045a50c2674caeb4d517d0c0cfef8744fadc935fca5b2d684501604067d2"
+      },
+      {
+        "path": "ppocr/metrics/vqa_token_ser_metric.py",
+        "bytes": 1551,
+        "sha256": "3fcc500d73f4fa79a813ee5bab3f966d7149d8ac05f385ef89bf5fbd8ee841dd"
+      },
+      {
+        "path": "ppocr/modeling/architectures/__init__.py",
+        "bytes": 5124,
+        "sha256": "da1fb9d01a2ff36cb936646bb4eecc81fcd9d85a93735f3b80065d1252fd7d88"
+      },
+      {
+        "path": "ppocr/modeling/architectures/base_model.py",
+        "bytes": 4281,
+        "sha256": "099fcd3af47499a0c33772205ce9be3ca587864d57ad257c2e4b17ebb06258db"
+      },
+      {
+        "path": "ppocr/modeling/architectures/distillation_model.py",
+        "bytes": 2328,
+        "sha256": "99f655b8f0e038b4306403a245113e7efc089c01150c304d3e13aa862d8ec37b"
+      },
+      {
+        "path": "ppocr/modeling/backbones/__init__.py",
+        "bytes": 5228,
+        "sha256": "cb0dcff1c2377614573e10c09b8ad90e9d10c9014a7ccb14d6ac93addb4fd9c4"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_mobilenet_v3.py",
+        "bytes": 9128,
+        "sha256": "29faf346357fc365c44221f82ad503a7b2048503f95d2a24fa1e0b92509c91a1"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_pp_lcnet.py",
+        "bytes": 9328,
+        "sha256": "c85979000ad1ce76efaa58c007dd6cbf8cc6f88ee9971fe2d184f5d23f380a1f"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_pp_lcnet_v2.py",
+        "bytes": 11655,
+        "sha256": "383946d05c7f59005a76eb331da5bcc11e2b8741417acae954d66ae3cfc0875f"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_resnet.py",
+        "bytes": 7848,
+        "sha256": "4cfc1aeeba2df85068ebb323e9ff080f876cc742f8b6cc4e3100b172f55054b1"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_resnet_vd.py",
+        "bytes": 11598,
+        "sha256": "35be9704858b9aa4685db3003271037bc9449d4a8ee370c179be658a587950ae"
+      },
+      {
+        "path": "ppocr/modeling/backbones/det_resnet_vd_sast.py",
+        "bytes": 9807,
+        "sha256": "5f4b2e423f6244c19e365ecdeb363140d67146d5c03a6b93a082ebf451cd1fe9"
+      },
+      {
+        "path": "ppocr/modeling/backbones/e2e_resnet_vd_pg.py",
+        "bytes": 9152,
+        "sha256": "2c2908d3c1f7d1bcfcd959a3eb0e16e95f1dbae217fd594e5cf91c9123c5c88c"
+      },
+      {
+        "path": "ppocr/modeling/backbones/kie_unet_sdmgr.py",
+        "bytes": 6185,
+        "sha256": "38ad4267680f052aabd877e7589300d2fc2707f460bfdc5273d538e8c4354d0b"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_densenet.py",
+        "bytes": 5019,
+        "sha256": "edc0c85535a613b2ff5d11eda20c4ab7adc66ba3f76c06f9d9c8991404778c18"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_donut_swin.py",
+        "bytes": 46490,
+        "sha256": "b8a2662a8f47d6f0da663e48f13061e550e5e3a8a83ae83fed47527e051894ad"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_efficientb3_pren.py",
+        "bytes": 10574,
+        "sha256": "3cf6489293de911b649d609a74f5e5c3b24de4dba4333d946bad7684d4c0013b"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_hgnet.py",
+        "bytes": 11745,
+        "sha256": "0ffb4b255b9ea888ce58195d35cefe9669fd97f54679571d5de6b734a170729f"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_hybridvit.py",
+        "bytes": 15844,
+        "sha256": "ad94b946b4310268c436461e796c82b1bfb18bcd375e44470317164371f4f106"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_lcnetv3.py",
+        "bytes": 17782,
+        "sha256": "5fdae866b22e845ef03d6d10c7d810d065e9d0cf354dc464eeead2c38702fa5e"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_lcnetv4.py",
+        "bytes": 20961,
+        "sha256": "a39161fe2819f65462a62a6d8382d557192a41e894de7b81c9a8fd6d4e1d5080"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_micronet.py",
+        "bytes": 19046,
+        "sha256": "9aab734a4c555138dc55dac913676d88a3be545390f775a643fe9bd71b3bc4a4"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_mobilenet_v3.py",
+        "bytes": 5486,
+        "sha256": "d09a82e04d8ffa17e0f2e0b1754b145410fbaea616880df27314184d62a41f98"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_mv1_enhance.py",
+        "bytes": 8042,
+        "sha256": "d17f9bfa88faf37ef17d6eacd0ebce0d25a3865fdf5859231fae3a6a2e7ae86c"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_nrtr_mtb.py",
+        "bytes": 1788,
+        "sha256": "25a298d6b44b9a73f2d1f40b80a563c83dedb923f7939bed04a6b7699b29af19"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_pphgnetv2.py",
+        "bytes": 60198,
+        "sha256": "a5a63ad71c4655f0a472b6ad75da05664a5bdebc6860d204e06ac14258885424"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_repvit.py",
+        "bytes": 12479,
+        "sha256": "863968b9ac2ee3a7ad738d832b123e82a554eeaf4cb6a3b0402f27ed85baa3b6"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_31.py",
+        "bytes": 9824,
+        "sha256": "f735dde05c0bfcad620c0469a83e5368bd20db689fcc4d026c542db81c39e2ad"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_32.py",
+        "bytes": 8993,
+        "sha256": "053dfd4836014b142f6a41e1f2c498b51a6bbd9b0177276e25cf07f5133e1b69"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_45.py",
+        "bytes": 4447,
+        "sha256": "b357fb51dd19a43f5433a6047be190d715c137abc6f64fc6a6b8227680832218"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_aster.py",
+        "bytes": 4556,
+        "sha256": "f841d20701f4bd3565f3e1581ace505d5ee91bff7b190055af9543116b34e501"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_fpn.py",
+        "bytes": 10833,
+        "sha256": "851a982b052d80150cc06de23a9f65c6e84b5b8f0f4a135149b14984f41a1bf5"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_rfl.py",
+        "bytes": 11345,
+        "sha256": "0781567f69d4ce247f345b7f1e5f8e4379c14e435e2179d650f136f214138148"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnet_vd.py",
+        "bytes": 9679,
+        "sha256": "7be7cd7d124891358737a1e8c29a0221b6f0e185aa082d5361ee055737451726"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_resnetv2.py",
+        "bytes": 38910,
+        "sha256": "6dd2487d09904d84c6abd741ce3c834a592b740fce2780b56d86f6c37240745f"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_shallow_cnn.py",
+        "bytes": 2569,
+        "sha256": "db04a5a79c2adb2df5513279c504b3856e311ca3a6872dd3c50e19a1a5e8ec8a"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_svtrnet.py",
+        "bytes": 20538,
+        "sha256": "1fccefe856e55b8839856cea3e618fce3d2b8f2cf1b6efb033ba60b6269c8956"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_svtrv2.py",
+        "bytes": 16869,
+        "sha256": "a26c70d3c199468113555ce75bb5e678c210ca30c78e695b967f35a4550ca618"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_vary_vit.py",
+        "bytes": 21295,
+        "sha256": "d87807da19be3c1977032bb34af8f5f1b97d9b4490244c32f14fb2662502d59a"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_vit.py",
+        "bytes": 8420,
+        "sha256": "c48b4932ae43be45beb6e70f8955b9820dc2f59828208b8792f6ab820299faeb"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_vit_parseq.py",
+        "bytes": 10366,
+        "sha256": "4a21ad029e0a86c4a3a72eed75e348ccee6c7c0b7765dc054c03e4dab57da958"
+      },
+      {
+        "path": "ppocr/modeling/backbones/rec_vitstr.py",
+        "bytes": 4230,
+        "sha256": "4fa1ca622738a4d77f70a71fc1d09720f55f565b9fc26a0ac20b856626ce6f26"
+      },
+      {
+        "path": "ppocr/modeling/backbones/table_master_resnet.py",
+        "bytes": 11333,
+        "sha256": "60c92553ca10494e95c314b47ca1d42283d1b7c8ba87e438f0d607c55cd18761"
+      },
+      {
+        "path": "ppocr/modeling/backbones/vqa_layoutlm.py",
+        "bytes": 7493,
+        "sha256": "543ff7cb8a2f0d99b82445fa4d23fd867bd3802117068432d9347bcb82a2274a"
+      },
+      {
+        "path": "ppocr/modeling/heads/__init__.py",
+        "bytes": 3194,
+        "sha256": "49f94f8d3ed64e419ffd1839c9196a8a231e1a5534a46812232080f6f133794c"
+      },
+      {
+        "path": "ppocr/modeling/heads/cls_head.py",
+        "bytes": 1647,
+        "sha256": "7b0d38a5e956197577bff1d587091a5ea44a8af32c7c4c208c1793433c00bfa9"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_ct_head.py",
+        "bytes": 2275,
+        "sha256": "62d3a8fef3e87cb9607f98b5d4ecb072873312dbe6354e34f4f9777d8c71575d"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_db_head.py",
+        "bytes": 10266,
+        "sha256": "f83f3d8a3558b9172601f4ff3ea4e992f4a1b8c7770b94818376e4fc08b01894"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_drrg_head.py",
+        "bytes": 7637,
+        "sha256": "15d90758ef84080eb5d60381356f1caee5996e422d868333a1e834ba47bf07ec"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_east_head.py",
+        "bytes": 3706,
+        "sha256": "656793c91d7c35ec45e0419ebda7234e519e1028d6a9165ed24e19f03f31bcdc"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_fce_head.py",
+        "bytes": 3420,
+        "sha256": "bb15c4edb94a3762dd9795beedc1ad14208c5a125e99e253d76b6039631eb0b5"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_pse_head.py",
+        "bytes": 1355,
+        "sha256": "36cdc936e838fe40ee6df74fef0a0c3021cdaf6c75645ae7ae799e3806467069"
+      },
+      {
+        "path": "ppocr/modeling/heads/det_sast_head.py",
+        "bytes": 4994,
+        "sha256": "8e1240cc7387631b692c1a445d24188dfece82f82aa546997e7a3f865eaf6d50"
+      },
+      {
+        "path": "ppocr/modeling/heads/e2e_pg_head.py",
+        "bytes": 8135,
+        "sha256": "2e8b68004f6e1dd30ad1d4b9f6381c7ccc0e94ae56f5a45310b1bc5c421a3ac0"
+      },
+      {
+        "path": "ppocr/modeling/heads/gcn.py",
+        "bytes": 3748,
+        "sha256": "12e6d815a5f1f13bfb74d7f9348d91d51caa5ab3f5beac4bf46bd6258f791185"
+      },
+      {
+        "path": "ppocr/modeling/heads/kie_sdmgr_head.py",
+        "bytes": 8203,
+        "sha256": "ae76c1c9e9cb41e8b2bf613e9d0dc30aa66483ddd2fde5679cd98ae4a4fec62b"
+      },
+      {
+        "path": "ppocr/modeling/heads/local_graph.py",
+        "bytes": 16251,
+        "sha256": "60c34fe0caf7a89ff6991a3908619631e16a6e6f40300180f8e1474859e967c9"
+      },
+      {
+        "path": "ppocr/modeling/heads/proposal_local_graph.py",
+        "bytes": 17955,
+        "sha256": "379bd8815f62f901c1db1c715a06db48af892ae48b0158bbd7069995f1a4897f"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_abinet_head.py",
+        "bytes": 10347,
+        "sha256": "0caa072fdd2c75b9f6a88db326d8469011545763af6e15ba7d854f8ab471ff45"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_aster_head.py",
+        "bytes": 15691,
+        "sha256": "f47ca3cba9f02909498de8e0dc01fc0016794d4d9433f99b7371cfd262c98449"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_att_head.py",
+        "bytes": 8083,
+        "sha256": "19c33505b90c834d1bac15438015f8292bdcbd12ab9703907f26a85644592b44"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_can_head.py",
+        "bytes": 11621,
+        "sha256": "0649cc6d10b5234b7a58840c5a7825d84ce682cec08d44dd85b499309fb1f064"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_cppd_head.py",
+        "bytes": 12575,
+        "sha256": "22b29809c8a80f502fbd53d5dd0e50b0b7ea0cecbdb0bde11855f1ba14dcb659"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_ctc_head.py",
+        "bytes": 3795,
+        "sha256": "a6465dba3f4f726b419a7478a8aef7ee82d492422c0457dfb1a70cc94d8e19aa"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_latexocr_head.py",
+        "bytes": 31417,
+        "sha256": "cf9b474ecbd432f60026b8c75c60c68937d7d5310de7fd25eff3562363192274"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_multi_head.py",
+        "bytes": 5635,
+        "sha256": "88d6b1a2ee61ec8687099a98543b4179368e29c5c69def4a0bcccfd18d042d47"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_nrtr_head.py",
+        "bytes": 26875,
+        "sha256": "f9d1a740cf6a47584c30f1dc7af6d791f8d5384e8ef9b8a0cf8486e5e3d3f273"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_parseq_head.py",
+        "bytes": 18213,
+        "sha256": "2f75803f099fd9f04d2756ff54b2bbc470c7159cdbc4eb65719ad77e639a4789"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_ppformulanet_head.py",
+        "bytes": 53854,
+        "sha256": "6d330739f5ba0da50038f411fabf095ae27257ee3635e63890d7dea7f146871c"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_pren_head.py",
+        "bytes": 1150,
+        "sha256": "b0762f2e79ec520dc66b83e6f6017a76b83d5edf7509d55b4fe4876285ce0057"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_rfl_head.py",
+        "bytes": 3655,
+        "sha256": "29ba5bc6f5ec4655666b4c528044ff764bf25d6154d93aa6599b0c6e4220cbb0"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_robustscanner_head.py",
+        "bytes": 25741,
+        "sha256": "f2b3600b111ef084880bfa12548ac3609bdebaf4fbe74c9f11c7d38112e2b10a"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_sar_head.py",
+        "bytes": 13945,
+        "sha256": "216d833448476a714d01676d6769c1f1203d08cbe8c679cb4afcbd04a761a39a"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_satrn_head.py",
+        "bytes": 18911,
+        "sha256": "063500b32f04f05ae9e21935a7ae1660459727c4e7be231133758dee8393170d"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_spin_att_head.py",
+        "bytes": 4759,
+        "sha256": "54867b30ea87c5b248730b76159ad52cab6ac6b30d599da3e66e5e05ccbb76bd"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_srn_head.py",
+        "bytes": 10944,
+        "sha256": "ef3b0e6c9a56a48f2b4acb47c932f7309f5d072c34e9052496fe886856540279"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_unimernet_head.py",
+        "bytes": 95624,
+        "sha256": "51fa8ee53aec406ad8e48d1570014543574f055575d355bb392e9f0677464d02"
+      },
+      {
+        "path": "ppocr/modeling/heads/rec_visionlan_head.py",
+        "bytes": 17832,
+        "sha256": "4ad1da4a14ca433e4e1fb05d7654d3c68ba579df2f21c5407b17e6d589e92fd1"
+      },
+      {
+        "path": "ppocr/modeling/heads/self_attention.py",
+        "bytes": 14608,
+        "sha256": "6de1d50be99f853c86dd0ac256a347db55c8e2125650d984dd257944f81c764e"
+      },
+      {
+        "path": "ppocr/modeling/heads/sr_rensnet_transformer.py",
+        "bytes": 13992,
+        "sha256": "659debd1a4a38d93f062f940cab8711b9984062f456af2b80ab7776f149d3a62"
+      },
+      {
+        "path": "ppocr/modeling/heads/table_att_head.py",
+        "bytes": 15146,
+        "sha256": "5b6821f08b46086b3a474aee20ef60d90db44c2596cf71e3e37cf65db16213ac"
+      },
+      {
+        "path": "ppocr/modeling/heads/table_master_head.py",
+        "bytes": 10109,
+        "sha256": "84b1cc233ee6a672a5432c8ef6c57e1a54803d746b9ae6380caa900934b3f688"
+      },
+      {
+        "path": "ppocr/modeling/necks/__init__.py",
+        "bytes": 1693,
+        "sha256": "abd1aea13d5cb1811c60885870ba67a1af8fc1aed6d4c17d4d7a3dea09126d43"
+      },
+      {
+        "path": "ppocr/modeling/necks/csp_pan.py",
+        "bytes": 11088,
+        "sha256": "536a5572351691e5054e7320826fed0e934ab302e0125cc9f8be99794a7a610c"
+      },
+      {
+        "path": "ppocr/modeling/necks/ct_fpn.py",
+        "bytes": 5981,
+        "sha256": "d335825aa6e4d15fd7ba9f606d08ef999948cad6b2efc54f3c9ecd4b678f0d15"
+      },
+      {
+        "path": "ppocr/modeling/necks/db_fpn.py",
+        "bytes": 37957,
+        "sha256": "fcfb75f5d71bcfca9f1afc149fdc06defec6a06b3e989d79d37b40be51de54b3"
+      },
+      {
+        "path": "ppocr/modeling/necks/east_fpn.py",
+        "bytes": 5848,
+        "sha256": "d39df02cabe91a70191141a2dc65fcb08614962fd540c9cbe7c7c3aa3374ac98"
+      },
+      {
+        "path": "ppocr/modeling/necks/fce_fpn.py",
+        "bytes": 11373,
+        "sha256": "c5aa2b4af4661b0804e84100f4e2a6389f63fda23a887023eeffed84180880f9"
+      },
+      {
+        "path": "ppocr/modeling/necks/fpn.py",
+        "bytes": 5115,
+        "sha256": "12c2d1c71bcecb2e5c5b44e09aa0a6b6096242c7c28fa1fcc497ad8e49726767"
+      },
+      {
+        "path": "ppocr/modeling/necks/fpn_unet.py",
+        "bytes": 3349,
+        "sha256": "e76393aad1cbda891780cbae42fdc72beaf53d9e134647b3e733408cb1b53fc9"
+      },
+      {
+        "path": "ppocr/modeling/necks/intracl.py",
+        "bytes": 3629,
+        "sha256": "4746d2f8c80de172c00f61ccd9e4c6a15d5a6eb61824ceff7fadd44d9bb612ec"
+      },
+      {
+        "path": "ppocr/modeling/necks/pg_fpn.py",
+        "bytes": 10017,
+        "sha256": "ea6b1568d378a31fdd397dab6de48161d1b99cedf441bb7a8388e2a4085f6e6b"
+      },
+      {
+        "path": "ppocr/modeling/necks/pren_fpn.py",
+        "bytes": 5731,
+        "sha256": "30807ab19fb55e530be7465f1149b61a39dd06923032801770f0eefbc53a2f79"
+      },
+      {
+        "path": "ppocr/modeling/necks/rf_adaptor.py",
+        "bytes": 5353,
+        "sha256": "6b7cae28bc979faa8e24ac2197605d7cf66a67f14e3df353c2ca6a3061a14a2f"
+      },
+      {
+        "path": "ppocr/modeling/necks/rnn.py",
+        "bytes": 12107,
+        "sha256": "4afbd98fb98aedb008d47d4bfff59562b44023e47ac8e308c68f3d17fdebf5da"
+      },
+      {
+        "path": "ppocr/modeling/necks/sast_fpn.py",
+        "bytes": 11705,
+        "sha256": "df459d39d505ee7b45249d4c24a64e897950a45c399f398f54a3ef44f71f144d"
+      },
+      {
+        "path": "ppocr/modeling/necks/table_fpn.py",
+        "bytes": 4323,
+        "sha256": "e4deeb7e3251c238b687a0c56f262d9dab283d1e7b7cfd5a18240f09bb43b6f6"
+      },
+      {
+        "path": "ppocr/modeling/transforms/__init__.py",
+        "bytes": 1137,
+        "sha256": "9dcd253b0cbebe4c1ec468a2140c8737f5add8bff25dc4a78b99510bbacaa5c4"
+      },
+      {
+        "path": "ppocr/modeling/transforms/gaspin_transformer.py",
+        "bytes": 12569,
+        "sha256": "78cb0ba9fbc737332817b466d23cfc5341190d9486397503970a8bbb3bde0931"
+      },
+      {
+        "path": "ppocr/modeling/transforms/stn.py",
+        "bytes": 5148,
+        "sha256": "930966188ef658f50daa7854912648238d6bcf1c6313c5424b6aec4f1e27bf20"
+      },
+      {
+        "path": "ppocr/modeling/transforms/tbsrn.py",
+        "bytes": 10391,
+        "sha256": "07b455953c7fa467c32cf2db4ac3ae1a9464a689946e244ac650e9955e45dc91"
+      },
+      {
+        "path": "ppocr/modeling/transforms/tps.py",
+        "bytes": 11540,
+        "sha256": "887ace0c6fe2a01f949648b97dcbad05d49be233ea9d827e11798ec8f5ee7752"
+      },
+      {
+        "path": "ppocr/modeling/transforms/tps_spatial_transformer.py",
+        "bytes": 6970,
+        "sha256": "73dc87b47ea82ef399503f0823a1e6df85e3e51169177cb2050b6f41d1bf3e38"
+      },
+      {
+        "path": "ppocr/modeling/transforms/tsrn.py",
+        "bytes": 6951,
+        "sha256": "04bb0f262ec4cdaa2b8faf2cea65c74576523569ebf1500c6ba880c36bf8a750"
+      },
+      {
+        "path": "ppocr/optimizer/__init__.py",
+        "bytes": 4275,
+        "sha256": "eed97291fb7f11edefae948b1bf745d94a152d12f9f5758a26ff5f436f5309f1"
+      },
+      {
+        "path": "ppocr/optimizer/learning_rate.py",
+        "bytes": 17048,
+        "sha256": "ce9886602178eef5283fb886fe85de9e3f496212dd8529b67fc3c0fc1c28e3c9"
+      },
+      {
+        "path": "ppocr/optimizer/lr_scheduler.py",
+        "bytes": 9015,
+        "sha256": "1ea775ab95b28565c7971efaf8dcdfab2add4f07d4c07b93260576e511731f82"
+      },
+      {
+        "path": "ppocr/optimizer/optimizer.py",
+        "bytes": 9649,
+        "sha256": "7469c42889e4ab645b4335dc676e8e748343440276226fc339486bc0ef91c194"
+      },
+      {
+        "path": "ppocr/optimizer/regularizer.py",
+        "bytes": 2492,
+        "sha256": "3a3284cacac0473396553053afe445489092d487e7c788bf45a5e9ccb05abcfd"
+      },
+      {
+        "path": "ppocr/postprocess/__init__.py",
+        "bytes": 3679,
+        "sha256": "cbaa15dc89a7423224d2c8d774440e24f6b2b5e97d1bd65e0aa24b556935b0ee"
+      },
+      {
+        "path": "ppocr/postprocess/cls_postprocess.py",
+        "bytes": 1526,
+        "sha256": "a03d3985e00443b8d79791bd68f8a816df5ed5a4a4fe314c39c17d09208ad680"
+      },
+      {
+        "path": "ppocr/postprocess/ct_postprocess.py",
+        "bytes": 5377,
+        "sha256": "97291370c25d4e070fce0f51554f843e1619be13fcdcb08badffe90611583fd1"
+      },
+      {
+        "path": "ppocr/postprocess/db_postprocess.py",
+        "bytes": 9852,
+        "sha256": "a7123cfab47c9f326f9442f4e3ec963694c53a12556fc13eb541169a8e66b67f"
+      },
+      {
+        "path": "ppocr/postprocess/drrg_postprocess.py",
+        "bytes": 11788,
+        "sha256": "f98964f3750217f49f9b8ce5705b807772c853caef7f09dd11e889f8a40ae33e"
+      },
+      {
+        "path": "ppocr/postprocess/east_postprocess.py",
+        "bytes": 5110,
+        "sha256": "60cb58de24a7359df8f4579026b821317e7446d9d5f3f30105710bd5a3b42cd6"
+      },
+      {
+        "path": "ppocr/postprocess/fce_postprocess.py",
+        "bytes": 8481,
+        "sha256": "fd0917ec6768c8d2332b391f1b64eda30cd6a989f045fc547b1e0649e77118a4"
+      },
+      {
+        "path": "ppocr/postprocess/locality_aware_nms.py",
+        "bytes": 5026,
+        "sha256": "0e9c8f2c146214b49bf6e2e4422eef7dc5851ca8c84774b449ab0520cf752767"
+      },
+      {
+        "path": "ppocr/postprocess/pg_postprocess.py",
+        "bytes": 1824,
+        "sha256": "583e561aa1c1eb6159bee4e94584fa03efcf5c266d0380e04a7927135cda601c"
+      },
+      {
+        "path": "ppocr/postprocess/picodet_postprocess.py",
+        "bytes": 11618,
+        "sha256": "3c61a1b83881385cc198c771029aac809bceafba4b09de8ea72f7810d586485b"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/__init__.py",
+        "bytes": 655,
+        "sha256": "cddb8bda05b789dfb5d97f1d7fe81cb7caf93653ded2e0041dae6ceea6b2451b"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/pse/__init__.py",
+        "bytes": 1166,
+        "sha256": "bbb41f3250e2f780b8762f4843bba23d59d67a3447f093374f7e6f0135845359"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/pse/pse.pyx",
+        "bytes": 2577,
+        "sha256": "98b3e42f3247f87721ec455b2ce1749aa5124cfd2eae2de98fccef5832aac5e8"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/pse/README.md",
+        "bytes": 160,
+        "sha256": "c3b53f8220303c2fc1e8e4f8e1f9078d10a5a3582a447acae4db8420db9867ba"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/pse/setup.py",
+        "bytes": 415,
+        "sha256": "9fa600a126c502064ee0181a25da9c3dbb24d5c985979a098191281160e19ac8"
+      },
+      {
+        "path": "ppocr/postprocess/pse_postprocess/pse_postprocess.py",
+        "bytes": 3975,
+        "sha256": "4ca0d0acc6f818ee127d6ed715fe607304dac98d0478f48f921ee28e677ebd77"
+      },
+      {
+        "path": "ppocr/postprocess/rec_postprocess.py",
+        "bytes": 58614,
+        "sha256": "a5e5376514991656f7c7977f4a51ac61224ca6939f8ba41bc18e32ce9d15c872"
+      },
+      {
+        "path": "ppocr/postprocess/sast_postprocess.py",
+        "bytes": 12957,
+        "sha256": "480250f8ed542bebccff1b59bce78f66db18b931c5e6b97ea0dafbabe1d8987b"
+      },
+      {
+        "path": "ppocr/postprocess/table_postprocess.py",
+        "bytes": 6844,
+        "sha256": "130350a59e3555894ed2f1d8f78466806a4e8ef160d678525738dfaa20bd49f3"
+      },
+      {
+        "path": "ppocr/postprocess/vqa_token_re_layoutlm_postprocess.py",
+        "bytes": 3772,
+        "sha256": "c9a3575821f9a879fce1fa9fbaae661ea693a5f1791ba9ec39f7485538055ff1"
+      },
+      {
+        "path": "ppocr/postprocess/vqa_token_ser_layoutlm_postprocess.py",
+        "bytes": 4382,
+        "sha256": "d1a404b2f4c4eda90712eff642da6ce69b3876f7c69fa0611e3ca228ee86faeb"
+      },
+      {
+        "path": "ppocr/utils/__init__.py",
+        "bytes": 610,
+        "sha256": "d15657d0b8f09cc0edb23b7001b63eb2baee5297d39780f1b0680065f862db31"
+      },
+      {
+        "path": "ppocr/utils/dict/ar_dict.txt",
+        "bytes": 273,
+        "sha256": "6e8d24e8eb45635cee81f7cac5694f632fac7fd0c664ab2b2b798abd28f97ff0"
+      },
+      {
+        "path": "ppocr/utils/dict/arabic_dict.txt",
+        "bytes": 405,
+        "sha256": "637c27c88512c22089bef927b34ada08f748dc132ac70facd68d8202384c2726"
+      },
+      {
+        "path": "ppocr/utils/dict/be_dict.txt",
+        "bytes": 357,
+        "sha256": "2fe10f4c9f3f8f8830645fadfac4a8c4ca3ddead9a72b4edd8d2244b506e5adb"
+      },
+      {
+        "path": "ppocr/utils/dict/bengali_dict.txt",
+        "bytes": 296,
+        "sha256": "2b531a28609ae8e4ea7da7686ae7932ce7f93d8a121d8f3ed26a64b3075796bb"
+      },
+      {
+        "path": "ppocr/utils/dict/bg_dict.txt",
+        "bytes": 341,
+        "sha256": "c46af0e70cb288404591c1594fafcbb582f344f216dd77facd048680dfcd0c72"
+      },
+      {
+        "path": "ppocr/utils/dict/bm_dict.txt",
+        "bytes": 640,
+        "sha256": "3f79a3f8aa71ee33e8418f9c12e47412d155e16dfb467c14b80ba1e375e6ece3"
+      },
+      {
+        "path": "ppocr/utils/dict/bm_dict_add.txt",
+        "bytes": 12789,
+        "sha256": "705d95fffee2161c07b5785c7036a7c2201f0aa82c8895648d7dd4bd3de37e7c"
+      },
+      {
+        "path": "ppocr/utils/dict/bn_dict.txt",
+        "bytes": 4051,
+        "sha256": "d509abad601cf33158113d796ce76585c4f50a51b3568002b4d4fcffbc5489d9"
+      },
+      {
+        "path": "ppocr/utils/dict/chinese_cht_dict.txt",
+        "bytes": 33443,
+        "sha256": "832551fee1f2fbc97508772d81ebdc8dba12c00de97a35c71c9ddf43ddac1a83"
+      },
+      {
+        "path": "ppocr/utils/dict/confuse.pkl",
+        "bytes": 30912,
+        "sha256": "57d8aa98a781330f7534a81263179e77c159a37050bd31fe09d8ddf1880c5628"
+      },
+      {
+        "path": "ppocr/utils/dict/cyrillic_dict.txt",
+        "bytes": 410,
+        "sha256": "369a82c6c8c479784a5d726448b83b1eafb5fef0a4129a5eaa3929625ddcd132"
+      },
+      {
+        "path": "ppocr/utils/dict/devanagari_dict.txt",
+        "bytes": 508,
+        "sha256": "b5f1be6d8bbff1a19fb96c5d4ca96a423380234bb7d2ce0e07b5838adb4d18ea"
+      },
+      {
+        "path": "ppocr/utils/dict/en_dict.txt",
+        "bytes": 126,
+        "sha256": "e1f9b09d757e60b89b6c5c701b40e4da62e44f9ff556b73959c50edda12cd530"
+      },
+      {
+        "path": "ppocr/utils/dict/fa_dict.txt",
+        "bytes": 330,
+        "sha256": "e46379da738faf556560468e333e0add75feb2698349298374a38b19d945dcae"
+      },
+      {
+        "path": "ppocr/utils/dict/french_dict.txt",
+        "bytes": 324,
+        "sha256": "b77870a69f833120eb2120889acd19ae79f6cd9fdedc03bdc6b3b40aeb0c92df"
+      },
+      {
+        "path": "ppocr/utils/dict/german_dict.txt",
+        "bytes": 346,
+        "sha256": "79f9988bf85879b0ded6204c0aadfca91eb86f1e4c98268be7fe194ccc670962"
+      },
+      {
+        "path": "ppocr/utils/dict/gujarati_dict.txt",
+        "bytes": 198,
+        "sha256": "eb9801d744991ddd4bf99af7577453d035ebf9fec5a17902a94e01552b7e2b56"
+      },
+      {
+        "path": "ppocr/utils/dict/hebrew_dict.txt",
+        "bytes": 610,
+        "sha256": "d838d6018851a0929f7089010128200ced1397778c7741c8e927f1f16e1c7d22"
+      },
+      {
+        "path": "ppocr/utils/dict/hi_dict.txt",
+        "bytes": 488,
+        "sha256": "20202636010cff122936153afa7264f9bfc998ecf172b3d1c3433c28da34b11c"
+      },
+      {
+        "path": "ppocr/utils/dict/it_dict.txt",
+        "bytes": 266,
+        "sha256": "4fedfb1920eddd6dced38c73caac39ab422fde3de29b6901727ca64de913928d"
+      },
+      {
+        "path": "ppocr/utils/dict/japan_dict.txt",
+        "bytes": 17332,
+        "sha256": "1dcfcb41eec90576a945b3084f22ade11ced506e24f14879245b071698f308e8"
+      },
+      {
+        "path": "ppocr/utils/dict/ka_dict.txt",
+        "bytes": 452,
+        "sha256": "fad3f765943275eec2134a6fbc9b52785426641104d4e7db3a159dc73f341dde"
+      },
+      {
+        "path": "ppocr/utils/dict/kazakh_dict.txt",
+        "bytes": 126,
+        "sha256": "f6dbd62868d056512ddae9f834efa32f624a3254694eeaaca18314746ad31a55"
+      },
+      {
+        "path": "ppocr/utils/dict/kie_dict/xfund_class_list.txt",
+        "bytes": 29,
+        "sha256": "dfd6de77536439e3998a1f4eb7c6bebd4d8041554ea1aeeeede2bc49b7f7f90d"
+      },
+      {
+        "path": "ppocr/utils/dict/korean_dict.txt",
+        "bytes": 14480,
+        "sha256": "aa1fdc8ae8f7cd40a0ec4edb472eb0421e11427e6ccfee9915440742c18b0a20"
+      },
+      {
+        "path": "ppocr/utils/dict/latex_ocr_tokenizer.json",
+        "bytes": 24175,
+        "sha256": "50aff4b7f753cc27388cde5c4fda7cc8e19c5904ca1d993cb332187a6d3eb060"
+      },
+      {
+        "path": "ppocr/utils/dict/latex_symbol_dict.txt",
+        "bytes": 366,
+        "sha256": "20ab2e20273365103c346cadd89e0a164906ced4ab5e1e6cec18edf482f291a0"
+      },
+      {
+        "path": "ppocr/utils/dict/latin_dict.txt",
+        "bytes": 468,
+        "sha256": "8e6d4e3629788c35c31f7e530287d6147b549bb7a265bd6708bb281134429e2c"
+      },
+      {
+        "path": "ppocr/utils/dict/layout_dict/layout_cdla_dict.txt",
+        "bytes": 86,
+        "sha256": "4c0843d65b18c5e1833e66c6ed92c9f294bb5cbab918bd16a10002c5b74e2915"
+      },
+      {
+        "path": "ppocr/utils/dict/layout_dict/layout_publaynet_dict.txt",
+        "bytes": 29,
+        "sha256": "c9a355895de2929e2eb4318efa1bddd1616fb4c1ab28805e61bc8afc84958935"
+      },
+      {
+        "path": "ppocr/utils/dict/layout_dict/layout_table_dict.txt",
+        "bytes": 6,
+        "sha256": "7ed9ac3831f7d8525696b390cde2ece4c1df132a433268072a47b4d42a6e8931"
+      },
+      {
+        "path": "ppocr/utils/dict/mr_dict.txt",
+        "bytes": 452,
+        "sha256": "eaaee26b361b2c182dd70f929d90c71672671643de00bc275f8590c0959f1872"
+      },
+      {
+        "path": "ppocr/utils/dict/ne_dict.txt",
+        "bytes": 452,
+        "sha256": "079c779444fc9b39f6532f3a87aa5e557630662eb4abd60b1c4ebee71cfbbac6"
+      },
+      {
+        "path": "ppocr/utils/dict/oc_dict.txt",
+        "bytes": 210,
+        "sha256": "e1e765a4aafd0040624ad45f89ee4d16f54f22f172ff7ecf82db37f73b375de5"
+      },
+      {
+        "path": "ppocr/utils/dict/parseq_dict.txt",
+        "bytes": 188,
+        "sha256": "851dfc1ebb105245410e2cde220b8610194b8a50f9d70b9e839795bbcb3587fb"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv4_doc_dict.txt",
+        "bytes": 62346,
+        "sha256": "a5bc3887c43c901e5a3f97b13ffadf1c5754ede7cc8c9f5abe22e875a7c48372"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_arabic_dict.txt",
+        "bytes": 2369,
+        "sha256": "7f92f7dbb9b75a4787a83bfb4f6d14a8ab515525130c9d40a9036f61cf6999e9"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_cyrillic_dict.txt",
+        "bytes": 2781,
+        "sha256": "db40aa52ceb112055be80c694afdf655d5d2c4f7873704524cc16a447ca913ba"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_devanagari_dict.txt",
+        "bytes": 1943,
+        "sha256": "09c7440bfc5477e5c41052304b6b185aff8c4a5e8b2b4c23c1c706f6fe1ee9fc"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_dict.txt",
+        "bytes": 74012,
+        "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_el_dict.txt",
+        "bytes": 1103,
+        "sha256": "31defc62c0c3ad3674a82da6192226a2ba98ef4ff014a7045cb88d59f9c3de31"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_en_dict.txt",
+        "bytes": 1416,
+        "sha256": "e025a66d31f327ba0c232e03f407ae8d105e1e709e7ccb3f408aa778c24e70d6"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_eslav_dict.txt",
+        "bytes": 1663,
+        "sha256": "3e95f1581557162870cacdba5af91a4c6be2890710d395b0c3c7578e7ee5e6eb"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_korean_dict.txt",
+        "bytes": 47451,
+        "sha256": "a88071c68c01707489baa79ebe0405b7beb5cca229f4fc94cc3ef992328802d7"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_latin_dict.txt",
+        "bytes": 2616,
+        "sha256": "ccbcc45730b3fbbd9050c5bc74db6a99067141ef1035e3d14889a84a6b9b1aff"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_ta_dict.txt",
+        "bytes": 1723,
+        "sha256": "85b541352ae18dc6ba6d47152d8bf8adff6b0266e605d2eef2990c1bf466117b"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_te_dict.txt",
+        "bytes": 1831,
+        "sha256": "42f83f5d3fdb50778e4fa5b66c58d99a59ab7792151c5e74f34b8ffd7b61c9d6"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv5_th_dict.txt",
+        "bytes": 1767,
+        "sha256": "57f5406f94bb6688fb7077f7be65f08bbd71cecf48c01ea26c522cb5c4836b7a"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv6_dict.txt",
+        "bytes": 74947,
+        "sha256": "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d"
+      },
+      {
+        "path": "ppocr/utils/dict/ppocrv6_tiny_dict.txt",
+        "bytes": 27156,
+        "sha256": "c5cbe34ef40c29c4df07ed012bf96569cb69a2d2a01a07027e9f13cb832bd9cd"
+      },
+      {
+        "path": "ppocr/utils/dict/pu_dict.txt",
+        "bytes": 305,
+        "sha256": "4732ea2c497ed31f96150bdbf43e191ef7f9d65fedfcb21d092e8785efe8793f"
+      },
+      {
+        "path": "ppocr/utils/dict/README.md",
+        "bytes": 305,
+        "sha256": "91c9a4e5aca7e64a62ef0ff7abaf5c32ff2d0a63fecfb8315808157af30d6d3b"
+      },
+      {
+        "path": "ppocr/utils/dict/rs_dict.txt",
+        "bytes": 194,
+        "sha256": "9518bd2c437d3455d159a7704017c16ae4a74e4b2c494d3db54be0181dcd6f1b"
+      },
+      {
+        "path": "ppocr/utils/dict/rsc_dict.txt",
+        "bytes": 324,
+        "sha256": "c9663355bb3706960e57af5e4704feb02c9ff3ead0329addbe1cd2bee68843c5"
+      },
+      {
+        "path": "ppocr/utils/dict/ru_dict.txt",
+        "bytes": 313,
+        "sha256": "d06f34bb0a13e1461a99c14977447736b535e803d51ade9d4f745beaa3da7e44"
+      },
+      {
+        "path": "ppocr/utils/dict/samaritan_dict.txt",
+        "bytes": 649,
+        "sha256": "1d90fb601d91c4ea91d790796a42146a6f977a1ee38e14cd2e9f37aa45156830"
+      },
+      {
+        "path": "ppocr/utils/dict/spin_dict.txt",
+        "bytes": 136,
+        "sha256": "dceb9255c6319245dda3b559b64aea94d408955d6f331300d594c810d1f5b04b"
+      },
+      {
+        "path": "ppocr/utils/dict/syriac_dict.txt",
+        "bytes": 393,
+        "sha256": "701410ceda941790b21b64edbe30072d895ad65913d87818c2ee761995491187"
+      },
+      {
+        "path": "ppocr/utils/dict/ta_dict.txt",
+        "bytes": 352,
+        "sha256": "e93e694814afd9ff1e918b6f4bb4267fb4c65a9344ee5d7464f9135b90c0a270"
+      },
+      {
+        "path": "ppocr/utils/dict/table_dict.txt",
+        "bytes": 894,
+        "sha256": "6b37865290dc6a296c7f128b2c6c2f7718d9d6708088e18fbf3056fc318c28e7"
+      },
+      {
+        "path": "ppocr/utils/dict/table_master_structure_dict.txt",
+        "bytes": 435,
+        "sha256": "234e25aa46080740a992693cd4c1a7bbc91c435ac44158edd1f42f0163d5e8ae"
+      },
+      {
+        "path": "ppocr/utils/dict/table_structure_dict.txt",
+        "bytes": 298,
+        "sha256": "1e2375e0be0ea6627fda5c5aa60abde65c62defaefc015d00cb49b88736bc170"
+      },
+      {
+        "path": "ppocr/utils/dict/table_structure_dict_ch.txt",
+        "bytes": 578,
+        "sha256": "68d344a84b726e043f390122240ff2b2ced2949b2a80ce9b61ae955054d190ef"
+      },
+      {
+        "path": "ppocr/utils/dict/te_dict.txt",
+        "bytes": 429,
+        "sha256": "ee9946a60d7701977474e89883694a4ca20eaa3868a23334bf7940dcd008f0f9"
+      },
+      {
+        "path": "ppocr/utils/dict/th_dict.txt",
+        "bytes": 330,
+        "sha256": "b87090be9eb54dfbe8b779b28ddde5e1f7387260f1c2b37d49910250131e1708"
+      },
+      {
+        "path": "ppocr/utils/dict/ug_dict.txt",
+        "bytes": 301,
+        "sha256": "40bf14e27191ed3ca0db62c37015f4b41afb1310bdc8fc195181dad5a1d82dc3"
+      },
+      {
+        "path": "ppocr/utils/dict/uk_dict.txt",
+        "bytes": 348,
+        "sha256": "e485e475e4f9656854338714909ea8c536cebcb833c47aa151207c32e0247f5b"
+      },
+      {
+        "path": "ppocr/utils/dict/unimernet_tokenizer/tokenizer.json",
+        "bytes": 2140014,
+        "sha256": "2811d82701ec97c192fa256aa2b4516929373870ae660326cc5b1dc879b95ff2"
+      },
+      {
+        "path": "ppocr/utils/dict/unimernet_tokenizer/tokenizer_config.json",
+        "bytes": 4491,
+        "sha256": "fd4d94f8b9dbb7deeb3a3ef084ca0e16c43d45774a180730b7e9cfd6359a074b"
+      },
+      {
+        "path": "ppocr/utils/dict/ur_dict.txt",
+        "bytes": 332,
+        "sha256": "63d2fcaaeaa5b5ec805630f8736e084bf9617139664cdee45ad8ebc6f45cac9f"
+      },
+      {
+        "path": "ppocr/utils/dict/vi_dict.txt",
+        "bytes": 339,
+        "sha256": "c20e64733da4dc47067c7f8ee79c1c549803ccd57a910bf7d998a3adf4bda01b"
+      },
+      {
+        "path": "ppocr/utils/dict/xi_dict.txt",
+        "bytes": 250,
+        "sha256": "d665d9df4d49f96ff3cd1dcf2d53084d00fe1670747dd9a93b58b9dda10efa15"
+      },
+      {
+        "path": "ppocr/utils/dict90.txt",
+        "bytes": 180,
+        "sha256": "74cb151bb2eedcff2159e2d36000cf9c3e3f59ce319c76183042c3b1ef67faf1"
+      },
+      {
+        "path": "ppocr/utils/e2e_metric/Deteval.py",
+        "bytes": 31928,
+        "sha256": "6d9dd4af0b98be86aaa74f635745923a2bc23f6123a4067c2c401a9aba7d1097"
+      },
+      {
+        "path": "ppocr/utils/e2e_metric/polygon_fast.py",
+        "bytes": 2838,
+        "sha256": "7bec1b344e0a1df14eb182d01d47cf84d3878d8385265c11390ce59c4e0dd0cd"
+      },
+      {
+        "path": "ppocr/utils/e2e_utils/extract_batchsize.py",
+        "bytes": 3236,
+        "sha256": "71b484450e57bd5151b38b1185f94c67d72efee66911d7462c0eb22fccb8efa8"
+      },
+      {
+        "path": "ppocr/utils/e2e_utils/extract_textpoint_fast.py",
+        "bytes": 18639,
+        "sha256": "cc19421e687f53d04c45183c9e5ab2f86c0e8c1398d09fd763fd1e1118303031"
+      },
+      {
+        "path": "ppocr/utils/e2e_utils/extract_textpoint_slow.py",
+        "bytes": 21515,
+        "sha256": "f37691955373a9ec84188eab1c528999e3b35903bbb0372d7448aee5d8147adf"
+      },
+      {
+        "path": "ppocr/utils/e2e_utils/pgnet_pp_utils.py",
+        "bytes": 6496,
+        "sha256": "4e4d79125619019af53ac35870cba815ec9308801579370c0394a601e9727f38"
+      },
+      {
+        "path": "ppocr/utils/e2e_utils/visual.py",
+        "bytes": 5266,
+        "sha256": "ee76cfb473bfe31f6407a76bb8f96f7f34c83eb33d7383da236b7e24f3ad109d"
+      },
+      {
+        "path": "ppocr/utils/ema.py",
+        "bytes": 4593,
+        "sha256": "11b5f4863f4f7723813551879888936eeafc2acc130d9bca6c4d758f7a5ad75d"
+      },
+      {
+        "path": "ppocr/utils/en_dict.txt",
+        "bytes": 190,
+        "sha256": "5662df9d2d03f0e8ca0d3b0649d6acbab904b6a14b3d3521463c71c37c668ce3"
+      },
+      {
+        "path": "ppocr/utils/EN_symbol_dict.txt",
+        "bytes": 188,
+        "sha256": "851dfc1ebb105245410e2cde220b8610194b8a50f9d70b9e839795bbcb3587fb"
+      },
+      {
+        "path": "ppocr/utils/export_model.py",
+        "bytes": 22044,
+        "sha256": "1b6958d2d4a8101645b647140b30d597ac25684c670c9e45dca1c3a231a5d67f"
+      },
+      {
+        "path": "ppocr/utils/formula_utils/math_txt2pkl.py",
+        "bytes": 2588,
+        "sha256": "8b4f21426da6603ad9fca45500b6e28f595c98bb75d176f200bdead65efb99cd"
+      },
+      {
+        "path": "ppocr/utils/formula_utils/unimernet_data_convert.py",
+        "bytes": 3778,
+        "sha256": "734c47b49cf13a845acf4140dfa26164ff5e1f2b5948041bac6e77d97f65a763"
+      },
+      {
+        "path": "ppocr/utils/gen_label.py",
+        "bytes": 2935,
+        "sha256": "98f3cf4225cb11ccdc1e02aea45b012c57e907466095f27de68a0346cd99b0de"
+      },
+      {
+        "path": "ppocr/utils/ic15_dict.txt",
+        "bytes": 72,
+        "sha256": "71e9aa833ec424844f3670bb5f1a2851867b9ce963f78df531e45d3a4c77dd72"
+      },
+      {
+        "path": "ppocr/utils/iou.py",
+        "bytes": 1699,
+        "sha256": "a29e8ca89b8f27a6fa9f060cf3549db3bb15bd3a1c2d1ad5a8b747e5a135d2c0"
+      },
+      {
+        "path": "ppocr/utils/loggers/__init__.py",
+        "bytes": 67,
+        "sha256": "96e034fda49831a66f95571e477bfa293a5e8e349fcf086d30b3a36612909d01"
+      },
+      {
+        "path": "ppocr/utils/loggers/base_logger.py",
+        "bytes": 326,
+        "sha256": "303c1f15c46db36c1c87a7ddbd4a751367c52c0c876609900e9d34e4f1f28967"
+      },
+      {
+        "path": "ppocr/utils/loggers/loggers.py",
+        "bytes": 576,
+        "sha256": "50e53636c22771c70553da0f992eab0469cae6aff51a8dcd45019023acd7b340"
+      },
+      {
+        "path": "ppocr/utils/loggers/wandb_logger.py",
+        "bytes": 2451,
+        "sha256": "41576f004e9031493bb63e50c3e672391e760036226d37147742beb62c1573e3"
+      },
+      {
+        "path": "ppocr/utils/logging.py",
+        "bytes": 2979,
+        "sha256": "8275fb9db46140bf6c1aaa3cd6a0a1246adbb9603b7803889e248a177e768620"
+      },
+      {
+        "path": "ppocr/utils/network.py",
+        "bytes": 5401,
+        "sha256": "705cf2d5829853533b1f389bf1569f14c6492ce611f83146c991b46388005241"
+      },
+      {
+        "path": "ppocr/utils/poly_nms.py",
+        "bytes": 4136,
+        "sha256": "12a9028252bcdc04afaf703712fd4bbfc3e6d387174b47d8dbf06952956f89cd"
+      },
+      {
+        "path": "ppocr/utils/ppocr_keys_v1.txt",
+        "bytes": 26250,
+        "sha256": "a1c84d9bdb9ab29043c58896224d32941783eb821629618416dcb08f12886492"
+      },
+      {
+        "path": "ppocr/utils/profiler.py",
+        "bytes": 5246,
+        "sha256": "b7f9d830e34dc2de17a7d1ae6614bda90d9936754cbe07ae0ec2d4543aed935b"
+      },
+      {
+        "path": "ppocr/utils/save_load.py",
+        "bytes": 16826,
+        "sha256": "1e12094eb580711fb53abb852607f605307524074102edb97d15ebdd679a6ca8"
+      },
+      {
+        "path": "ppocr/utils/stats.py",
+        "bytes": 2199,
+        "sha256": "d7225d65ba736611c8c22ddda080a4bf894739de9fd446d174bf7635ab87fcf1"
+      },
+      {
+        "path": "ppocr/utils/utility.py",
+        "bytes": 7440,
+        "sha256": "74f35f26761df852045a29bde5052a9fc63a12cb254a51d69c42242f90af67e1"
+      },
+      {
+        "path": "ppocr/utils/visual.py",
+        "bytes": 4605,
+        "sha256": "68e2e5c05bd994da93664507a3a88d3c3e0cacd3af1b1267f84e2bc5ff8e3914"
+      },
+      {
+        "path": "requirements.txt",
+        "bytes": 254,
+        "sha256": "d33da5c48e908fc328b48569098e52c4a9df4529a177fe09920c1ccb4531a9ef"
+      }
+    ]
+  },
+  "license": "Apache-2.0",
+  "license_evidence": "E:/project/care_app/data/ai-training-v1/sources/paddleocr/code/LICENSE",
+  "directory": "E:/project/care_app/data/ai-training-v1/sources/paddleocr",
+  "files": [
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/arabic_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2935,
+      "sha256": "72e4624e087b14f18d4ed9f24f27551144b7d4bef40f869e9d5fe3ff849b4461"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/cyrillic_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2943,
+      "sha256": "649abeff2fd61d2527f3663d3a3c72f2f7baa6e1a69a3ea0fda2476172e9b1fe"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/devanagari_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2951,
+      "sha256": "028201702b4e1ae5a3a571ae797c770025ae53c36ea4df1a882d66c0c4bfabf5"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/el_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2919,
+      "sha256": "c51bebbb6e9afe037e7be73f117cf9ad592e9b8941a0668bdb8f60e58194c9e8"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/en_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2919,
+      "sha256": "19ccdc0fdb0632ef20438584a609c63f40ba347233b7164fd04f3453a47ab50d"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/eslav_PP-OCRv5_mobile_rec.yml",
+      "bytes": 2925,
+      "sha256": "580fd1319489939c736cbb0043cba0be8947fc0ace7bf8088350bac3991f9330"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/korean_PP-OCRv5_mobile_rec.yml",
+      "bytes": 2928,
+      "sha256": "c7aaf8d53df433865a76d7f8af417a0416c2902fbc073f51d98b45629fcd64ea"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/latin_PP-OCRv5_mobile_rec.yml",
+      "bytes": 2979,
+      "sha256": "643f51bf382e9f6e4a1dec9bebe6c9aa063d2c7c5086f0f6294a0b5914a6d14b"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/ta_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2919,
+      "sha256": "a38cb0f8645bd3cea4f08978f7a0ad771f3d18fd22a96b413222921aad892327"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/te_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2919,
+      "sha256": "84b73d270edc2bda7a051b80d503b5f789e34f80b4aaeddaac146d6619538444"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/multi_language/th_PP-OCRv5_mobile_rec.yaml",
+      "bytes": 2919,
+      "sha256": "5cd6d34927608f37a19a6b59c75213ba8b54d035b710606cc4884eb8745bc23c"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/PP-OCRv5_mobile_rec.yml",
+      "bytes": 2921,
+      "sha256": "833ffa1b802beb9d89115f8bb9695533c3231ea551b0b8acd5efd19eb4320151"
+    },
+    {
+      "path": "code/configs/rec/PP-OCRv5/PP-OCRv5_server_rec.yml",
+      "bytes": 2818,
+      "sha256": "d38c678ec4075aa0c65750d2759ac4396694f6ffb29004b127e0e8b3d11fcef3"
+    },
+    {
+      "path": "code/LICENSE",
+      "bytes": 11376,
+      "sha256": "3840c5c0c61c294264d2dd77b8777be6ddd90121ef4e0e64abcd22edea581d6e"
+    },
+    {
+      "path": "code/ppocr/__init__.py",
+      "bytes": 610,
+      "sha256": "5a0df9248353c020ab5ed83e8f2bd499e9b515361260ae5a5eb85646efa70136"
+    },
+    {
+      "path": "code/ppocr/data/__init__.py",
+      "bytes": 5328,
+      "sha256": "452c568125581b514f06bdd9fce3dae4c38bfc426fa7243e6efbc0fbfe119054"
+    },
+    {
+      "path": "code/ppocr/data/collate_fn.py",
+      "bytes": 5700,
+      "sha256": "0076f365e3c91e0468ee68a6ba806d9f51aa476237d6b7cd157d65cb7bc6d74a"
+    },
+    {
+      "path": "code/ppocr/data/imaug/__init__.py",
+      "bytes": 2764,
+      "sha256": "46809a18e259aad4e3ce5623a813396b2d42d63eba86d8c1e20ef747feb40422"
+    },
+    {
+      "path": "code/ppocr/data/imaug/abinet_aug.py",
+      "bytes": 17942,
+      "sha256": "89ad4af8623cf64d6f843a4cfe6af5305908714034a9c8a3b6cb49015ab6f162"
+    },
+    {
+      "path": "code/ppocr/data/imaug/ColorJitter.py",
+      "bytes": 1028,
+      "sha256": "5ed1ed017811014997f8d977e6381c1e16c138b6e2c6b6363d9b3a59dfd8bfa4"
+    },
+    {
+      "path": "code/ppocr/data/imaug/copy_paste.py",
+      "bytes": 6659,
+      "sha256": "d5c044cffb9227233031375a8fa25c5fa095dc1d9bb2bfb6d6ebe56efa5342b5"
+    },
+    {
+      "path": "code/ppocr/data/imaug/ct_process.py",
+      "bytes": 11857,
+      "sha256": "cba5dd48258f64accccbcbecadd111d67ef10b436c1667a786e01eafac314d08"
+    },
+    {
+      "path": "code/ppocr/data/imaug/drrg_targets.py",
+      "bytes": 29635,
+      "sha256": "ce71f4c2b3a24e57ea09308965de4f9983014603f7685fcf0a9958f9cbabc725"
+    },
+    {
+      "path": "code/ppocr/data/imaug/east_process.py",
+      "bytes": 17123,
+      "sha256": "899af9e85ca3fc3ab42fd2b2b4ed26757a099736a522eee4c00f8f1508dec1ab"
+    },
+    {
+      "path": "code/ppocr/data/imaug/fce_aug.py",
+      "bytes": 20760,
+      "sha256": "3f8eba5895273a7252b203b90a7c75c93954ea37bc391bf601e37a723eae5cb1"
+    },
+    {
+      "path": "code/ppocr/data/imaug/fce_targets.py",
+      "bytes": 26535,
+      "sha256": "1b4b014a9e7589025d3696548d65626b9e7d7abf700aaf403d08e80edc6a91c6"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost1.jpg",
+      "bytes": 279928,
+      "sha256": "aebc8aae10bb92ac70b911533491aad9bda23adbcdcbe8f2de95af627b01e037"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost2.png",
+      "bytes": 299002,
+      "sha256": "fe211a89b336999c207a852ce05818d4545d0b57c5beadd824b4cc9d9a9b6137"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost3.png",
+      "bytes": 299002,
+      "sha256": "2d0d50b4a9bb213f38b024ef7768731bb83cc08d2f26b5766bbc167cdfa0e504"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost4.jpg",
+      "bytes": 36734,
+      "sha256": "3f8b91ca1a9fa7167b09e773da53f5ae60d0a1fd88f02a783f6e328a72887f6e"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost5.jpg",
+      "bytes": 155150,
+      "sha256": "5fc6a19df4a429ba68abdcc8f8a4278d4c9f81c9ccafd2c92ab0c8cf8992ebd2"
+    },
+    {
+      "path": "code/ppocr/data/imaug/frost_img/frost6.jpg",
+      "bytes": 90185,
+      "sha256": "1f92b2f48408748085b68dd81d816ef239f42cef3029c25d041fcb6760fb4f25"
+    },
+    {
+      "path": "code/ppocr/data/imaug/iaa_augment.py",
+      "bytes": 9219,
+      "sha256": "79d7dcc66833a778c7374641db5c7aa47931a8900b7cdc69a4ca85dd9a64e954"
+    },
+    {
+      "path": "code/ppocr/data/imaug/label_ops.py",
+      "bytes": 75167,
+      "sha256": "89c75bfb515c0d8ea3e8ebb5728335fcb8032e8d2e3e3060eb059527e7df61c7"
+    },
+    {
+      "path": "code/ppocr/data/imaug/latex_ocr_aug.py",
+      "bytes": 6310,
+      "sha256": "a1ede294da0a18ac1cdb26aaf8b52bd3df966649fef87fd48c6cb2a57477b703"
+    },
+    {
+      "path": "code/ppocr/data/imaug/make_border_map.py",
+      "bytes": 6885,
+      "sha256": "4e66acf6645cee91bd771c506d4869623b702365a227604a425c7e9b9faffd1f"
+    },
+    {
+      "path": "code/ppocr/data/imaug/make_pse_gt.py",
+      "bytes": 3774,
+      "sha256": "8eb700c54198e7bfd9083c08a59fc7a606fc38078cb360e0cfac7348353c09d3"
+    },
+    {
+      "path": "code/ppocr/data/imaug/make_shrink_map.py",
+      "bytes": 5007,
+      "sha256": "9a4ec56d114a2bf540cf0092f3efbb999b3a4f0737291f13da23696f8e9bd47f"
+    },
+    {
+      "path": "code/ppocr/data/imaug/operators.py",
+      "bytes": 23106,
+      "sha256": "46190b708d4044ba282dabd08dd78b8ab67f0580372a3f5d6fad08f5d0dbabf6"
+    },
+    {
+      "path": "code/ppocr/data/imaug/pg_process.py",
+      "bytes": 40535,
+      "sha256": "6b48d48ab920fb1027fad3939726dcb44991834fa8b2dd36309870d2158513f5"
+    },
+    {
+      "path": "code/ppocr/data/imaug/randaugment.py",
+      "bytes": 5168,
+      "sha256": "15c7bacebbf1ed7f84c2cd8645982285ad88156aa888f6ddb684f2b8d0fbfe98"
+    },
+    {
+      "path": "code/ppocr/data/imaug/random_crop_data.py",
+      "bytes": 20615,
+      "sha256": "25576d1deb46951641bffc183bd94b86bafce68bcf83b92976f81b008ac8581e"
+    },
+    {
+      "path": "code/ppocr/data/imaug/rec_img_aug.py",
+      "bytes": 29050,
+      "sha256": "77607eb2a5e6e5d01829565a97161845ecd85a35a4d827435198f3ed4a32f9ad"
+    },
+    {
+      "path": "code/ppocr/data/imaug/sast_process.py",
+      "bytes": 29197,
+      "sha256": "26f787b61ea05246a186400dd95e24b4edf05e5a8a24fc59f8221db6fd00a61a"
+    },
+    {
+      "path": "code/ppocr/data/imaug/ssl_img_aug.py",
+      "bytes": 1996,
+      "sha256": "f8a29310785f0186b29964afbff8e3efd41db3cb890a716aa8044441190fc22c"
+    },
+    {
+      "path": "code/ppocr/data/imaug/table_ops.py",
+      "bytes": 8754,
+      "sha256": "0be69fe04e4ff6d41601a2fa5d81f4c55e45c49184c49b88a917edd4968aa5ac"
+    },
+    {
+      "path": "code/ppocr/data/imaug/text_image_aug/__init__.py",
+      "bytes": 733,
+      "sha256": "a274da16e32b483e87f13a5d9bfe431f889474fd188188fe95430c5c5490dc0b"
+    },
+    {
+      "path": "code/ppocr/data/imaug/text_image_aug/augment.py",
+      "bytes": 3496,
+      "sha256": "203d177f39e8ebbf2880ea25fcce83e2963420641948da82fddd8d814c94a288"
+    },
+    {
+      "path": "code/ppocr/data/imaug/text_image_aug/warp_mls.py",
+      "bytes": 6810,
+      "sha256": "6657555474613243d539673136fc4f4016a7e57193769453a2716e156756cef8"
+    },
+    {
+      "path": "code/ppocr/data/imaug/unimernet_aug.py",
+      "bytes": 28879,
+      "sha256": "03a18292349999aa775439f731074e509943c9cdac67fc9b081a83846e284e36"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/__init__.py",
+      "bytes": 889,
+      "sha256": "6374e0659707b64e36704ed58360f14e3fe6787a7045e6adf70812c983c28094"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/augment.py",
+      "bytes": 1188,
+      "sha256": "9d4d9bec9ba13fc5a63ca68f7aee7b5b8920eb084816e7ca79cbef30df4e3739"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/token/__init__.py",
+      "bytes": 817,
+      "sha256": "bc7ab8e121eedda893617d0420dae694d1afcfb52b295a3c454b68e5ae23fb3a"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/token/vqa_re_convert.py",
+      "bytes": 1992,
+      "sha256": "f344999da0aee9036d8206fb18336943e3d2ff3075cc121141f3b14d4877f6c4"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/token/vqa_token_chunk.py",
+      "bytes": 5191,
+      "sha256": "dd060f0afe74ddc7f3787eb68f3994be09bd9216e0314f9001070b95c82d0f78"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/token/vqa_token_pad.py",
+      "bytes": 4854,
+      "sha256": "60e8c8a0000dfd1968a67992ea8bc3548271106ffd60d6110ac9419ef6c37be9"
+    },
+    {
+      "path": "code/ppocr/data/imaug/vqa/token/vqa_token_relation.py",
+      "bytes": 2650,
+      "sha256": "e5391e1f8c648c862c62a05e251b8d22c957e0c3ac8cd4823dd68e86c81a5847"
+    },
+    {
+      "path": "code/ppocr/data/latexocr_dataset.py",
+      "bytes": 7449,
+      "sha256": "eecb8e78799ca4c08384dc0b3f2f8bcad5f81429d2cda63e8a3e3eae08269d05"
+    },
+    {
+      "path": "code/ppocr/data/lmdb_dataset.py",
+      "bytes": 11625,
+      "sha256": "2050eecf14af9e1b8191e21e38245a49f1a601e5d89507a6ad7ea9b7cf5ce8bd"
+    },
+    {
+      "path": "code/ppocr/data/multi_scale_sampler.py",
+      "bytes": 6580,
+      "sha256": "a55394c3c16cb4ed2a4c3e342eec34ba46333ce80a209d90c15db5548d7d2552"
+    },
+    {
+      "path": "code/ppocr/data/pgnet_dataset.py",
+      "bytes": 4185,
+      "sha256": "1b1dfa0a7b816a9038c2b61a2e8d6a245efe88c9f8b194b32917765e552a211b"
+    },
+    {
+      "path": "code/ppocr/data/pubtab_dataset.py",
+      "bytes": 5145,
+      "sha256": "b00e7ad763cddb93286f8e9ac49c7207e2fc59116645c572d4b40990d0514e5b"
+    },
+    {
+      "path": "code/ppocr/data/simple_dataset.py",
+      "bytes": 21738,
+      "sha256": "f876a3aa926743e76ecddb995e7fee5cc252a4b88fe1a2d4076b30fb6947f86d"
+    },
+    {
+      "path": "code/ppocr/ext_op/__init__.py",
+      "bytes": 65,
+      "sha256": "b8892bd64d64fa39cc13e4aa986c930ef8c874c60f451e854212f0264d16711f"
+    },
+    {
+      "path": "code/ppocr/ext_op/roi_align_rotated/roi_align_rotated.cc",
+      "bytes": 19806,
+      "sha256": "ea065e7f82a80c82ab13fc9a54bf3f3f4f708964baa8001c9e3d22133fc95901"
+    },
+    {
+      "path": "code/ppocr/ext_op/roi_align_rotated/roi_align_rotated.cu",
+      "bytes": 14363,
+      "sha256": "305250820ff82541d7db5be559124fdaf0d5682149381d0858191ca2d4db55d3"
+    },
+    {
+      "path": "code/ppocr/ext_op/roi_align_rotated/roi_align_rotated.py",
+      "bytes": 2184,
+      "sha256": "004e369fc87d46629f6c0686bc2d819217e7bd79b28a4288b49c65c53080babe"
+    },
+    {
+      "path": "code/ppocr/losses/__init__.py",
+      "bytes": 3426,
+      "sha256": "be4785c99e0daa3e32a938c37ae61a73d6f2dac42f68755aff4dd5488370fcf5"
+    },
+    {
+      "path": "code/ppocr/losses/ace_loss.py",
+      "bytes": 1720,
+      "sha256": "ab3878fbaf481e71341027da4bee5ae4a2e92e54d8824867f0cd0cd1b7b7b63b"
+    },
+    {
+      "path": "code/ppocr/losses/basic_loss.py",
+      "bytes": 8021,
+      "sha256": "ad468de3171779c4b1f6f25634b31c901b38cf1a66dfeb783d57574fa52c52c8"
+    },
+    {
+      "path": "code/ppocr/losses/center_loss.py",
+      "bytes": 3380,
+      "sha256": "93a3ca79b2e8211114bd9294841f7ce6c477658da864064d69e5bcecd4958932"
+    },
+    {
+      "path": "code/ppocr/losses/cls_loss.py",
+      "bytes": 1076,
+      "sha256": "ba76192e12a9da937b7399410532a6bd80982f7bfa69332fa268b44e9a1e5d5d"
+    },
+    {
+      "path": "code/ppocr/losses/combined_loss.py",
+      "bytes": 2855,
+      "sha256": "0a7070713f26bf73642d118cc34c0c1db9c69e2b188640140516bfe9499ae739"
+    },
+    {
+      "path": "code/ppocr/losses/det_basic_loss.py",
+      "bytes": 10809,
+      "sha256": "7b778bc96dd553c57f8d6cb1670814b233a2fc3353acaf624492e85f9b673eaf"
+    },
+    {
+      "path": "code/ppocr/losses/det_ct_loss.py",
+      "bytes": 9479,
+      "sha256": "68a174d7e0eeffa46e0d9567ab604875f63c2b348e8c73e93998327cd0de1d3a"
+    },
+    {
+      "path": "code/ppocr/losses/det_db_loss.py",
+      "bytes": 5133,
+      "sha256": "785725c8fe61a3c66f78dc51c16e8e4e1e2bad75d17f4bd1ad4249c4f1276d2e"
+    },
+    {
+      "path": "code/ppocr/losses/det_drrg_loss.py",
+      "bytes": 8603,
+      "sha256": "4a26493cb637bae85a64564a6bc18a2c74b53e72ef11fcb8d7b33e0e273a7eb1"
+    },
+    {
+      "path": "code/ppocr/losses/det_east_loss.py",
+      "bytes": 2248,
+      "sha256": "0e5b9d639820d04104bbd0c7e45057e41eeda0439fb58e1686dd5ae0ef14b043"
+    },
+    {
+      "path": "code/ppocr/losses/det_fce_loss.py",
+      "bytes": 9247,
+      "sha256": "df1b73be4e4267e37ccf5ca788edf1908ff9cd0f84a5b6326a507de714df7d04"
+    },
+    {
+      "path": "code/ppocr/losses/det_pse_loss.py",
+      "bytes": 5646,
+      "sha256": "9f119849993d9d378e54d32e7300ae46a038ebe9d83a51ef39780429d75cc75a"
+    },
+    {
+      "path": "code/ppocr/losses/det_sast_loss.py",
+      "bytes": 5147,
+      "sha256": "834b6ee0f79001aa6426a1f7f73304a10192058df1976630028f2af5975b3970"
+    },
+    {
+      "path": "code/ppocr/losses/distillation_loss.py",
+      "bytes": 41264,
+      "sha256": "3f470cf8220e486ca3fb6ee0cadfb5b26a3084d2eec1ac7adb5063414f7ccd64"
+    },
+    {
+      "path": "code/ppocr/losses/e2e_pg_loss.py",
+      "bytes": 6653,
+      "sha256": "b59876aa158f9ef52505c5da00c0e931e8b8567bb60170d48da2f60192dc402e"
+    },
+    {
+      "path": "code/ppocr/losses/kie_sdmgr_loss.py",
+      "bytes": 4690,
+      "sha256": "50b70e8156cdba394bf7ce15bbbe33f4adf606a571d71bab50b1774d2d76bc13"
+    },
+    {
+      "path": "code/ppocr/losses/rec_aster_loss.py",
+      "bytes": 3688,
+      "sha256": "a6cc458eb2b82b715ebad38bde983515528815d5dde2a3b353b96b88cb837733"
+    },
+    {
+      "path": "code/ppocr/losses/rec_att_loss.py",
+      "bytes": 1575,
+      "sha256": "c3ffabdc4be82722bab944b25c36192c9738e75e1332a15f8bdf12d467ca2794"
+    },
+    {
+      "path": "code/ppocr/losses/rec_can_loss.py",
+      "bytes": 2799,
+      "sha256": "5d4407d233df85bcd8b5024d98e1c77af47dc431c41e30ffa6f6cc0f88b2a4a5"
+    },
+    {
+      "path": "code/ppocr/losses/rec_ce_loss.py",
+      "bytes": 2582,
+      "sha256": "c558ac833ea5fad3258ce91f7aac8f28f7a8c1bfad0ebc9c31f9f2eef1febc67"
+    },
+    {
+      "path": "code/ppocr/losses/rec_cppd_loss.py",
+      "bytes": 2874,
+      "sha256": "7392e8f1de411c4bc94d9f4089540dacfe1cd7fd9e1ac7bc62f09b8cdec0fb2b"
+    },
+    {
+      "path": "code/ppocr/losses/rec_ctc_loss.py",
+      "bytes": 1764,
+      "sha256": "55d9d23b0da3fc81475aae7bf049a34d55713f03a79b4ce0b7e1c6c96ddca6c6"
+    },
+    {
+      "path": "code/ppocr/losses/rec_enhanced_ctc_loss.py",
+      "bytes": 2485,
+      "sha256": "3719a817c481ed13e2b77287d769f6e48ddee15333bd3714bc988edb82df90b1"
+    },
+    {
+      "path": "code/ppocr/losses/rec_latexocr_loss.py",
+      "bytes": 1456,
+      "sha256": "7fe97409c1addf1e0746743c08b01057161f01e945c7cd4e804053837c4b6747"
+    },
+    {
+      "path": "code/ppocr/losses/rec_multi_loss.py",
+      "bytes": 2493,
+      "sha256": "d6e82ca7eeec42d29fd207b0e05e34320722f3e78c27758c718feb90a0f1b2e8"
+    },
+    {
+      "path": "code/ppocr/losses/rec_nrtr_loss.py",
+      "bytes": 1193,
+      "sha256": "30e85721c34eaaa177613a49bfee82836a96a3486c4cd1750b9fe321b6fc7914"
+    },
+    {
+      "path": "code/ppocr/losses/rec_parseq_loss.py",
+      "bytes": 1752,
+      "sha256": "335d6c5e521a1ed087568e94c37973c0f8c5d51aa52198d8918a00333f857804"
+    },
+    {
+      "path": "code/ppocr/losses/rec_ppformulanet_loss.py",
+      "bytes": 2381,
+      "sha256": "c444c546d784f85bfc13862fde83ccb281da2fe2bc303c05dae64b92fa8dcd4a"
+    },
+    {
+      "path": "code/ppocr/losses/rec_pren_loss.py",
+      "bytes": 1093,
+      "sha256": "67e5fc04a8e423656897a049fec10c9f8386097160292ef7193586009a1f14cf"
+    },
+    {
+      "path": "code/ppocr/losses/rec_rfl_loss.py",
+      "bytes": 2624,
+      "sha256": "ca56b1cd55e794f915149e2ee93e11782cac1e3b28af698b16e08f37f2c4e666"
+    },
+    {
+      "path": "code/ppocr/losses/rec_sar_loss.py",
+      "bytes": 1212,
+      "sha256": "9bde5620275863ece212421928979333b3e325164a41a8deebe599a49766c7ee"
+    },
+    {
+      "path": "code/ppocr/losses/rec_satrn_loss.py",
+      "bytes": 1964,
+      "sha256": "d81b9f17951005003c013078cd059d607d4cff32c99d5f8f25bc3bb433db509a"
+    },
+    {
+      "path": "code/ppocr/losses/rec_spin_att_loss.py",
+      "bytes": 1800,
+      "sha256": "42081f3d72db03d3c09475c0e1c2bc8bcc95c28688a221c50d2d5b2099478cb7"
+    },
+    {
+      "path": "code/ppocr/losses/rec_srn_loss.py",
+      "bytes": 1817,
+      "sha256": "e0e1f7028fed576475187965b758fc2a22de7429cb27f79fb70fee7cfd94d70e"
+    },
+    {
+      "path": "code/ppocr/losses/rec_unimernet_loss.py",
+      "bytes": 2073,
+      "sha256": "5c673ec8b8b55cd989becf28eac3a5237c89c1545ee9f2618f62f845e0eb6203"
+    },
+    {
+      "path": "code/ppocr/losses/rec_vl_loss.py",
+      "bytes": 2872,
+      "sha256": "2351ab05c9920f4d9458f7ba367cb1d882e9b7671b9945a7248ccf4c6bafd0ac"
+    },
+    {
+      "path": "code/ppocr/losses/stroke_focus_loss.py",
+      "bytes": 2237,
+      "sha256": "92755e8fc4cb592deed8982433ce903c571ae12b0af3d7e3cb11974cf609cdd1"
+    },
+    {
+      "path": "code/ppocr/losses/table_att_loss.py",
+      "bytes": 3742,
+      "sha256": "c7240a67516a162a55752ecc6eea330de185c58b91c66f5571a06004ccb4432f"
+    },
+    {
+      "path": "code/ppocr/losses/table_master_loss.py",
+      "bytes": 2807,
+      "sha256": "cb0fcfaf89f21a462217071629b9efc23a8362468b2e641158df68bb63898924"
+    },
+    {
+      "path": "code/ppocr/losses/text_focus_loss.py",
+      "bytes": 3293,
+      "sha256": "55c5ad3a9b09cdf7dbd4f738f39c2827b946e3d2c098c9387611a2542bc21b90"
+    },
+    {
+      "path": "code/ppocr/losses/vqa_token_layoutlm_loss.py",
+      "bytes": 2059,
+      "sha256": "ed3889b458b7f6a9eb6c187e4ad6d0d0ced5d141da82ad85692d2f145f1119ce"
+    },
+    {
+      "path": "code/ppocr/metrics/__init__.py",
+      "bytes": 1935,
+      "sha256": "e4785c6cf508bf555b2ca6eb0705423ccb91cfb961e95117a67cd0f34c465c3d"
+    },
+    {
+      "path": "code/ppocr/metrics/bleu.py",
+      "bytes": 8139,
+      "sha256": "23dc18bde355352277303331242c41934218c4a1805b633d60a1b10fe86a002d"
+    },
+    {
+      "path": "code/ppocr/metrics/cls_metric.py",
+      "bytes": 1523,
+      "sha256": "f05f3f6f47db3262d50a5f285083130ff24c052f5d7044ac48b9f2c8675ee5e7"
+    },
+    {
+      "path": "code/ppocr/metrics/ct_metric.py",
+      "bytes": 1757,
+      "sha256": "3728320b0adda56638b536a776cff0a4380e0c4da83d4a9ba6d778d9395319f0"
+    },
+    {
+      "path": "code/ppocr/metrics/det_metric.py",
+      "bytes": 5718,
+      "sha256": "9ea9d2f63ac01d6c86e633658d1ae5758e665951ef2e5855410a8e28b5b56a05"
+    },
+    {
+      "path": "code/ppocr/metrics/distillation_metric.py",
+      "bytes": 2434,
+      "sha256": "be1de346c14beff834b5dc06e506904daa43c75c6982540c877dede1c85eaa9c"
+    },
+    {
+      "path": "code/ppocr/metrics/e2e_metric.py",
+      "bytes": 3122,
+      "sha256": "200266c01b88881fdad57f18dd84408eb67b58e5851d2a9b374951f8c82b6aa1"
+    },
+    {
+      "path": "code/ppocr/metrics/eval_det_iou.py",
+      "bytes": 8147,
+      "sha256": "5d80facb77bca0ca2a561b6488a84e14cf06a173a6dec5cc22a4d01209e6b700"
+    },
+    {
+      "path": "code/ppocr/metrics/kie_metric.py",
+      "bytes": 2507,
+      "sha256": "f568981c579b50f8b8a65af732d0b1bde37296cb4ad25cf5ef0a86a245b60b5d"
+    },
+    {
+      "path": "code/ppocr/metrics/rec_metric.py",
+      "bytes": 9636,
+      "sha256": "5046bc1f7a55e9dd586593f1a4708ba9deff4de6091ba407e02ee74c094758d1"
+    },
+    {
+      "path": "code/ppocr/metrics/sr_metric.py",
+      "bytes": 5224,
+      "sha256": "c834b39264624a8741e54096402ffdb576e098afb4f819cbfe4863b9e348e105"
+    },
+    {
+      "path": "code/ppocr/metrics/table_metric.py",
+      "bytes": 5723,
+      "sha256": "865e13af560ed006575d95a2d79b3c02a04df4a1c993421d2287f75beb93951b"
+    },
+    {
+      "path": "code/ppocr/metrics/vqa_token_re_metric.py",
+      "bytes": 7503,
+      "sha256": "ad73045a50c2674caeb4d517d0c0cfef8744fadc935fca5b2d684501604067d2"
+    },
+    {
+      "path": "code/ppocr/metrics/vqa_token_ser_metric.py",
+      "bytes": 1551,
+      "sha256": "3fcc500d73f4fa79a813ee5bab3f966d7149d8ac05f385ef89bf5fbd8ee841dd"
+    },
+    {
+      "path": "code/ppocr/modeling/architectures/__init__.py",
+      "bytes": 5124,
+      "sha256": "da1fb9d01a2ff36cb936646bb4eecc81fcd9d85a93735f3b80065d1252fd7d88"
+    },
+    {
+      "path": "code/ppocr/modeling/architectures/base_model.py",
+      "bytes": 4281,
+      "sha256": "099fcd3af47499a0c33772205ce9be3ca587864d57ad257c2e4b17ebb06258db"
+    },
+    {
+      "path": "code/ppocr/modeling/architectures/distillation_model.py",
+      "bytes": 2328,
+      "sha256": "99f655b8f0e038b4306403a245113e7efc089c01150c304d3e13aa862d8ec37b"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/__init__.py",
+      "bytes": 5228,
+      "sha256": "cb0dcff1c2377614573e10c09b8ad90e9d10c9014a7ccb14d6ac93addb4fd9c4"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_mobilenet_v3.py",
+      "bytes": 9128,
+      "sha256": "29faf346357fc365c44221f82ad503a7b2048503f95d2a24fa1e0b92509c91a1"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_pp_lcnet.py",
+      "bytes": 9328,
+      "sha256": "c85979000ad1ce76efaa58c007dd6cbf8cc6f88ee9971fe2d184f5d23f380a1f"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_pp_lcnet_v2.py",
+      "bytes": 11655,
+      "sha256": "383946d05c7f59005a76eb331da5bcc11e2b8741417acae954d66ae3cfc0875f"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_resnet.py",
+      "bytes": 7848,
+      "sha256": "4cfc1aeeba2df85068ebb323e9ff080f876cc742f8b6cc4e3100b172f55054b1"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_resnet_vd.py",
+      "bytes": 11598,
+      "sha256": "35be9704858b9aa4685db3003271037bc9449d4a8ee370c179be658a587950ae"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/det_resnet_vd_sast.py",
+      "bytes": 9807,
+      "sha256": "5f4b2e423f6244c19e365ecdeb363140d67146d5c03a6b93a082ebf451cd1fe9"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/e2e_resnet_vd_pg.py",
+      "bytes": 9152,
+      "sha256": "2c2908d3c1f7d1bcfcd959a3eb0e16e95f1dbae217fd594e5cf91c9123c5c88c"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/kie_unet_sdmgr.py",
+      "bytes": 6185,
+      "sha256": "38ad4267680f052aabd877e7589300d2fc2707f460bfdc5273d538e8c4354d0b"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_densenet.py",
+      "bytes": 5019,
+      "sha256": "edc0c85535a613b2ff5d11eda20c4ab7adc66ba3f76c06f9d9c8991404778c18"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_donut_swin.py",
+      "bytes": 46490,
+      "sha256": "b8a2662a8f47d6f0da663e48f13061e550e5e3a8a83ae83fed47527e051894ad"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_efficientb3_pren.py",
+      "bytes": 10574,
+      "sha256": "3cf6489293de911b649d609a74f5e5c3b24de4dba4333d946bad7684d4c0013b"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_hgnet.py",
+      "bytes": 11745,
+      "sha256": "0ffb4b255b9ea888ce58195d35cefe9669fd97f54679571d5de6b734a170729f"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_hybridvit.py",
+      "bytes": 15844,
+      "sha256": "ad94b946b4310268c436461e796c82b1bfb18bcd375e44470317164371f4f106"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_lcnetv3.py",
+      "bytes": 17782,
+      "sha256": "5fdae866b22e845ef03d6d10c7d810d065e9d0cf354dc464eeead2c38702fa5e"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_lcnetv4.py",
+      "bytes": 20961,
+      "sha256": "a39161fe2819f65462a62a6d8382d557192a41e894de7b81c9a8fd6d4e1d5080"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_micronet.py",
+      "bytes": 19046,
+      "sha256": "9aab734a4c555138dc55dac913676d88a3be545390f775a643fe9bd71b3bc4a4"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_mobilenet_v3.py",
+      "bytes": 5486,
+      "sha256": "d09a82e04d8ffa17e0f2e0b1754b145410fbaea616880df27314184d62a41f98"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_mv1_enhance.py",
+      "bytes": 8042,
+      "sha256": "d17f9bfa88faf37ef17d6eacd0ebce0d25a3865fdf5859231fae3a6a2e7ae86c"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_nrtr_mtb.py",
+      "bytes": 1788,
+      "sha256": "25a298d6b44b9a73f2d1f40b80a563c83dedb923f7939bed04a6b7699b29af19"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_pphgnetv2.py",
+      "bytes": 60198,
+      "sha256": "a5a63ad71c4655f0a472b6ad75da05664a5bdebc6860d204e06ac14258885424"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_repvit.py",
+      "bytes": 12479,
+      "sha256": "863968b9ac2ee3a7ad738d832b123e82a554eeaf4cb6a3b0402f27ed85baa3b6"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_31.py",
+      "bytes": 9824,
+      "sha256": "f735dde05c0bfcad620c0469a83e5368bd20db689fcc4d026c542db81c39e2ad"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_32.py",
+      "bytes": 8993,
+      "sha256": "053dfd4836014b142f6a41e1f2c498b51a6bbd9b0177276e25cf07f5133e1b69"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_45.py",
+      "bytes": 4447,
+      "sha256": "b357fb51dd19a43f5433a6047be190d715c137abc6f64fc6a6b8227680832218"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_aster.py",
+      "bytes": 4556,
+      "sha256": "f841d20701f4bd3565f3e1581ace505d5ee91bff7b190055af9543116b34e501"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_fpn.py",
+      "bytes": 10833,
+      "sha256": "851a982b052d80150cc06de23a9f65c6e84b5b8f0f4a135149b14984f41a1bf5"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_rfl.py",
+      "bytes": 11345,
+      "sha256": "0781567f69d4ce247f345b7f1e5f8e4379c14e435e2179d650f136f214138148"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnet_vd.py",
+      "bytes": 9679,
+      "sha256": "7be7cd7d124891358737a1e8c29a0221b6f0e185aa082d5361ee055737451726"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_resnetv2.py",
+      "bytes": 38910,
+      "sha256": "6dd2487d09904d84c6abd741ce3c834a592b740fce2780b56d86f6c37240745f"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_shallow_cnn.py",
+      "bytes": 2569,
+      "sha256": "db04a5a79c2adb2df5513279c504b3856e311ca3a6872dd3c50e19a1a5e8ec8a"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_svtrnet.py",
+      "bytes": 20538,
+      "sha256": "1fccefe856e55b8839856cea3e618fce3d2b8f2cf1b6efb033ba60b6269c8956"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_svtrv2.py",
+      "bytes": 16869,
+      "sha256": "a26c70d3c199468113555ce75bb5e678c210ca30c78e695b967f35a4550ca618"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_vary_vit.py",
+      "bytes": 21295,
+      "sha256": "d87807da19be3c1977032bb34af8f5f1b97d9b4490244c32f14fb2662502d59a"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_vit.py",
+      "bytes": 8420,
+      "sha256": "c48b4932ae43be45beb6e70f8955b9820dc2f59828208b8792f6ab820299faeb"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_vit_parseq.py",
+      "bytes": 10366,
+      "sha256": "4a21ad029e0a86c4a3a72eed75e348ccee6c7c0b7765dc054c03e4dab57da958"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/rec_vitstr.py",
+      "bytes": 4230,
+      "sha256": "4fa1ca622738a4d77f70a71fc1d09720f55f565b9fc26a0ac20b856626ce6f26"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/table_master_resnet.py",
+      "bytes": 11333,
+      "sha256": "60c92553ca10494e95c314b47ca1d42283d1b7c8ba87e438f0d607c55cd18761"
+    },
+    {
+      "path": "code/ppocr/modeling/backbones/vqa_layoutlm.py",
+      "bytes": 7493,
+      "sha256": "543ff7cb8a2f0d99b82445fa4d23fd867bd3802117068432d9347bcb82a2274a"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/__init__.py",
+      "bytes": 3194,
+      "sha256": "49f94f8d3ed64e419ffd1839c9196a8a231e1a5534a46812232080f6f133794c"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/cls_head.py",
+      "bytes": 1647,
+      "sha256": "7b0d38a5e956197577bff1d587091a5ea44a8af32c7c4c208c1793433c00bfa9"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_ct_head.py",
+      "bytes": 2275,
+      "sha256": "62d3a8fef3e87cb9607f98b5d4ecb072873312dbe6354e34f4f9777d8c71575d"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_db_head.py",
+      "bytes": 10266,
+      "sha256": "f83f3d8a3558b9172601f4ff3ea4e992f4a1b8c7770b94818376e4fc08b01894"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_drrg_head.py",
+      "bytes": 7637,
+      "sha256": "15d90758ef84080eb5d60381356f1caee5996e422d868333a1e834ba47bf07ec"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_east_head.py",
+      "bytes": 3706,
+      "sha256": "656793c91d7c35ec45e0419ebda7234e519e1028d6a9165ed24e19f03f31bcdc"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_fce_head.py",
+      "bytes": 3420,
+      "sha256": "bb15c4edb94a3762dd9795beedc1ad14208c5a125e99e253d76b6039631eb0b5"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_pse_head.py",
+      "bytes": 1355,
+      "sha256": "36cdc936e838fe40ee6df74fef0a0c3021cdaf6c75645ae7ae799e3806467069"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/det_sast_head.py",
+      "bytes": 4994,
+      "sha256": "8e1240cc7387631b692c1a445d24188dfece82f82aa546997e7a3f865eaf6d50"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/e2e_pg_head.py",
+      "bytes": 8135,
+      "sha256": "2e8b68004f6e1dd30ad1d4b9f6381c7ccc0e94ae56f5a45310b1bc5c421a3ac0"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/gcn.py",
+      "bytes": 3748,
+      "sha256": "12e6d815a5f1f13bfb74d7f9348d91d51caa5ab3f5beac4bf46bd6258f791185"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/kie_sdmgr_head.py",
+      "bytes": 8203,
+      "sha256": "ae76c1c9e9cb41e8b2bf613e9d0dc30aa66483ddd2fde5679cd98ae4a4fec62b"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/local_graph.py",
+      "bytes": 16251,
+      "sha256": "60c34fe0caf7a89ff6991a3908619631e16a6e6f40300180f8e1474859e967c9"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/proposal_local_graph.py",
+      "bytes": 17955,
+      "sha256": "379bd8815f62f901c1db1c715a06db48af892ae48b0158bbd7069995f1a4897f"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_abinet_head.py",
+      "bytes": 10347,
+      "sha256": "0caa072fdd2c75b9f6a88db326d8469011545763af6e15ba7d854f8ab471ff45"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_aster_head.py",
+      "bytes": 15691,
+      "sha256": "f47ca3cba9f02909498de8e0dc01fc0016794d4d9433f99b7371cfd262c98449"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_att_head.py",
+      "bytes": 8083,
+      "sha256": "19c33505b90c834d1bac15438015f8292bdcbd12ab9703907f26a85644592b44"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_can_head.py",
+      "bytes": 11621,
+      "sha256": "0649cc6d10b5234b7a58840c5a7825d84ce682cec08d44dd85b499309fb1f064"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_cppd_head.py",
+      "bytes": 12575,
+      "sha256": "22b29809c8a80f502fbd53d5dd0e50b0b7ea0cecbdb0bde11855f1ba14dcb659"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_ctc_head.py",
+      "bytes": 3795,
+      "sha256": "a6465dba3f4f726b419a7478a8aef7ee82d492422c0457dfb1a70cc94d8e19aa"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_latexocr_head.py",
+      "bytes": 31417,
+      "sha256": "cf9b474ecbd432f60026b8c75c60c68937d7d5310de7fd25eff3562363192274"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_multi_head.py",
+      "bytes": 5635,
+      "sha256": "88d6b1a2ee61ec8687099a98543b4179368e29c5c69def4a0bcccfd18d042d47"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_nrtr_head.py",
+      "bytes": 26875,
+      "sha256": "f9d1a740cf6a47584c30f1dc7af6d791f8d5384e8ef9b8a0cf8486e5e3d3f273"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_parseq_head.py",
+      "bytes": 18213,
+      "sha256": "2f75803f099fd9f04d2756ff54b2bbc470c7159cdbc4eb65719ad77e639a4789"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_ppformulanet_head.py",
+      "bytes": 53854,
+      "sha256": "6d330739f5ba0da50038f411fabf095ae27257ee3635e63890d7dea7f146871c"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_pren_head.py",
+      "bytes": 1150,
+      "sha256": "b0762f2e79ec520dc66b83e6f6017a76b83d5edf7509d55b4fe4876285ce0057"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_rfl_head.py",
+      "bytes": 3655,
+      "sha256": "29ba5bc6f5ec4655666b4c528044ff764bf25d6154d93aa6599b0c6e4220cbb0"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_robustscanner_head.py",
+      "bytes": 25741,
+      "sha256": "f2b3600b111ef084880bfa12548ac3609bdebaf4fbe74c9f11c7d38112e2b10a"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_sar_head.py",
+      "bytes": 13945,
+      "sha256": "216d833448476a714d01676d6769c1f1203d08cbe8c679cb4afcbd04a761a39a"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_satrn_head.py",
+      "bytes": 18911,
+      "sha256": "063500b32f04f05ae9e21935a7ae1660459727c4e7be231133758dee8393170d"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_spin_att_head.py",
+      "bytes": 4759,
+      "sha256": "54867b30ea87c5b248730b76159ad52cab6ac6b30d599da3e66e5e05ccbb76bd"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_srn_head.py",
+      "bytes": 10944,
+      "sha256": "ef3b0e6c9a56a48f2b4acb47c932f7309f5d072c34e9052496fe886856540279"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_unimernet_head.py",
+      "bytes": 95624,
+      "sha256": "51fa8ee53aec406ad8e48d1570014543574f055575d355bb392e9f0677464d02"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/rec_visionlan_head.py",
+      "bytes": 17832,
+      "sha256": "4ad1da4a14ca433e4e1fb05d7654d3c68ba579df2f21c5407b17e6d589e92fd1"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/self_attention.py",
+      "bytes": 14608,
+      "sha256": "6de1d50be99f853c86dd0ac256a347db55c8e2125650d984dd257944f81c764e"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/sr_rensnet_transformer.py",
+      "bytes": 13992,
+      "sha256": "659debd1a4a38d93f062f940cab8711b9984062f456af2b80ab7776f149d3a62"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/table_att_head.py",
+      "bytes": 15146,
+      "sha256": "5b6821f08b46086b3a474aee20ef60d90db44c2596cf71e3e37cf65db16213ac"
+    },
+    {
+      "path": "code/ppocr/modeling/heads/table_master_head.py",
+      "bytes": 10109,
+      "sha256": "84b1cc233ee6a672a5432c8ef6c57e1a54803d746b9ae6380caa900934b3f688"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/__init__.py",
+      "bytes": 1693,
+      "sha256": "abd1aea13d5cb1811c60885870ba67a1af8fc1aed6d4c17d4d7a3dea09126d43"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/csp_pan.py",
+      "bytes": 11088,
+      "sha256": "536a5572351691e5054e7320826fed0e934ab302e0125cc9f8be99794a7a610c"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/ct_fpn.py",
+      "bytes": 5981,
+      "sha256": "d335825aa6e4d15fd7ba9f606d08ef999948cad6b2efc54f3c9ecd4b678f0d15"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/db_fpn.py",
+      "bytes": 37957,
+      "sha256": "fcfb75f5d71bcfca9f1afc149fdc06defec6a06b3e989d79d37b40be51de54b3"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/east_fpn.py",
+      "bytes": 5848,
+      "sha256": "d39df02cabe91a70191141a2dc65fcb08614962fd540c9cbe7c7c3aa3374ac98"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/fce_fpn.py",
+      "bytes": 11373,
+      "sha256": "c5aa2b4af4661b0804e84100f4e2a6389f63fda23a887023eeffed84180880f9"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/fpn.py",
+      "bytes": 5115,
+      "sha256": "12c2d1c71bcecb2e5c5b44e09aa0a6b6096242c7c28fa1fcc497ad8e49726767"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/fpn_unet.py",
+      "bytes": 3349,
+      "sha256": "e76393aad1cbda891780cbae42fdc72beaf53d9e134647b3e733408cb1b53fc9"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/intracl.py",
+      "bytes": 3629,
+      "sha256": "4746d2f8c80de172c00f61ccd9e4c6a15d5a6eb61824ceff7fadd44d9bb612ec"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/pg_fpn.py",
+      "bytes": 10017,
+      "sha256": "ea6b1568d378a31fdd397dab6de48161d1b99cedf441bb7a8388e2a4085f6e6b"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/pren_fpn.py",
+      "bytes": 5731,
+      "sha256": "30807ab19fb55e530be7465f1149b61a39dd06923032801770f0eefbc53a2f79"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/rf_adaptor.py",
+      "bytes": 5353,
+      "sha256": "6b7cae28bc979faa8e24ac2197605d7cf66a67f14e3df353c2ca6a3061a14a2f"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/rnn.py",
+      "bytes": 12107,
+      "sha256": "4afbd98fb98aedb008d47d4bfff59562b44023e47ac8e308c68f3d17fdebf5da"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/sast_fpn.py",
+      "bytes": 11705,
+      "sha256": "df459d39d505ee7b45249d4c24a64e897950a45c399f398f54a3ef44f71f144d"
+    },
+    {
+      "path": "code/ppocr/modeling/necks/table_fpn.py",
+      "bytes": 4323,
+      "sha256": "e4deeb7e3251c238b687a0c56f262d9dab283d1e7b7cfd5a18240f09bb43b6f6"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/__init__.py",
+      "bytes": 1137,
+      "sha256": "9dcd253b0cbebe4c1ec468a2140c8737f5add8bff25dc4a78b99510bbacaa5c4"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/gaspin_transformer.py",
+      "bytes": 12569,
+      "sha256": "78cb0ba9fbc737332817b466d23cfc5341190d9486397503970a8bbb3bde0931"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/stn.py",
+      "bytes": 5148,
+      "sha256": "930966188ef658f50daa7854912648238d6bcf1c6313c5424b6aec4f1e27bf20"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/tbsrn.py",
+      "bytes": 10391,
+      "sha256": "07b455953c7fa467c32cf2db4ac3ae1a9464a689946e244ac650e9955e45dc91"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/tps.py",
+      "bytes": 11540,
+      "sha256": "887ace0c6fe2a01f949648b97dcbad05d49be233ea9d827e11798ec8f5ee7752"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/tps_spatial_transformer.py",
+      "bytes": 6970,
+      "sha256": "73dc87b47ea82ef399503f0823a1e6df85e3e51169177cb2050b6f41d1bf3e38"
+    },
+    {
+      "path": "code/ppocr/modeling/transforms/tsrn.py",
+      "bytes": 6951,
+      "sha256": "04bb0f262ec4cdaa2b8faf2cea65c74576523569ebf1500c6ba880c36bf8a750"
+    },
+    {
+      "path": "code/ppocr/optimizer/__init__.py",
+      "bytes": 4275,
+      "sha256": "eed97291fb7f11edefae948b1bf745d94a152d12f9f5758a26ff5f436f5309f1"
+    },
+    {
+      "path": "code/ppocr/optimizer/learning_rate.py",
+      "bytes": 17048,
+      "sha256": "ce9886602178eef5283fb886fe85de9e3f496212dd8529b67fc3c0fc1c28e3c9"
+    },
+    {
+      "path": "code/ppocr/optimizer/lr_scheduler.py",
+      "bytes": 9015,
+      "sha256": "1ea775ab95b28565c7971efaf8dcdfab2add4f07d4c07b93260576e511731f82"
+    },
+    {
+      "path": "code/ppocr/optimizer/optimizer.py",
+      "bytes": 9649,
+      "sha256": "7469c42889e4ab645b4335dc676e8e748343440276226fc339486bc0ef91c194"
+    },
+    {
+      "path": "code/ppocr/optimizer/regularizer.py",
+      "bytes": 2492,
+      "sha256": "3a3284cacac0473396553053afe445489092d487e7c788bf45a5e9ccb05abcfd"
+    },
+    {
+      "path": "code/ppocr/postprocess/__init__.py",
+      "bytes": 3679,
+      "sha256": "cbaa15dc89a7423224d2c8d774440e24f6b2b5e97d1bd65e0aa24b556935b0ee"
+    },
+    {
+      "path": "code/ppocr/postprocess/cls_postprocess.py",
+      "bytes": 1526,
+      "sha256": "a03d3985e00443b8d79791bd68f8a816df5ed5a4a4fe314c39c17d09208ad680"
+    },
+    {
+      "path": "code/ppocr/postprocess/ct_postprocess.py",
+      "bytes": 5377,
+      "sha256": "97291370c25d4e070fce0f51554f843e1619be13fcdcb08badffe90611583fd1"
+    },
+    {
+      "path": "code/ppocr/postprocess/db_postprocess.py",
+      "bytes": 9852,
+      "sha256": "a7123cfab47c9f326f9442f4e3ec963694c53a12556fc13eb541169a8e66b67f"
+    },
+    {
+      "path": "code/ppocr/postprocess/drrg_postprocess.py",
+      "bytes": 11788,
+      "sha256": "f98964f3750217f49f9b8ce5705b807772c853caef7f09dd11e889f8a40ae33e"
+    },
+    {
+      "path": "code/ppocr/postprocess/east_postprocess.py",
+      "bytes": 5110,
+      "sha256": "60cb58de24a7359df8f4579026b821317e7446d9d5f3f30105710bd5a3b42cd6"
+    },
+    {
+      "path": "code/ppocr/postprocess/fce_postprocess.py",
+      "bytes": 8481,
+      "sha256": "fd0917ec6768c8d2332b391f1b64eda30cd6a989f045fc547b1e0649e77118a4"
+    },
+    {
+      "path": "code/ppocr/postprocess/locality_aware_nms.py",
+      "bytes": 5026,
+      "sha256": "0e9c8f2c146214b49bf6e2e4422eef7dc5851ca8c84774b449ab0520cf752767"
+    },
+    {
+      "path": "code/ppocr/postprocess/pg_postprocess.py",
+      "bytes": 1824,
+      "sha256": "583e561aa1c1eb6159bee4e94584fa03efcf5c266d0380e04a7927135cda601c"
+    },
+    {
+      "path": "code/ppocr/postprocess/picodet_postprocess.py",
+      "bytes": 11618,
+      "sha256": "3c61a1b83881385cc198c771029aac809bceafba4b09de8ea72f7810d586485b"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/__init__.py",
+      "bytes": 655,
+      "sha256": "cddb8bda05b789dfb5d97f1d7fe81cb7caf93653ded2e0041dae6ceea6b2451b"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/pse/__init__.py",
+      "bytes": 1166,
+      "sha256": "bbb41f3250e2f780b8762f4843bba23d59d67a3447f093374f7e6f0135845359"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/pse/pse.pyx",
+      "bytes": 2577,
+      "sha256": "98b3e42f3247f87721ec455b2ce1749aa5124cfd2eae2de98fccef5832aac5e8"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/pse/README.md",
+      "bytes": 160,
+      "sha256": "c3b53f8220303c2fc1e8e4f8e1f9078d10a5a3582a447acae4db8420db9867ba"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/pse/setup.py",
+      "bytes": 415,
+      "sha256": "9fa600a126c502064ee0181a25da9c3dbb24d5c985979a098191281160e19ac8"
+    },
+    {
+      "path": "code/ppocr/postprocess/pse_postprocess/pse_postprocess.py",
+      "bytes": 3975,
+      "sha256": "4ca0d0acc6f818ee127d6ed715fe607304dac98d0478f48f921ee28e677ebd77"
+    },
+    {
+      "path": "code/ppocr/postprocess/rec_postprocess.py",
+      "bytes": 58614,
+      "sha256": "a5e5376514991656f7c7977f4a51ac61224ca6939f8ba41bc18e32ce9d15c872"
+    },
+    {
+      "path": "code/ppocr/postprocess/sast_postprocess.py",
+      "bytes": 12957,
+      "sha256": "480250f8ed542bebccff1b59bce78f66db18b931c5e6b97ea0dafbabe1d8987b"
+    },
+    {
+      "path": "code/ppocr/postprocess/table_postprocess.py",
+      "bytes": 6844,
+      "sha256": "130350a59e3555894ed2f1d8f78466806a4e8ef160d678525738dfaa20bd49f3"
+    },
+    {
+      "path": "code/ppocr/postprocess/vqa_token_re_layoutlm_postprocess.py",
+      "bytes": 3772,
+      "sha256": "c9a3575821f9a879fce1fa9fbaae661ea693a5f1791ba9ec39f7485538055ff1"
+    },
+    {
+      "path": "code/ppocr/postprocess/vqa_token_ser_layoutlm_postprocess.py",
+      "bytes": 4382,
+      "sha256": "d1a404b2f4c4eda90712eff642da6ce69b3876f7c69fa0611e3ca228ee86faeb"
+    },
+    {
+      "path": "code/ppocr/utils/__init__.py",
+      "bytes": 610,
+      "sha256": "d15657d0b8f09cc0edb23b7001b63eb2baee5297d39780f1b0680065f862db31"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ar_dict.txt",
+      "bytes": 273,
+      "sha256": "6e8d24e8eb45635cee81f7cac5694f632fac7fd0c664ab2b2b798abd28f97ff0"
+    },
+    {
+      "path": "code/ppocr/utils/dict/arabic_dict.txt",
+      "bytes": 405,
+      "sha256": "637c27c88512c22089bef927b34ada08f748dc132ac70facd68d8202384c2726"
+    },
+    {
+      "path": "code/ppocr/utils/dict/be_dict.txt",
+      "bytes": 357,
+      "sha256": "2fe10f4c9f3f8f8830645fadfac4a8c4ca3ddead9a72b4edd8d2244b506e5adb"
+    },
+    {
+      "path": "code/ppocr/utils/dict/bengali_dict.txt",
+      "bytes": 296,
+      "sha256": "2b531a28609ae8e4ea7da7686ae7932ce7f93d8a121d8f3ed26a64b3075796bb"
+    },
+    {
+      "path": "code/ppocr/utils/dict/bg_dict.txt",
+      "bytes": 341,
+      "sha256": "c46af0e70cb288404591c1594fafcbb582f344f216dd77facd048680dfcd0c72"
+    },
+    {
+      "path": "code/ppocr/utils/dict/bm_dict.txt",
+      "bytes": 640,
+      "sha256": "3f79a3f8aa71ee33e8418f9c12e47412d155e16dfb467c14b80ba1e375e6ece3"
+    },
+    {
+      "path": "code/ppocr/utils/dict/bm_dict_add.txt",
+      "bytes": 12789,
+      "sha256": "705d95fffee2161c07b5785c7036a7c2201f0aa82c8895648d7dd4bd3de37e7c"
+    },
+    {
+      "path": "code/ppocr/utils/dict/bn_dict.txt",
+      "bytes": 4051,
+      "sha256": "d509abad601cf33158113d796ce76585c4f50a51b3568002b4d4fcffbc5489d9"
+    },
+    {
+      "path": "code/ppocr/utils/dict/chinese_cht_dict.txt",
+      "bytes": 33443,
+      "sha256": "832551fee1f2fbc97508772d81ebdc8dba12c00de97a35c71c9ddf43ddac1a83"
+    },
+    {
+      "path": "code/ppocr/utils/dict/confuse.pkl",
+      "bytes": 30912,
+      "sha256": "57d8aa98a781330f7534a81263179e77c159a37050bd31fe09d8ddf1880c5628"
+    },
+    {
+      "path": "code/ppocr/utils/dict/cyrillic_dict.txt",
+      "bytes": 410,
+      "sha256": "369a82c6c8c479784a5d726448b83b1eafb5fef0a4129a5eaa3929625ddcd132"
+    },
+    {
+      "path": "code/ppocr/utils/dict/devanagari_dict.txt",
+      "bytes": 508,
+      "sha256": "b5f1be6d8bbff1a19fb96c5d4ca96a423380234bb7d2ce0e07b5838adb4d18ea"
+    },
+    {
+      "path": "code/ppocr/utils/dict/en_dict.txt",
+      "bytes": 126,
+      "sha256": "e1f9b09d757e60b89b6c5c701b40e4da62e44f9ff556b73959c50edda12cd530"
+    },
+    {
+      "path": "code/ppocr/utils/dict/fa_dict.txt",
+      "bytes": 330,
+      "sha256": "e46379da738faf556560468e333e0add75feb2698349298374a38b19d945dcae"
+    },
+    {
+      "path": "code/ppocr/utils/dict/french_dict.txt",
+      "bytes": 324,
+      "sha256": "b77870a69f833120eb2120889acd19ae79f6cd9fdedc03bdc6b3b40aeb0c92df"
+    },
+    {
+      "path": "code/ppocr/utils/dict/german_dict.txt",
+      "bytes": 346,
+      "sha256": "79f9988bf85879b0ded6204c0aadfca91eb86f1e4c98268be7fe194ccc670962"
+    },
+    {
+      "path": "code/ppocr/utils/dict/gujarati_dict.txt",
+      "bytes": 198,
+      "sha256": "eb9801d744991ddd4bf99af7577453d035ebf9fec5a17902a94e01552b7e2b56"
+    },
+    {
+      "path": "code/ppocr/utils/dict/hebrew_dict.txt",
+      "bytes": 610,
+      "sha256": "d838d6018851a0929f7089010128200ced1397778c7741c8e927f1f16e1c7d22"
+    },
+    {
+      "path": "code/ppocr/utils/dict/hi_dict.txt",
+      "bytes": 488,
+      "sha256": "20202636010cff122936153afa7264f9bfc998ecf172b3d1c3433c28da34b11c"
+    },
+    {
+      "path": "code/ppocr/utils/dict/it_dict.txt",
+      "bytes": 266,
+      "sha256": "4fedfb1920eddd6dced38c73caac39ab422fde3de29b6901727ca64de913928d"
+    },
+    {
+      "path": "code/ppocr/utils/dict/japan_dict.txt",
+      "bytes": 17332,
+      "sha256": "1dcfcb41eec90576a945b3084f22ade11ced506e24f14879245b071698f308e8"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ka_dict.txt",
+      "bytes": 452,
+      "sha256": "fad3f765943275eec2134a6fbc9b52785426641104d4e7db3a159dc73f341dde"
+    },
+    {
+      "path": "code/ppocr/utils/dict/kazakh_dict.txt",
+      "bytes": 126,
+      "sha256": "f6dbd62868d056512ddae9f834efa32f624a3254694eeaaca18314746ad31a55"
+    },
+    {
+      "path": "code/ppocr/utils/dict/kie_dict/xfund_class_list.txt",
+      "bytes": 29,
+      "sha256": "dfd6de77536439e3998a1f4eb7c6bebd4d8041554ea1aeeeede2bc49b7f7f90d"
+    },
+    {
+      "path": "code/ppocr/utils/dict/korean_dict.txt",
+      "bytes": 14480,
+      "sha256": "aa1fdc8ae8f7cd40a0ec4edb472eb0421e11427e6ccfee9915440742c18b0a20"
+    },
+    {
+      "path": "code/ppocr/utils/dict/latex_ocr_tokenizer.json",
+      "bytes": 24175,
+      "sha256": "50aff4b7f753cc27388cde5c4fda7cc8e19c5904ca1d993cb332187a6d3eb060"
+    },
+    {
+      "path": "code/ppocr/utils/dict/latex_symbol_dict.txt",
+      "bytes": 366,
+      "sha256": "20ab2e20273365103c346cadd89e0a164906ced4ab5e1e6cec18edf482f291a0"
+    },
+    {
+      "path": "code/ppocr/utils/dict/latin_dict.txt",
+      "bytes": 468,
+      "sha256": "8e6d4e3629788c35c31f7e530287d6147b549bb7a265bd6708bb281134429e2c"
+    },
+    {
+      "path": "code/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt",
+      "bytes": 86,
+      "sha256": "4c0843d65b18c5e1833e66c6ed92c9f294bb5cbab918bd16a10002c5b74e2915"
+    },
+    {
+      "path": "code/ppocr/utils/dict/layout_dict/layout_publaynet_dict.txt",
+      "bytes": 29,
+      "sha256": "c9a355895de2929e2eb4318efa1bddd1616fb4c1ab28805e61bc8afc84958935"
+    },
+    {
+      "path": "code/ppocr/utils/dict/layout_dict/layout_table_dict.txt",
+      "bytes": 6,
+      "sha256": "7ed9ac3831f7d8525696b390cde2ece4c1df132a433268072a47b4d42a6e8931"
+    },
+    {
+      "path": "code/ppocr/utils/dict/mr_dict.txt",
+      "bytes": 452,
+      "sha256": "eaaee26b361b2c182dd70f929d90c71672671643de00bc275f8590c0959f1872"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ne_dict.txt",
+      "bytes": 452,
+      "sha256": "079c779444fc9b39f6532f3a87aa5e557630662eb4abd60b1c4ebee71cfbbac6"
+    },
+    {
+      "path": "code/ppocr/utils/dict/oc_dict.txt",
+      "bytes": 210,
+      "sha256": "e1e765a4aafd0040624ad45f89ee4d16f54f22f172ff7ecf82db37f73b375de5"
+    },
+    {
+      "path": "code/ppocr/utils/dict/parseq_dict.txt",
+      "bytes": 188,
+      "sha256": "851dfc1ebb105245410e2cde220b8610194b8a50f9d70b9e839795bbcb3587fb"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv4_doc_dict.txt",
+      "bytes": 62346,
+      "sha256": "a5bc3887c43c901e5a3f97b13ffadf1c5754ede7cc8c9f5abe22e875a7c48372"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_arabic_dict.txt",
+      "bytes": 2369,
+      "sha256": "7f92f7dbb9b75a4787a83bfb4f6d14a8ab515525130c9d40a9036f61cf6999e9"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_cyrillic_dict.txt",
+      "bytes": 2781,
+      "sha256": "db40aa52ceb112055be80c694afdf655d5d2c4f7873704524cc16a447ca913ba"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_devanagari_dict.txt",
+      "bytes": 1943,
+      "sha256": "09c7440bfc5477e5c41052304b6b185aff8c4a5e8b2b4c23c1c706f6fe1ee9fc"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_dict.txt",
+      "bytes": 74012,
+      "sha256": "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_el_dict.txt",
+      "bytes": 1103,
+      "sha256": "31defc62c0c3ad3674a82da6192226a2ba98ef4ff014a7045cb88d59f9c3de31"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_en_dict.txt",
+      "bytes": 1416,
+      "sha256": "e025a66d31f327ba0c232e03f407ae8d105e1e709e7ccb3f408aa778c24e70d6"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_eslav_dict.txt",
+      "bytes": 1663,
+      "sha256": "3e95f1581557162870cacdba5af91a4c6be2890710d395b0c3c7578e7ee5e6eb"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_korean_dict.txt",
+      "bytes": 47451,
+      "sha256": "a88071c68c01707489baa79ebe0405b7beb5cca229f4fc94cc3ef992328802d7"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_latin_dict.txt",
+      "bytes": 2616,
+      "sha256": "ccbcc45730b3fbbd9050c5bc74db6a99067141ef1035e3d14889a84a6b9b1aff"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_ta_dict.txt",
+      "bytes": 1723,
+      "sha256": "85b541352ae18dc6ba6d47152d8bf8adff6b0266e605d2eef2990c1bf466117b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_te_dict.txt",
+      "bytes": 1831,
+      "sha256": "42f83f5d3fdb50778e4fa5b66c58d99a59ab7792151c5e74f34b8ffd7b61c9d6"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv5_th_dict.txt",
+      "bytes": 1767,
+      "sha256": "57f5406f94bb6688fb7077f7be65f08bbd71cecf48c01ea26c522cb5c4836b7a"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv6_dict.txt",
+      "bytes": 74947,
+      "sha256": "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ppocrv6_tiny_dict.txt",
+      "bytes": 27156,
+      "sha256": "c5cbe34ef40c29c4df07ed012bf96569cb69a2d2a01a07027e9f13cb832bd9cd"
+    },
+    {
+      "path": "code/ppocr/utils/dict/pu_dict.txt",
+      "bytes": 305,
+      "sha256": "4732ea2c497ed31f96150bdbf43e191ef7f9d65fedfcb21d092e8785efe8793f"
+    },
+    {
+      "path": "code/ppocr/utils/dict/README.md",
+      "bytes": 305,
+      "sha256": "91c9a4e5aca7e64a62ef0ff7abaf5c32ff2d0a63fecfb8315808157af30d6d3b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/rs_dict.txt",
+      "bytes": 194,
+      "sha256": "9518bd2c437d3455d159a7704017c16ae4a74e4b2c494d3db54be0181dcd6f1b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/rsc_dict.txt",
+      "bytes": 324,
+      "sha256": "c9663355bb3706960e57af5e4704feb02c9ff3ead0329addbe1cd2bee68843c5"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ru_dict.txt",
+      "bytes": 313,
+      "sha256": "d06f34bb0a13e1461a99c14977447736b535e803d51ade9d4f745beaa3da7e44"
+    },
+    {
+      "path": "code/ppocr/utils/dict/samaritan_dict.txt",
+      "bytes": 649,
+      "sha256": "1d90fb601d91c4ea91d790796a42146a6f977a1ee38e14cd2e9f37aa45156830"
+    },
+    {
+      "path": "code/ppocr/utils/dict/spin_dict.txt",
+      "bytes": 136,
+      "sha256": "dceb9255c6319245dda3b559b64aea94d408955d6f331300d594c810d1f5b04b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/syriac_dict.txt",
+      "bytes": 393,
+      "sha256": "701410ceda941790b21b64edbe30072d895ad65913d87818c2ee761995491187"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ta_dict.txt",
+      "bytes": 352,
+      "sha256": "e93e694814afd9ff1e918b6f4bb4267fb4c65a9344ee5d7464f9135b90c0a270"
+    },
+    {
+      "path": "code/ppocr/utils/dict/table_dict.txt",
+      "bytes": 894,
+      "sha256": "6b37865290dc6a296c7f128b2c6c2f7718d9d6708088e18fbf3056fc318c28e7"
+    },
+    {
+      "path": "code/ppocr/utils/dict/table_master_structure_dict.txt",
+      "bytes": 435,
+      "sha256": "234e25aa46080740a992693cd4c1a7bbc91c435ac44158edd1f42f0163d5e8ae"
+    },
+    {
+      "path": "code/ppocr/utils/dict/table_structure_dict.txt",
+      "bytes": 298,
+      "sha256": "1e2375e0be0ea6627fda5c5aa60abde65c62defaefc015d00cb49b88736bc170"
+    },
+    {
+      "path": "code/ppocr/utils/dict/table_structure_dict_ch.txt",
+      "bytes": 578,
+      "sha256": "68d344a84b726e043f390122240ff2b2ced2949b2a80ce9b61ae955054d190ef"
+    },
+    {
+      "path": "code/ppocr/utils/dict/te_dict.txt",
+      "bytes": 429,
+      "sha256": "ee9946a60d7701977474e89883694a4ca20eaa3868a23334bf7940dcd008f0f9"
+    },
+    {
+      "path": "code/ppocr/utils/dict/th_dict.txt",
+      "bytes": 330,
+      "sha256": "b87090be9eb54dfbe8b779b28ddde5e1f7387260f1c2b37d49910250131e1708"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ug_dict.txt",
+      "bytes": 301,
+      "sha256": "40bf14e27191ed3ca0db62c37015f4b41afb1310bdc8fc195181dad5a1d82dc3"
+    },
+    {
+      "path": "code/ppocr/utils/dict/uk_dict.txt",
+      "bytes": 348,
+      "sha256": "e485e475e4f9656854338714909ea8c536cebcb833c47aa151207c32e0247f5b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/unimernet_tokenizer/tokenizer.json",
+      "bytes": 2140014,
+      "sha256": "2811d82701ec97c192fa256aa2b4516929373870ae660326cc5b1dc879b95ff2"
+    },
+    {
+      "path": "code/ppocr/utils/dict/unimernet_tokenizer/tokenizer_config.json",
+      "bytes": 4491,
+      "sha256": "fd4d94f8b9dbb7deeb3a3ef084ca0e16c43d45774a180730b7e9cfd6359a074b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/ur_dict.txt",
+      "bytes": 332,
+      "sha256": "63d2fcaaeaa5b5ec805630f8736e084bf9617139664cdee45ad8ebc6f45cac9f"
+    },
+    {
+      "path": "code/ppocr/utils/dict/vi_dict.txt",
+      "bytes": 339,
+      "sha256": "c20e64733da4dc47067c7f8ee79c1c549803ccd57a910bf7d998a3adf4bda01b"
+    },
+    {
+      "path": "code/ppocr/utils/dict/xi_dict.txt",
+      "bytes": 250,
+      "sha256": "d665d9df4d49f96ff3cd1dcf2d53084d00fe1670747dd9a93b58b9dda10efa15"
+    },
+    {
+      "path": "code/ppocr/utils/dict90.txt",
+      "bytes": 180,
+      "sha256": "74cb151bb2eedcff2159e2d36000cf9c3e3f59ce319c76183042c3b1ef67faf1"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_metric/Deteval.py",
+      "bytes": 31928,
+      "sha256": "6d9dd4af0b98be86aaa74f635745923a2bc23f6123a4067c2c401a9aba7d1097"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_metric/polygon_fast.py",
+      "bytes": 2838,
+      "sha256": "7bec1b344e0a1df14eb182d01d47cf84d3878d8385265c11390ce59c4e0dd0cd"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_utils/extract_batchsize.py",
+      "bytes": 3236,
+      "sha256": "71b484450e57bd5151b38b1185f94c67d72efee66911d7462c0eb22fccb8efa8"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_utils/extract_textpoint_fast.py",
+      "bytes": 18639,
+      "sha256": "cc19421e687f53d04c45183c9e5ab2f86c0e8c1398d09fd763fd1e1118303031"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_utils/extract_textpoint_slow.py",
+      "bytes": 21515,
+      "sha256": "f37691955373a9ec84188eab1c528999e3b35903bbb0372d7448aee5d8147adf"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_utils/pgnet_pp_utils.py",
+      "bytes": 6496,
+      "sha256": "4e4d79125619019af53ac35870cba815ec9308801579370c0394a601e9727f38"
+    },
+    {
+      "path": "code/ppocr/utils/e2e_utils/visual.py",
+      "bytes": 5266,
+      "sha256": "ee76cfb473bfe31f6407a76bb8f96f7f34c83eb33d7383da236b7e24f3ad109d"
+    },
+    {
+      "path": "code/ppocr/utils/ema.py",
+      "bytes": 4593,
+      "sha256": "11b5f4863f4f7723813551879888936eeafc2acc130d9bca6c4d758f7a5ad75d"
+    },
+    {
+      "path": "code/ppocr/utils/en_dict.txt",
+      "bytes": 190,
+      "sha256": "5662df9d2d03f0e8ca0d3b0649d6acbab904b6a14b3d3521463c71c37c668ce3"
+    },
+    {
+      "path": "code/ppocr/utils/EN_symbol_dict.txt",
+      "bytes": 188,
+      "sha256": "851dfc1ebb105245410e2cde220b8610194b8a50f9d70b9e839795bbcb3587fb"
+    },
+    {
+      "path": "code/ppocr/utils/export_model.py",
+      "bytes": 22044,
+      "sha256": "1b6958d2d4a8101645b647140b30d597ac25684c670c9e45dca1c3a231a5d67f"
+    },
+    {
+      "path": "code/ppocr/utils/formula_utils/math_txt2pkl.py",
+      "bytes": 2588,
+      "sha256": "8b4f21426da6603ad9fca45500b6e28f595c98bb75d176f200bdead65efb99cd"
+    },
+    {
+      "path": "code/ppocr/utils/formula_utils/unimernet_data_convert.py",
+      "bytes": 3778,
+      "sha256": "734c47b49cf13a845acf4140dfa26164ff5e1f2b5948041bac6e77d97f65a763"
+    },
+    {
+      "path": "code/ppocr/utils/gen_label.py",
+      "bytes": 2935,
+      "sha256": "98f3cf4225cb11ccdc1e02aea45b012c57e907466095f27de68a0346cd99b0de"
+    },
+    {
+      "path": "code/ppocr/utils/ic15_dict.txt",
+      "bytes": 72,
+      "sha256": "71e9aa833ec424844f3670bb5f1a2851867b9ce963f78df531e45d3a4c77dd72"
+    },
+    {
+      "path": "code/ppocr/utils/iou.py",
+      "bytes": 1699,
+      "sha256": "a29e8ca89b8f27a6fa9f060cf3549db3bb15bd3a1c2d1ad5a8b747e5a135d2c0"
+    },
+    {
+      "path": "code/ppocr/utils/loggers/__init__.py",
+      "bytes": 67,
+      "sha256": "96e034fda49831a66f95571e477bfa293a5e8e349fcf086d30b3a36612909d01"
+    },
+    {
+      "path": "code/ppocr/utils/loggers/base_logger.py",
+      "bytes": 326,
+      "sha256": "303c1f15c46db36c1c87a7ddbd4a751367c52c0c876609900e9d34e4f1f28967"
+    },
+    {
+      "path": "code/ppocr/utils/loggers/loggers.py",
+      "bytes": 576,
+      "sha256": "50e53636c22771c70553da0f992eab0469cae6aff51a8dcd45019023acd7b340"
+    },
+    {
+      "path": "code/ppocr/utils/loggers/wandb_logger.py",
+      "bytes": 2451,
+      "sha256": "41576f004e9031493bb63e50c3e672391e760036226d37147742beb62c1573e3"
+    },
+    {
+      "path": "code/ppocr/utils/logging.py",
+      "bytes": 2979,
+      "sha256": "8275fb9db46140bf6c1aaa3cd6a0a1246adbb9603b7803889e248a177e768620"
+    },
+    {
+      "path": "code/ppocr/utils/network.py",
+      "bytes": 5401,
+      "sha256": "705cf2d5829853533b1f389bf1569f14c6492ce611f83146c991b46388005241"
+    },
+    {
+      "path": "code/ppocr/utils/poly_nms.py",
+      "bytes": 4136,
+      "sha256": "12a9028252bcdc04afaf703712fd4bbfc3e6d387174b47d8dbf06952956f89cd"
+    },
+    {
+      "path": "code/ppocr/utils/ppocr_keys_v1.txt",
+      "bytes": 26250,
+      "sha256": "a1c84d9bdb9ab29043c58896224d32941783eb821629618416dcb08f12886492"
+    },
+    {
+      "path": "code/ppocr/utils/profiler.py",
+      "bytes": 5246,
+      "sha256": "b7f9d830e34dc2de17a7d1ae6614bda90d9936754cbe07ae0ec2d4543aed935b"
+    },
+    {
+      "path": "code/ppocr/utils/save_load.py",
+      "bytes": 16826,
+      "sha256": "1e12094eb580711fb53abb852607f605307524074102edb97d15ebdd679a6ca8"
+    },
+    {
+      "path": "code/ppocr/utils/stats.py",
+      "bytes": 2199,
+      "sha256": "d7225d65ba736611c8c22ddda080a4bf894739de9fd446d174bf7635ab87fcf1"
+    },
+    {
+      "path": "code/ppocr/utils/utility.py",
+      "bytes": 7440,
+      "sha256": "74f35f26761df852045a29bde5052a9fc63a12cb254a51d69c42242f90af67e1"
+    },
+    {
+      "path": "code/ppocr/utils/visual.py",
+      "bytes": 4605,
+      "sha256": "68e2e5c05bd994da93664507a3a88d3c3e0cacd3af1b1267f84e2bc5ff8e3914"
+    },
+    {
+      "path": "code/requirements.txt",
+      "bytes": 254,
+      "sha256": "d33da5c48e908fc328b48569098e52c4a9df4529a177fe09920c1ccb4531a9ef"
+    },
+    {
+      "path": "korean_PP-OCRv5_mobile_rec_pretrained.pdparams",
+      "bytes": 110996478,
+      "sha256": "8975dede5e0c2f47e0a7712b3d79ffdc766972f872fd0441ebcccd9d77cd52a3"
+    },
+    {
+      "path": "PP-OCRv5_mobile_rec_pretrained.pdparams",
+      "bytes": 133890015,
+      "sha256": "04745475b97a1faf029c7442a4c4421b156249b9395814e509bf4a9804e37750"
+    },
+    {
+      "path": "source.zip",
+      "bytes": 118704753,
+      "sha256": "ef2c41e3739753bd9dcb83ac3ead3d295b51139c76a8b0698680f88627eeb56a"
+    }
+  ],
+  "completed_at": "2026-09-10T14:57:42.113840+00:00"
+}

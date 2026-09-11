@@ -1,0 +1,34 @@
+{
+  "task": "asr",
+  "evaluation_eligible": false,
+  "assets": [],
+  "repository": "google/fleurs",
+  "revision": "168de341b3db6859a9bac1c50a2ef5e3b47647e0",
+  "source_split": "train",
+  "license": "CC-BY-4.0",
+  "license_source": "https://huggingface.co/datasets/google/fleurs",
+  "directory": "E:/project/care_app/data/ai-training-v1/sources/fleurs-train",
+  "files": [
+    {
+      "path": "cmn_hans_cn/train/0000.parquet",
+      "bytes": 2214262858,
+      "sha256": "b7310d1e78afe209a1cbc40412d0de18a218ac614bbff0d2d1b87aba2c066b3d"
+    },
+    {
+      "path": "en_us/train/0000.parquet",
+      "bytes": 1721501976,
+      "sha256": "0472c0b6eb31427c50350e8d44d5151ec9febfe26ffceaa6806c894806e87c07"
+    },
+    {
+      "path": "ja_jp/train/0000.parquet",
+      "bytes": 1686320112,
+      "sha256": "74c0f2455b71cac7a9aaa4474f93df1d773d545d9f9ef56fc21dc30a8c42ea52"
+    },
+    {
+      "path": "ko_kr/train/0000.parquet",
+      "bytes": 1814793938,
+      "sha256": "19900c0407536a37500082bdcf18c4e3a24757fd7eaf1c0954dd374ba24a1c0c"
+    }
+  ],
+  "completed_at": "2026-09-10T14:57:31.851361+00:00"
+}

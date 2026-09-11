@@ -1,0 +1,19 @@
+# Observed Windows desktop environment; torch CUDA wheel index must be configured separately.
+torch==2.12.1+cu126
+torchvision==0.27.1+cu126
+transformers==5.16.1
+accelerate==1.14.0
+bitsandbytes==0.50.2
+huggingface-hub==1.29.0
+paddlepaddle==3.3.1
+paddleocr==3.7.0
+paddlex==3.7.2
+numpy==2.3.5
+Pillow==12.3.0
+fonttools==4.64.0
+pyarrow==25.0.1
+soundfile==0.14.0
+librosa==0.11.0
+lm-format-enforcer==0.11.3
+psutil==7.2.2
+opencc==1.4.2

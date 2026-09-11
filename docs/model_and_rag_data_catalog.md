@@ -3,6 +3,10 @@
 - 문서 상태: 조사 완료 후보 목록, 도입 승인 전
 - 조사 기준일: 2026-08-29
 - 모델 비교군 반영일: 2026-09-02
+- 모바일 챗봇·OCR·ASR 후속 조사: [모델 후보와 성능 개선 방안 — 2026-09-10](./ai_model_research_2026-09-10.md). 실험 제안이며 기존 모델·데이터의 승인 상태를 변경하지 않는다.
+- 후속 실행: [챗봇·OCR·음성 전사 기준선 결과 — 2026-09-10](./ai_baseline_results_2026-09-10.md). PC의 합성 기록·문서 및 공개 음성 비교이며 의료·모바일 성능 승인 결과가 아니다.
+- 추가 학습 실행: [SFT·출력 기반 증류·OCR·ASR 파일럿 — 2026-09-11](./ai_training_results_2026-09-11.md). 실제 학습 가중치와 학습 전후 결과를 기록하며 제품 도입·의료 검수 상태는 변경하지 않는다.
+- 추가 검증: [새 질문·문서 검출·음성/VAD 대조 — 2026-09-11](./ai_additional_validation_2026-09-11.md). 가중치 고정 시험에서 모호한 조회, OCR 행 분리, 음성 숫자·단위 회귀를 확인했다. 기존 합성 점수만으로 모델 채택을 확정하지 않는다.
 - 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
 - 검증 계획: [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md)
 
