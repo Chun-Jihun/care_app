@@ -7,7 +7,7 @@ import 'sqlite_session.dart';
 
 final class SchemaMigrations {
   SchemaMigrations(this._store, this._verify);
-  static const version = 3;
+  static const version = 4;
   final SqliteSession _store;
   final void Function() _verify;
   String get directory => _store.directory;
@@ -33,10 +33,16 @@ final class SchemaMigrations {
     if (version == 1 && identityVersion == 1) {
       _upgradeChatSchema();
       _upgradeDraftSchema();
+      _upgradeAiSchema();
       return;
     }
     if (version == 2 && identityVersion == 2) {
       _upgradeDraftSchema();
+      _upgradeAiSchema();
+      return;
+    }
+    if (version == 3 && identityVersion == 3) {
+      _upgradeAiSchema();
       return;
     }
     if (version != 0 || identityVersion != 0) {
@@ -89,6 +95,18 @@ final class SchemaMigrations {
     });
     _upgradeChatSchema();
     _upgradeDraftSchema();
+    _upgradeAiSchema();
+  }
+
+  void _upgradeAiSchema() {
+    _store.transaction(() {
+      _store.connection.execute('''
+        ALTER TABLE chat_message ADD COLUMN reply TEXT CHECK(reply IS NULL OR length(reply)<=8192);
+        PRAGMA user_version=4;
+        PRAGMA identity.user_version=4;
+      ''');
+    });
+    _verify();
   }
 
   void _upgradeChatSchema() {

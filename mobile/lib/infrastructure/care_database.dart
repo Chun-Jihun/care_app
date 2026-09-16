@@ -7,10 +7,10 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
 import '../domain/records.dart';
+import '../domain/record_lookup.dart';
 import '../domain/chat.dart';
 import '../domain/drafts.dart';
 import '../domain/backup.dart';
-
 import '../application/notebook_repository.dart';
 import 'sqlite_session.dart';
 import 'schema_migrations.dart';
@@ -22,6 +22,7 @@ import 'repositories/profiles.dart';
 import 'repositories/chat.dart';
 import 'repositories/drafts.dart';
 import 'repositories/backup.dart';
+import '../domain/ai.dart';
 
 /// Coordinates one encrypted connection; feature repositories own their SQL.
 class CareDatabase implements NotebookRepository {
@@ -144,6 +145,7 @@ class CareDatabase implements NotebookRepository {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
   }) => _records.entries(
@@ -151,6 +153,7 @@ class CareDatabase implements NotebookRepository {
     kind: kind,
     query: query,
     day: day,
+    lookup: lookup,
     limit: limit,
     displayText: displayText,
   );
@@ -343,6 +346,9 @@ class CareDatabase implements NotebookRepository {
   @override
   ChatMessage addChatMessage(String pid, String text, {DateTime? now}) =>
       _chat.addChatMessage(pid, text, now: now);
+  @override
+  void setChatReply(String pid, String id, AiReply reply) =>
+      _chat.setChatReply(pid, id, reply);
   @override
   void deleteChatMessage(String pid, String id) =>
       _chat.deleteChatMessage(pid, id);

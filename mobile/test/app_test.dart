@@ -14,6 +14,7 @@ import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/drafts.dart';
 
 import 'support.dart';
+import 'chat_ui_support.dart';
 
 void main() {
   late Directory root;
@@ -140,6 +141,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.byTooltip('간병 도우미 대화'));
     await tester.pumpAndSettle();
+    await acknowledgeChatNotice(tester);
     expect(tester.takeException(), isNull);
     await tester.runAsync(
       () => c.setChatRetention(c.selectedId!, ChatRetention.week),
@@ -185,6 +187,7 @@ void main() {
       await start(tester);
       await tester.tap(find.byTooltip('간병 도우미 대화'));
       await tester.pumpAndSettle();
+      await acknowledgeChatNotice(tester);
       await tester.enterText(
         find.byKey(const ValueKey('chat_input')),
         '대화 시험 질문',
@@ -203,7 +206,7 @@ void main() {
       });
       await tester.pumpAndSettle();
       expect(find.text('대화 시험 질문'), findsOneWidget);
-      expect(find.textContaining('답변 없음'), findsOneWidget);
+      expect(find.textContaining('조회는 최대 31일'), findsOneWidget);
       expect(c.entries, isEmpty);
       await tester.tap(find.byTooltip('질문 메뉴'));
       await tester.pumpAndSettle();
@@ -216,11 +219,11 @@ void main() {
       expect(find.text('작성 중인 내용을 어떻게 할까요?'), findsOneWidget);
       await tester.tap(find.text('초안 보관 후 나가기'));
       await tester.pumpAndSettle();
-      expect(find.text('간병 도우미'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, '간병 도우미'), findsOneWidget);
       expect(c.visits, isEmpty);
       await tester.tap(find.byType(DropdownButtonFormField<ChatRetention>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('이번 잠금 해제 동안만').last);
+      await tester.tap(find.text('이번 앱 사용 동안만').last);
       await tester.pumpAndSettle();
       await tester.tap(find.text('취소'));
       await tester.pumpAndSettle();
@@ -300,6 +303,14 @@ void main() {
     });
     await tester.tap(find.byTooltip('간병 도우미 대화'));
     await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      final raster = await boundary.toImage(pixelRatio: 2);
+      final bytes = await raster.toByteData(format: ui.ImageByteFormat.png);
+      await File('build/preview/chat-warning.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
+      raster.dispose();
+    });
+    await acknowledgeChatNotice(tester);
     await tester.runAsync(() async {
       await c.setChatRetention(c.selectedId!, ChatRetention.week);
       await c.addChatMessage(c.selectedId!, '다음 진료 때 식사량이 줄어든 점을 물어보고 싶어요.');

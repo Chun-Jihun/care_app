@@ -1,0 +1,8 @@
+name: care_ort
+description: Bounded float tensor adapter using the ONNX Runtime bundled by sherpa_onnx.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.13.2
+dependencies:
+  ffi: ^2.0.1

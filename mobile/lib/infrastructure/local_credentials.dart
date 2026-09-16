@@ -11,6 +11,11 @@ final class LocalCredentials implements Credentials {
   @override
   Future<bool> hasPin() async => await _secrets.read('auth.pin') != null;
   @override
+  Future<bool> notebookStarted() async =>
+      await _secrets.read('app.started') == 'true';
+  @override
+  Future<void> markNotebookStarted() => _secrets.write('app.started', 'true');
+  @override
   Future<void> setPin(
     String pin, {
     required void Function() beforeCommit,
@@ -21,9 +26,23 @@ final class LocalCredentials implements Credentials {
     final salt = base64Encode(VaultCrypto.randomBytes(16));
     final hash = await VaultCrypto.pinHash(pin, salt);
     beforeCommit();
-    await _secrets.write('auth.pin', jsonEncode({'salt': salt, 'hash': hash}));
     await _secrets.write('auth.failures', '0');
     await _secrets.write('auth.until', '0');
+    // The PIN itself is the single source of truth for whether app lock is on.
+    // Commit it last so a failed supporting write cannot silently enable it.
+    beforeCommit();
+    await _secrets.write('auth.pin', jsonEncode({'salt': salt, 'hash': hash}));
+  }
+
+  @override
+  Future<void> removePin({required void Function() beforeCommit}) async {
+    await markNotebookStarted();
+    await setDeviceEnabled(false);
+    await _secrets.delete('auth.failures');
+    await _secrets.delete('auth.until');
+    // A failed operation must leave the PIN required, including on restart.
+    beforeCommit();
+    await _secrets.delete('auth.pin');
   }
 
   @override
@@ -70,6 +89,7 @@ final class LocalCredentials implements Credentials {
   @override
   Future<void> clearAuthentication() async {
     for (final key in [
+      'app.started',
       'auth.pin',
       'auth.hash',
       'auth.salt',

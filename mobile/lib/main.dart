@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_strings.dart';
-
 import 'application/care_controller.dart';
 import 'infrastructure/platform_services.dart';
 import 'infrastructure/vault_store.dart';
 import 'presentation/app.dart';
+import 'infrastructure/ai/device_ai_runtime.dart';
+import 'infrastructure/ai/memory_recorder.dart';
+import 'infrastructure/ai/licenses.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerAiLicenses();
   var language = AppLanguage.fromLocale(
     WidgetsBinding.instance.platformDispatcher.locale,
   );
@@ -19,6 +22,8 @@ Future<void> main() async {
     final controller = CareController(
       VaultStore(await DevicePlatformServices.prepareDirectory(), secrets),
       DevicePlatformServices(),
+      aiRuntime: DeviceAiRuntime(),
+      microphone: MemoryRecorder.new,
     );
     await controller.initialize();
     runApp(CareApp(controller: controller));

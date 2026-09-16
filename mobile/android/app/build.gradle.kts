@@ -28,6 +28,12 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Match plugin libraries to Flutter's libapp.so. The SDK otherwise adds
+        // every plugin ABI, even when --target-platform=android-arm64 is used.
+        ndk {
+            abiFilters += if (project.findProperty("target-platform") == "android-x64")
+                "x86_64" else "arm64-v8a"
+        }
     }
 
     buildTypes {

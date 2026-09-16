@@ -5,8 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
+import '../domain/reviewed_input.dart';
 
 import 'common.dart';
+import 'ai_draft_page.dart';
 import 'editors.dart';
 
 class EntryDetails extends StatelessWidget {
@@ -114,21 +116,66 @@ class EntryDetails extends StatelessWidget {
                       MaterialPageRoute<void>(builder: (_) => PhotoPage(photo)),
                     );
                   },
-                  trailing: IconButton(
-                    tooltip: context.tr('사진 삭제'),
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () async {
-                      if (await confirm(
-                            context,
-                            context.tr('사진을 삭제할까요?'),
-                            context.tr('이 기록에 저장된 사진을 삭제합니다.'),
-                          ) &&
-                          context.mounted) {
-                        await attempt(context, () async {
-                          await c.records.deleteAttachment(pid, a.id);
-                        });
-                      }
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: context.tr('사진에서 글자 읽기'),
+                        icon: const Icon(Icons.document_scanner_outlined),
+                        onPressed: () async {
+                          await attempt(context, () async {
+                            final epoch = c.captureSession();
+                            final image = await c.photo(pid, id, a.id);
+                            if (!context.mounted) return;
+                            final reviewed = await reviewRecordInput(
+                              context,
+                              c,
+                              pid,
+                              photo: image,
+                              kind: e.kind,
+                              currentFields: e.fields,
+                            );
+                            if (!context.mounted || reviewed == null) return;
+                            c.requireSession(epoch);
+                            final current = c.records.entry(pid, id);
+                            if (current == null) return;
+                            await editEntry(
+                              context,
+                              c,
+                              current.kind,
+                              entry: current,
+                              initialNote: appendReviewedInput(
+                                current.note,
+                                reviewed.text,
+                              ),
+                              initialFields: {
+                                for (final field in reviewed.fields.entries)
+                                  if ((current.fields[field.key] ?? '')
+                                      .trim()
+                                      .isEmpty)
+                                    field.key: field.value,
+                              },
+                            );
+                          });
+                        },
+                      ),
+                      IconButton(
+                        tooltip: context.tr('사진 삭제'),
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () async {
+                          if (await confirm(
+                                context,
+                                context.tr('사진을 삭제할까요?'),
+                                context.tr('이 기록에 저장된 사진을 삭제합니다.'),
+                              ) &&
+                              context.mounted) {
+                            await attempt(context, () async {
+                              await c.records.deleteAttachment(pid, a.id);
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

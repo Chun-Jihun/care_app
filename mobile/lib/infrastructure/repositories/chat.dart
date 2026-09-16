@@ -1,6 +1,7 @@
 import '../../domain/records.dart';
 import '../../domain/chat.dart';
 import '../sqlite_session.dart';
+import '../../domain/ai.dart';
 
 final class SqliteChat {
   SqliteChat(this._store);
@@ -61,6 +62,9 @@ final class SqliteChat {
           (r) => ChatMessage(
             id: r['id'] as String,
             patientId: pid,
+            reply: r['reply'] == null
+                ? null
+                : AiReply.decode(r['reply'] as String),
             text: r['text'] as String,
             createdAt: DateTime.fromMillisecondsSinceEpoch(
               r['created_at'] as int,
@@ -79,20 +83,35 @@ final class SqliteChat {
       throw CareError(CareErrorCode.invalidQuestionLength);
     }
     final at = now ?? DateTime.now(), id = RecordIds.next();
-    _store.connection.execute('INSERT INTO chat_message VALUES(?,?,?,?,?)', [
-      id,
-      pid,
-      text.trim(),
-      at.millisecondsSinceEpoch,
-      policy.days == null
-          ? null
-          : at.add(Duration(days: policy.days!)).millisecondsSinceEpoch,
-    ]);
+    _store.connection.execute(
+      'INSERT INTO chat_message(id,patient_id,text,created_at,expires_at) VALUES(?,?,?,?,?)',
+      [
+        id,
+        pid,
+        text.trim(),
+        at.millisecondsSinceEpoch,
+        policy.days == null
+            ? null
+            : at.add(Duration(days: policy.days!)).millisecondsSinceEpoch,
+      ],
+    );
     return ChatMessage(
       id: id,
       patientId: pid,
       text: text.trim(),
       createdAt: at,
+    );
+  }
+
+  void setChatReply(String pid, String id, AiReply reply) {
+    _store.scoped('chat_message', pid, id);
+    final encoded = AiReply.decode(reply.encode()).encode();
+    for (final source in reply.sources) {
+      _store.scoped('care_entry', pid, source.id);
+    }
+    _store.connection.execute(
+      'UPDATE chat_message SET reply=? WHERE patient_id=? AND id=? AND (expires_at IS NULL OR expires_at>?)',
+      [encoded, pid, id, DateTime.now().millisecondsSinceEpoch],
     );
   }
 

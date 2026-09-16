@@ -1,6 +1,8 @@
 import '../domain/records.dart';
 import '../domain/chat.dart';
 import '../domain/drafts.dart';
+import '../domain/ai.dart';
+import '../domain/record_lookup.dart';
 
 /// Internal application persistence port. Screens and AI receive feature APIs,
 /// never this full repository or its implementation.
@@ -10,6 +12,7 @@ abstract interface class NotebookRepository {
   void pruneChats({DateTime? now});
   List<ChatMessage> chatMessages(String pid, {DateTime? now});
   ChatMessage addChatMessage(String pid, String text, {DateTime? now});
+  void setChatReply(String pid, String id, AiReply reply);
   void deleteChatMessage(String pid, String id);
   void clearChatMessages(String pid);
   String? setting(String key);
@@ -35,6 +38,7 @@ abstract interface class NotebookRepository {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
   });

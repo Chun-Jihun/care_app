@@ -1,0 +1,14 @@
+[
+  {
+    "path": "E:\\project\\care_app\\data\\mobile-ai\\sources\\llama-b10903-bin-win-cpu-x64.zip",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b10903/llama-b10903-bin-win-cpu-x64.zip",
+    "bytes": 18423911,
+    "sha256": "b009259d362662f4d73633773080e0ce5d748b8556290b7973fc7249b3b83806"
+  },
+  {
+    "path": "E:\\project\\care_app\\data\\mobile-ai\\sources\\silero-v6.2.onnx",
+    "url": "https://raw.githubusercontent.com/snakers4/silero-vad/be95df9152c0d7618fa1edfeb296fc3dae32376f/src/silero_vad/data/silero_vad.onnx",
+    "bytes": 2327524,
+    "sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3"
+  }
+]

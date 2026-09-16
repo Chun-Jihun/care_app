@@ -1,6 +1,6 @@
 # 앱 언어 관리
 
-지원 코드: `ko`, `en`, `ja`, `zh_Hans`, `zh_Hant`. `AppLanguage`에 표시 언어와 Flutter `Locale`을 정의한다. 중국어 스크립트를 명시하므로 간체와 번체를 각각 선택할 수 있다.
+번역 코드: `ko`, `en`, `ja`, `zh_Hans`, `zh_Hant`. `AppLanguage`에 표시 언어와 Flutter `Locale`을 정의하며 중국어 스크립트를 구분한다. 2026-09-11 사용자 요청에 따라 공통 `LanguagePicker`는 잠금 화면과 설정 모두 비활성화했다. 문서·언어별 지원 준비가 끝난 후 변경 UI를 다시 연결한다. 기존 선택은 보존하며 아래 저장 API와 번역 자산은 향후 재개를 위해 유지한다.
 
 `catalogs/*.json`이 번역 원본이다. 한국어 원문을 키로 사용하며 다섯 파일에서 키와 `{0}`, `{1}` 등 자리표시자를 일치시킨다. `catalogs.g.dart`는 직접 편집하지 않는다. `mobile/`에서 실행:
 

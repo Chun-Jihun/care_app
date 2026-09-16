@@ -1,26 +1,71 @@
 # Local secrets and environment overrides
 .env
 .env.*
+*.env
+*.env.*
 !.env.example
+
+# Signing credentials and private keys, even when copied outside mobile/
+key.properties
+*.keystore
+*.jks
+*.key
+*.pem
+*.p8
+*.p12
+*.pfx
+*.mobileprovision
 
 # Downloaded model weights and local model artifacts
 /models/
 /artifacts/models/
 *.gguf
 *.safetensors
+*.bin
+*.careai
+*.onnx
+*.onnx.data
+*.pt
+*.pth
+*.ckpt
+*.pdparams
+*.pdmodel
+*.pdiparams
+*.pdiparams.info
+*.npy
+*.npz
+*.tflite
+*.mlmodel
+*.mlpackage/
+checkpoint-*/
 
 # Downloaded or generated datasets and evaluation outputs
-/data/raw/
-/data/staged/
+/data/*
+!/data/.gitkeep
 /artifacts/data/raw/
 /artifacts/data/staged/
 /artifacts/eval/**/results/
 /runs/
 /results/
+/outputs/
+/wandb/
+/mlruns/
+/lightning_logs/
+
+# Local notebooks and backups are sensitive even when encrypted
+*.carebackup
+*.enc
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+# Frozen synthetic compatibility fixture; never replace it with a real backup
+!/mobile/test/fixtures/legacy_selective_v2.carebackup
 
 # Python environments and caches
-.venv/
-.venv-qwen35/
+.venv*/
 venv/
 __pycache__/
 *.py[cod]
@@ -33,6 +78,14 @@ __pycache__/
 /temp.ipynb
 
 # Local mobile SDKs, dependency caches and build output
+*.apk
+*.aab
+*.apks
+*.ipa
+*.aar
+*.so
+*.dylib
+*.dll
 /.tools/
 /mobile/.dart_tool/
 /mobile/build/
@@ -56,9 +109,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# data folders
-/data/*
-!/data/.gitkeep
-
-#medagentbench
-/medagentbench/*
+# Downloaded benchmark checkout (cover both spellings on case-sensitive Git)
+/MedAgentBench/
+/medagentbench/

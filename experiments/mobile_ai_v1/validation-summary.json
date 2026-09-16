@@ -1,0 +1,341 @@
+{
+  "medical_release_gate_result": false,
+  "quality_gate_result": false,
+  "normalization": "Unicode casefold and whitespace removal only",
+  "groups": {
+    "chat": {
+      "cases": 5,
+      "native_errors": 0,
+      "criterion_passes": 3,
+      "milliseconds_range": [
+        11082,
+        32857
+      ]
+    },
+    "ocr": {
+      "cases": 20,
+      "native_errors": 0,
+      "criterion_passes": 20,
+      "milliseconds_range": [
+        400,
+        787
+      ],
+      "normalized_exact": 19,
+      "cer": 0.009925558312655087,
+      "per_case": [
+        {
+          "id": "ocr-ko",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 12
+        },
+        {
+          "id": "ocr-en",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 12
+        },
+        {
+          "id": "ocr-ja",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 12
+        },
+        {
+          "id": "ocr-zh-Hans",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 12
+        },
+        {
+          "id": "ocr-zh-Hant",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 12
+        },
+        {
+          "id": "ocr-text-FV-OCR-ko-16-clean",
+          "normalized_exact": false,
+          "errors": 4,
+          "characters": 12
+        },
+        {
+          "id": "ocr-text-FV-OCR-ko-19-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 10
+        },
+        {
+          "id": "ocr-text-FV-OCR-en-16-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 14
+        },
+        {
+          "id": "ocr-text-FV-OCR-en-19-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 17
+        },
+        {
+          "id": "ocr-text-FV-OCR-ja-16-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 13
+        },
+        {
+          "id": "ocr-text-FV-OCR-ja-19-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 10
+        },
+        {
+          "id": "ocr-text-FV-OCR-zh-Hans-16-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 9
+        },
+        {
+          "id": "ocr-text-FV-OCR-zh-Hans-19-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 10
+        },
+        {
+          "id": "ocr-text-FV-OCR-zh-Hant-16-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 9
+        },
+        {
+          "id": "ocr-text-FV-OCR-zh-Hant-19-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 10
+        },
+        {
+          "id": "ocr-page-FV-PAGE-ko-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 45
+        },
+        {
+          "id": "ocr-page-FV-PAGE-en-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 54
+        },
+        {
+          "id": "ocr-page-FV-PAGE-ja-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 46
+        },
+        {
+          "id": "ocr-page-FV-PAGE-zh-Hans-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 42
+        },
+        {
+          "id": "ocr-page-FV-PAGE-zh-Hant-clean",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 42
+        }
+      ]
+    },
+    "speech": {
+      "cases": 4,
+      "native_errors": 0,
+      "criterion_passes": 4,
+      "milliseconds_range": [
+        4613,
+        7390
+      ],
+      "normalized_exact": 1,
+      "cer": 0.1079136690647482,
+      "per_case": [
+        {
+          "id": "speech-ko",
+          "normalized_exact": false,
+          "errors": 10,
+          "characters": 34
+        },
+        {
+          "id": "speech-en",
+          "normalized_exact": true,
+          "errors": 0,
+          "characters": 60
+        },
+        {
+          "id": "speech-ja",
+          "normalized_exact": false,
+          "errors": 2,
+          "characters": 25
+        },
+        {
+          "id": "speech-zh",
+          "normalized_exact": false,
+          "errors": 3,
+          "characters": 20
+        }
+      ]
+    },
+    "silence": {
+      "cases": 1,
+      "native_errors": 0,
+      "criterion_passes": 1,
+      "milliseconds_range": [
+        102,
+        102
+      ]
+    },
+    "control": {
+      "cases": 1,
+      "native_errors": 0,
+      "criterion_passes": 1
+    }
+  },
+  "apk": {
+    "bytes": 62125564,
+    "sha256": "47b20df5cdb91b7cddb2a11a889ae2ca040ced343a27152447bceb7eabecdc4e",
+    "libraries": [
+      {
+        "name": "lib/arm64-v8a/libapp.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          65536,
+          65536,
+          65536
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libdartjni.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libflutter.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          65536,
+          65536,
+          65536
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libggml-base.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libggml-cpu.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libggml.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libllama.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libmtmd.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsherpa-onnx-c-api.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsherpa-onnx-cxx-api.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsqlcipher.so",
+        "machine": 183,
+        "cpu_library": true,
+        "load_alignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "aligned_16k": true
+      }
+    ]
+  },
+  "manifest_sha256": "5c07dcf499c8727b0598950f7eb9312c3029e997639b9b2f57b10af478a04295",
+  "native_report_sha256": "0a249455ae517e99adf50e745205a455d3569174b084919847861fa4fe02ea1d"
+}

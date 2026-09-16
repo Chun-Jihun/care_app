@@ -2,3 +2,4 @@
 "NSCameraUsageDescription" = "食事や処方資料の写真を記録に添付します。";
 "NSPhotoLibraryUsageDescription" = "選択した写真を記録に添付します。";
 "NSFaceIDUsageDescription" = "ケア手帳のロックを解除します。";
+"NSMicrophoneUsageDescription" = "音声を端末内で文字に変換し、記録の入力を補助します。";

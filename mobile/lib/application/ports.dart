@@ -13,7 +13,10 @@ abstract interface class SecretStore {
 /// Typed access to authentication preferences; raw key storage stays private.
 abstract interface class Credentials {
   Future<bool> hasPin();
+  Future<bool> notebookStarted();
+  Future<void> markNotebookStarted();
   Future<void> setPin(String pin, {required void Function() beforeCommit});
+  Future<void> removePin({required void Function() beforeCommit});
   Future<void> verifyPin(String pin);
   Future<bool> deviceEnabled();
   Future<void> setDeviceEnabled(bool value);

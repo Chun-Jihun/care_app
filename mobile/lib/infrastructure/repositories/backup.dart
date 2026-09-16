@@ -6,6 +6,7 @@ import '../../domain/records.dart';
 import '../../domain/backup.dart';
 import '../../application/notebook_repository.dart';
 import '../sqlite_session.dart';
+import '../../domain/ai.dart';
 
 /// The allowlist is also the insertion order for a self-contained snapshot.
 const _backupTables = [
@@ -88,9 +89,36 @@ final class SqliteBackup {
         ),
       ];
       for (final table in order) {
-        final columns = backupColumnsV1[table]!.keys.toList();
+        final columns = backupColumnsV2[table]!.keys.toList();
         for (final source in rows[table]!) {
           final row = Map<String, Object?>.from(source);
+          if (table == 'chat_message' && row['reply'] != null) {
+            final reply = AiReply.decode(row['reply'] as String);
+            final references = <AiReference>[];
+            for (final ref in reply.sources) {
+              final entry = rows['care_entry']!
+                  .where((e) => e['id'] == ref.id)
+                  .firstOrNull;
+              if (entry == null) {
+                continue; // Source omitted from selective backup or deleted.
+              }
+              if (entry['patient_id'] != source['patient_id']) {
+                throw CareError(CareErrorCode.recordPatientMismatch);
+              }
+              references.add(AiReference(mapped(ref.id), ref.version));
+            }
+            row['reply'] = AiReply(
+              reply.kind == AiReplyKind.records && references.isEmpty
+                  ? AiReplyKind.unavailable
+                  : reply.kind,
+              sources: references,
+              model: reply.model,
+              lookup: reply.kind == AiReplyKind.records && references.isEmpty
+                  ? null
+                  : reply.lookup,
+              hasMore: reply.hasMore && references.length == 8,
+            ).encode();
+          }
           for (final key in [
             'id',
             'patient_id',

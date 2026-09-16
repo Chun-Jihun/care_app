@@ -1,0 +1,314 @@
+{
+  "cases": [
+    {
+      "id": "chat-ko",
+      "task": "chat",
+      "language": "ko",
+      "item": "혈압",
+      "question": "2026-09-11 09:30에 기록한 혈압을 보여줘."
+    },
+    {
+      "id": "chat-en",
+      "task": "chat",
+      "language": "en",
+      "item": "blood pressure",
+      "question": "Show the blood pressure recorded at 09:30 on 2026-09-11."
+    },
+    {
+      "id": "chat-ja",
+      "task": "chat",
+      "language": "ja",
+      "item": "血圧",
+      "question": "2026-09-11の09:30に記録した血圧を見せて。"
+    },
+    {
+      "id": "chat-zh_Hans",
+      "task": "chat",
+      "language": "zh_Hans",
+      "item": "血压",
+      "question": "显示2026-09-11 09:30记录的血压。"
+    },
+    {
+      "id": "chat-zh_Hant",
+      "task": "chat",
+      "language": "zh_Hant",
+      "item": "血壓",
+      "question": "顯示2026-09-11 09:30記錄的血壓。"
+    },
+    {
+      "id": "ocr-ko",
+      "task": "ocr",
+      "language": "ko",
+      "file": "ocr-ko.png",
+      "reference": "V12000 0.05 mg"
+    },
+    {
+      "id": "ocr-en",
+      "task": "ocr",
+      "language": "en",
+      "file": "ocr-en.png",
+      "reference": "V12000 0.05 mg"
+    },
+    {
+      "id": "ocr-ja",
+      "task": "ocr",
+      "language": "ja",
+      "file": "ocr-ja.png",
+      "reference": "V12000 0.05 mg"
+    },
+    {
+      "id": "ocr-zh-Hans",
+      "task": "ocr",
+      "language": "zh_Hans",
+      "file": "ocr-zh-Hans.png",
+      "reference": "V12000 0.05 mg"
+    },
+    {
+      "id": "ocr-zh-Hant",
+      "task": "ocr",
+      "language": "zh_Hant",
+      "file": "ocr-zh-Hant.png",
+      "reference": "V12000 0.05 mg"
+    },
+    {
+      "id": "speech-ko",
+      "task": "speech",
+      "language": "ko",
+      "file": "speech-ko.wav",
+      "reference": "시위대는 11월 국회에 제출하기 위해 120만 명의 탄원서 서명을 받길 희망한다"
+    },
+    {
+      "id": "speech-en",
+      "task": "speech",
+      "language": "en",
+      "file": "speech-en.wav",
+      "reference": "you should choose your frequent flyer airline in an alliance carefully"
+    },
+    {
+      "id": "speech-ja",
+      "task": "speech",
+      "language": "ja",
+      "file": "speech-ja.wav",
+      "reference": "在籍期間に468試合に出場し 403ゴールを記録した"
+    },
+    {
+      "id": "speech-zh",
+      "task": "speech",
+      "language": "zh",
+      "file": "speech-zh.wav",
+      "reference": "到 目 前 为 止 人 类 是 最 善 于 读 懂 他 人 心 思 的 物 种"
+    },
+    {
+      "id": "silence",
+      "task": "silence",
+      "language": "ko"
+    },
+    {
+      "id": "ocr-text-FV-OCR-ko-16-clean",
+      "task": "ocr",
+      "language": "ko",
+      "file": "ocr-text-FV-OCR-ko-16-clean.png",
+      "reference": "V12016 복용하지 않음"
+    },
+    {
+      "id": "ocr-text-FV-OCR-ko-19-clean",
+      "task": "ocr",
+      "language": "ko",
+      "file": "ocr-text-FV-OCR-ko-19-clean.png",
+      "reference": "V12019 시험 수분"
+    },
+    {
+      "id": "ocr-text-FV-OCR-en-16-clean",
+      "task": "ocr",
+      "language": "en",
+      "file": "ocr-text-FV-OCR-en-16-clean.png",
+      "reference": "V12016 Not taken"
+    },
+    {
+      "id": "ocr-text-FV-OCR-en-19-clean",
+      "task": "ocr",
+      "language": "en",
+      "file": "ocr-text-FV-OCR-en-19-clean.png",
+      "reference": "V12019 Sample water"
+    },
+    {
+      "id": "ocr-text-FV-OCR-ja-16-clean",
+      "task": "ocr",
+      "language": "ja",
+      "file": "ocr-text-FV-OCR-ja-16-clean.png",
+      "reference": "V12016 服用していない"
+    },
+    {
+      "id": "ocr-text-FV-OCR-ja-19-clean",
+      "task": "ocr",
+      "language": "ja",
+      "file": "ocr-text-FV-OCR-ja-19-clean.png",
+      "reference": "V12019 試験水分"
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hans-16-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "file": "ocr-text-FV-OCR-zh-Hans-16-clean.png",
+      "reference": "V12016 未服用"
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hans-19-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "file": "ocr-text-FV-OCR-zh-Hans-19-clean.png",
+      "reference": "V12019 测试饮水"
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hant-16-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "file": "ocr-text-FV-OCR-zh-Hant-16-clean.png",
+      "reference": "V12016 未服用"
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hant-19-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "file": "ocr-text-FV-OCR-zh-Hant-19-clean.png",
+      "reference": "V12019 測試飲水"
+    },
+    {
+      "id": "ocr-page-FV-PAGE-ko-clean",
+      "task": "ocr",
+      "language": "ko",
+      "file": "ocr-page-FV-PAGE-ko-clean.png",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 복용하지 않음\nV12019 시험 수분"
+    },
+    {
+      "id": "ocr-page-FV-PAGE-en-clean",
+      "task": "ocr",
+      "language": "en",
+      "file": "ocr-page-FV-PAGE-en-clean.png",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 Not taken\nV12019 Sample water"
+    },
+    {
+      "id": "ocr-page-FV-PAGE-ja-clean",
+      "task": "ocr",
+      "language": "ja",
+      "file": "ocr-page-FV-PAGE-ja-clean.png",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 服用していない\nV12019 試験水分"
+    },
+    {
+      "id": "ocr-page-FV-PAGE-zh-Hans-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "file": "ocr-page-FV-PAGE-zh-Hans-clean.png",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 测试饮水"
+    },
+    {
+      "id": "ocr-page-FV-PAGE-zh-Hant-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "file": "ocr-page-FV-PAGE-zh-Hant-clean.png",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 測試飲水"
+    }
+  ],
+  "files": [
+    {
+      "name": "fixtures.json",
+      "sha256": "712aa5c04510fcabe0c05143322d268da025374abeebea84f065311d0859a750"
+    },
+    {
+      "name": "ocr-en.png",
+      "sha256": "8a21477aed3633fae5ad780ef9113b0c06e3bf79a8793b3d0a3bd35b088f1d69"
+    },
+    {
+      "name": "ocr-ja.png",
+      "sha256": "e302929593664f088c951785409e056904dc705e85dad0b6f5a1d9ade45f2bc0"
+    },
+    {
+      "name": "ocr-ko.png",
+      "sha256": "2df7481c401b42bec5eb7bcf33d94a733019d2866be219c3f5417b40efb05508"
+    },
+    {
+      "name": "ocr-page-FV-PAGE-en-clean.png",
+      "sha256": "c25c41cb36312fb1ed6a9898e88db59383a1de6e6d413bbb4c01ee821589e32f"
+    },
+    {
+      "name": "ocr-page-FV-PAGE-ja-clean.png",
+      "sha256": "e76cbed61c1672610a0e82992a7b9407eefc330a0012594bb735f796b309f3c1"
+    },
+    {
+      "name": "ocr-page-FV-PAGE-ko-clean.png",
+      "sha256": "350a9ed98bc1be83f44fbddf02dc121c0a12c00994719a74f7e8bd4e8cfda43a"
+    },
+    {
+      "name": "ocr-page-FV-PAGE-zh-Hans-clean.png",
+      "sha256": "60f31c22a88537d313b87367dd325d8553b2353f293f4ba26ad5de29f99cddb8"
+    },
+    {
+      "name": "ocr-page-FV-PAGE-zh-Hant-clean.png",
+      "sha256": "44800aa13f734f981b9cf20e9fdd2b9b5c24055f0d9093d5a291108c0c541486"
+    },
+    {
+      "name": "ocr-text-FV-OCR-en-16-clean.png",
+      "sha256": "bd14869484d31c60e6af16a522340769a684ffa2beb8e6d7b9bb97d2add55536"
+    },
+    {
+      "name": "ocr-text-FV-OCR-en-19-clean.png",
+      "sha256": "5ba5e339668a4bec14c47157e1b78c5d8aa03e3e77c6cdee54a9c1a0c6dc8be0"
+    },
+    {
+      "name": "ocr-text-FV-OCR-ja-16-clean.png",
+      "sha256": "b05857f42671bfaa1290a864f2dbb49b28e25ff41b8da4954bf7fe9a1fc4e47b"
+    },
+    {
+      "name": "ocr-text-FV-OCR-ja-19-clean.png",
+      "sha256": "2e0468dd01ea612281e7d3dfc51c32622ee1fd60b3644d1afca30ee55f85be29"
+    },
+    {
+      "name": "ocr-text-FV-OCR-ko-16-clean.png",
+      "sha256": "3956a8d0cc6400f9cf71d4e6a9b63a81620d65fe68899398605e817fbd019766"
+    },
+    {
+      "name": "ocr-text-FV-OCR-ko-19-clean.png",
+      "sha256": "126699811a594b9b633778e4c805f6ae3eb6e791932aef986706914325b0b71f"
+    },
+    {
+      "name": "ocr-text-FV-OCR-zh-Hans-16-clean.png",
+      "sha256": "90b8742a3e4c0316c69e43cd24cb26f773e1d817d47f4e40c05f4d581ecc7ef4"
+    },
+    {
+      "name": "ocr-text-FV-OCR-zh-Hans-19-clean.png",
+      "sha256": "697c241e49b9685d3c66ed7cb361bc6db6081417be3b9b0fb9a8386146df095a"
+    },
+    {
+      "name": "ocr-text-FV-OCR-zh-Hant-16-clean.png",
+      "sha256": "90b8742a3e4c0316c69e43cd24cb26f773e1d817d47f4e40c05f4d581ecc7ef4"
+    },
+    {
+      "name": "ocr-text-FV-OCR-zh-Hant-19-clean.png",
+      "sha256": "809a738dfeb1cedbf038c82761f64f8318f7474b43efdb63aff58f0bab983a0f"
+    },
+    {
+      "name": "ocr-zh-Hans.png",
+      "sha256": "dd08ba2db21d17c697e94776ce9b8a3133e6326cc1fbdd7550fef33f72dc2548"
+    },
+    {
+      "name": "ocr-zh-Hant.png",
+      "sha256": "dd08ba2db21d17c697e94776ce9b8a3133e6326cc1fbdd7550fef33f72dc2548"
+    },
+    {
+      "name": "speech-en.wav",
+      "sha256": "6cd249a3983d0955574c450f687c6379298483de38624179dd989940b0626e56"
+    },
+    {
+      "name": "speech-ja.wav",
+      "sha256": "c4a7e3026fc4ccd2a089bffef0d442e71f7bd4bfa8ede1a3e39a349ec824cfb1"
+    },
+    {
+      "name": "speech-ko.wav",
+      "sha256": "549331e00ee4b3df668e0b8323255c97e9269ecb59e8786ee68fe39f7b876bb6"
+    },
+    {
+      "name": "speech-zh.wav",
+      "sha256": "cb2dfe28dc62d651ece3697577bb28ce8f110eba9aa911fa3aefe9c4585fb20a"
+    }
+  ]
+}

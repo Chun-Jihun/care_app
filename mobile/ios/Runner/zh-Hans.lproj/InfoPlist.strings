@@ -2,3 +2,4 @@
 "NSCameraUsageDescription" = "将食物和处方资料照片附加到记录中。";
 "NSPhotoLibraryUsageDescription" = "将所选照片附加到记录中。";
 "NSFaceIDUsageDescription" = "解锁照护手册。";
+"NSMicrophoneUsageDescription" = "在设备上将语音转为文字，帮助填写记录。";

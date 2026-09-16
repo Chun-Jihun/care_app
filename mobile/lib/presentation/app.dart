@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../application/care_controller.dart';
-import '../domain/records.dart';
 import 'common.dart';
 import 'shell.dart';
 
@@ -45,7 +44,7 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused &&
         !widget.controller.externalOperation) {
-      widget.controller.lock();
+      widget.controller.handleBackground();
     }
     setState(() => obscured = state != AppLifecycleState.resumed);
     if (state == AppLifecycleState.resumed && widget.controller.unlocked) {
@@ -169,13 +168,12 @@ class LockScreen extends StatefulWidget {
 }
 
 class _LockScreenState extends State<LockScreen> {
-  final pin = TextEditingController(), repeat = TextEditingController();
+  final pin = TextEditingController();
   bool working = false;
   Object? error;
   @override
   void dispose() {
     pin.dispose();
-    repeat.dispose();
     super.dispose();
   }
 
@@ -230,41 +228,27 @@ class _LockScreenState extends State<LockScreen> {
                   c.hasPin
                       ? context.tr('잠금 번호를 입력해 수첩을 열어 주세요.')
                       : context.tr(
-                          '간병수첩에 오신 것을 환영해요.\n이 기기에 기록을 안전하게 보관할\n6자리 잠금 번호를 정해 주세요.',
+                          '간병수첩에 오신 것을 환영해요.\n바로 기록을 시작할 수 있어요.\n앱 잠금은 설정에서 켤 수 있습니다.',
                         ),
                   style: const TextStyle(height: 1.7),
                 ),
                 const SizedBox(height: 28),
-                TextField(
-                  controller: pin,
-                  obscureText: true,
-                  enableIMEPersonalizedLearning: false,
-                  maxLength: 6,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: context.tr('잠금 번호 6자리'),
-                  ),
-                  onSubmitted: (_) {
-                    if (c.hasPin && !working) {
-                      run(() => c.unlockPin(pin.text));
-                    }
-                  },
-                ),
-                if (!c.hasPin)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: TextField(
-                      controller: repeat,
-                      obscureText: true,
-                      enableIMEPersonalizedLearning: false,
-                      maxLength: 6,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        labelText: context.tr('잠금 번호 다시 입력'),
-                      ),
+                if (c.hasPin)
+                  TextField(
+                    controller: pin,
+                    obscureText: true,
+                    enableIMEPersonalizedLearning: false,
+                    maxLength: 6,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: context.tr('잠금 번호 6자리'),
                     ),
+                    onSubmitted: (_) {
+                      if (c.hasPin && !working) {
+                        run(() => c.unlockPin(pin.text));
+                      }
+                    },
                   ),
                 if (error != null)
                   Padding(
@@ -283,12 +267,7 @@ class _LockScreenState extends State<LockScreen> {
                           if (c.hasPin) {
                             await c.unlockPin(pin.text);
                           } else {
-                            if (pin.text != repeat.text) {
-                              throw CareError(
-                                CareErrorCode.pinConfirmationMismatch,
-                              );
-                            }
-                            await c.setPin(pin.text);
+                            await c.startWithoutLock();
                           }
                         }),
                   child: Padding(

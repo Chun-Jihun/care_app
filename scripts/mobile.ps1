@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('SetupAndroid','Dependencies','Analyze','Test','BuildAndroid','Run')]
+    [ValidateSet('SetupAndroid','Dependencies','Analyze','Test','Validate','BuildAndroid','Run')]
     [string]$Action = 'Test'
 )
 $ErrorActionPreference = 'Stop'
@@ -36,7 +36,16 @@ try {
         'Dependencies' { & $flutterCommand pub get }
         'Analyze' { & $flutterCommand analyze }
         'Test' { & $flutterCommand test }
-        'BuildAndroid' { & $flutterCommand build apk --release }
+        'Validate' {
+            # Uses installed dependencies and never starts a device or installs models.
+            $dartCommand = Join-Path $toolRoot 'flutter\bin\cache\dart-sdk\bin\dart.exe'
+            & $dartCommand run tool/generate_translations.dart --check
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & $flutterCommand analyze --no-pub
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & $flutterCommand test --no-pub
+        }
+        'BuildAndroid' { & $flutterCommand build apk --release --target-platform=android-arm64 }
         'Run' { & $flutterCommand run }
     }
     $resultCode = $LASTEXITCODE

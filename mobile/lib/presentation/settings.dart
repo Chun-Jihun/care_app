@@ -1,10 +1,11 @@
 import 'language_picker.dart';
+import 'ai_settings.dart';
+import 'app_lock_settings.dart';
 import '../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
-import '../domain/records.dart';
 import 'common.dart';
 import 'editors.dart';
 import 'draft_page.dart';
@@ -33,6 +34,7 @@ Widget contactCard(BuildContext context, CareController c) => Card(
 );
 List<Widget> settingsContent(BuildContext context, CareController c) => [
   LanguagePicker(c),
+  AiSettings(c),
   Section(context.tr('내 수첩 설정')),
   Text(context.tr('기록은 이 기기에 암호화해 보관됩니다.'), style: TextStyle(color: forest)),
   Section(
@@ -99,25 +101,7 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
               await c.setImportedRemindersEnabled(c.selectedId!, v);
             }),
           ),
-        FutureBuilder<bool>(
-          future: c.deviceAuthEnabled,
-          builder: (context, snapshot) => SwitchListTile(
-            title: Text(context.tr('기기 인증으로 열기')),
-            subtitle: Text(context.tr('지문·얼굴 또는 기기 잠금으로 인증')),
-            value: snapshot.data ?? false,
-            onChanged: (v) => attempt(context, () => c.enableDeviceAuth(v)),
-          ),
-        ),
-        ListTile(
-          title: Text(context.tr('잠금 번호 변경')),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => changePin(context, c),
-        ),
-        ListTile(
-          title: Text(context.tr('지금 잠그기')),
-          trailing: const Icon(Icons.lock_outline),
-          onTap: c.lock,
-        ),
+        AppLockSettings(c),
       ],
     ),
   ),
@@ -229,29 +213,3 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     child: Text(context.tr('모든 데이터 삭제')),
   ),
 ];
-Future<void> changePin(BuildContext context, CareController c) async {
-  final a = TextEditingController(), b = TextEditingController();
-  try {
-    await pushPage(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => EditorPage(
-          title: context.tr('잠금 번호 변경'),
-          content: (_) => [
-            textField(a, context.tr('새 잠금 번호 (숫자 6자리)'), secret: true),
-            textField(b, context.tr('잠금 번호 확인'), secret: true),
-          ],
-          save: () async {
-            if (a.text != b.text) {
-              throw CareError(CareErrorCode.pinConfirmationMismatch);
-            }
-            await c.setPin(a.text);
-          },
-        ),
-      ),
-    );
-  } finally {
-    a.dispose();
-    b.dispose();
-  }
-}

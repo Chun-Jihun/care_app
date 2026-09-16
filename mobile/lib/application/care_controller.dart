@@ -21,11 +21,22 @@ import 'services/backup_service.dart';
 import 'services/photo_service.dart';
 import 'services/reminder_service.dart';
 
+import 'dart:async';
+
+import '../domain/ai.dart';
+import 'services/ai_service.dart';
+
 /// Session lifecycle and composition. Feature services own feature operations.
 class CareController extends ChangeNotifier {
-  CareController(NotebookVault vault, PlatformServices platform)
-    : _vault = vault,
-      _platform = platform;
+  CareController(
+    NotebookVault vault,
+    PlatformServices platform, {
+    this._aiRuntime = const UnavailableAiRuntime(),
+    this.microphone,
+  }) : _vault = vault,
+       _platform = platform;
+  final LocalAiRuntime _aiRuntime;
+  final MicrophoneCapture Function()? microphone;
   final NotebookVault _vault;
   final PlatformServices _platform;
   bool _ready = false, _unlocked = false, _hasPin = false, _busy = false;
@@ -61,6 +72,7 @@ class CareController extends ChangeNotifier {
   late final contextTasks = ContextTasks(_scope);
 
   void _advanceEpoch() {
+    _aiRuntime.cancel();
     contextTasks.cancelAll();
     _epoch++;
   }
@@ -76,6 +88,7 @@ class CareController extends ChangeNotifier {
     notify: draftsChanged,
   );
   late final chat = ChatService(_scope);
+  late final ai = AiService(_scope, contextTasks, chat, _aiRuntime);
   late final backups = BackupService(
     _scope,
     _vault,
@@ -165,6 +178,9 @@ class CareController extends ChangeNotifier {
     _language = AppLanguage.fromCode(await _vault.credentials.language());
     _platform.strings = strings;
     _hasPin = await _vault.credentials.hasPin();
+    if (!_hasPin && await _vault.credentials.notebookStarted()) {
+      await _open(_epoch);
+    }
     _ready = true;
     notifyListeners();
   }
@@ -201,6 +217,20 @@ class CareController extends ChangeNotifier {
     await _refresh(ChangeImpact.all);
   }
 
+  Future<void> startWithoutLock() => _exclusive((epoch) async {
+    if (_hasPin) throw CareError(CareErrorCode.existingPinRequired);
+    await _vault.credentials.markNotebookStarted();
+    _check(epoch, requireUnlock: false);
+    await _open(epoch);
+  }, requireUnlock: false);
+
+  Future<void> disableAppLock(String pin) => _exclusive((epoch) async {
+    await _vault.credentials.verifyPin(pin);
+    _check(epoch);
+    await _vault.credentials.removePin(beforeCommit: () => _check(epoch));
+    _hasPin = false;
+  });
+
   Future<void> setPin(String pin) => _exclusive((epoch) async {
     if (_hasPin && !_unlocked) {
       throw CareError(CareErrorCode.existingPinRequired);
@@ -217,7 +247,7 @@ class CareController extends ChangeNotifier {
     await _open(epoch);
   }, requireUnlock: false);
   Future<void> unlockDevice() => _exclusive((epoch) async {
-    if (!await _vault.credentials.deviceEnabled()) {
+    if (!_hasPin || !await _vault.credentials.deviceEnabled()) {
       throw CareError(CareErrorCode.deviceAuthDisabled);
     }
     if (await _external(_platform.authenticate)) {
@@ -226,14 +256,31 @@ class CareController extends ChangeNotifier {
       throw CareError(CareErrorCode.deviceAuthFallback);
     }
   }, requireUnlock: false);
-  Future<bool> get deviceAuthEnabled => _vault.credentials.deviceEnabled();
+  Future<bool> get deviceAuthEnabled async =>
+      _hasPin && await _vault.credentials.deviceEnabled();
   Future<void> enableDeviceAuth(bool value) => _exclusive((epoch) async {
+    if (!_hasPin) throw CareError(CareErrorCode.deviceAuthDisabled);
     if (value && !await _external(_platform.authenticate)) {
       throw CareError(CareErrorCode.deviceAuthIncomplete);
     }
     _check(epoch);
     await _vault.credentials.setDeviceEnabled(value);
   });
+
+  void handleBackground() {
+    if (_hasPin) {
+      lock();
+      return;
+    }
+    if (!_unlocked) return;
+    drafts.flushAll(locking: true);
+    _aiRuntime.cancel();
+    contextTasks.cancelAll();
+    chat.clearSession();
+    // Keep the editor session valid when authentication is not requested.
+    notifyListeners();
+  }
+
   void lock() {
     if (_unlocked) drafts.flushAll(locking: true);
     chat.clearSession();
@@ -307,7 +354,7 @@ class CareController extends ChangeNotifier {
         ? '기록은 열렸습니다. 저장소 정리는 다음 실행 때 다시 시도합니다.'
         : null;
     if (drafts.takeFlushFailure()) {
-      _notice = '잠금 전 초안 저장에 실패했습니다. 마지막으로 저장된 초안부터 확인해 주세요.';
+      _notice = '초안 저장에 실패했습니다. 마지막으로 저장된 초안부터 확인해 주세요.';
     }
     if ({
       ChangeImpact.all,
@@ -407,6 +454,7 @@ class CareController extends ChangeNotifier {
   }, requireUnlock: false);
   @override
   void dispose() {
+    unawaited(_aiRuntime.dispose());
     contextTasks.cancelAll();
     _vault.close();
     super.dispose();

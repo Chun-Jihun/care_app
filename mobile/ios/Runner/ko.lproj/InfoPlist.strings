@@ -2,3 +2,4 @@
 "NSCameraUsageDescription" = "음식과 처방자료 사진을 기록에 첨부합니다.";
 "NSPhotoLibraryUsageDescription" = "선택한 사진을 기록에 첨부합니다.";
 "NSFaceIDUsageDescription" = "간병수첩 잠금을 해제합니다.";
+"NSMicrophoneUsageDescription" = "음성을 기기에서 글자로 바꾸어 기록 작성을 돕습니다.";

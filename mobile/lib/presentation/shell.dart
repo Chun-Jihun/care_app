@@ -101,10 +101,14 @@ class _CareShellState extends State<CareShell> {
           actions: [
             IconButton(
               tooltip: context.tr('간병 도우미 대화'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(builder: (_) => ChatPage(c)),
-              ),
+              onPressed: () {
+                // A quick second tap must not stack two entry notices.
+                if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(builder: (_) => ChatPage(c)),
+                );
+              },
               icon: const Icon(Icons.chat_bubble_outline, size: 21),
             ),
             PopupMenuButton<String>(
@@ -148,11 +152,12 @@ class _CareShellState extends State<CareShell> {
                 ),
               ),
             ),
-            IconButton(
-              tooltip: context.tr('잠그기'),
-              onPressed: c.lock,
-              icon: const Icon(Icons.lock_outline, size: 20),
-            ),
+            if (c.hasPin)
+              IconButton(
+                tooltip: context.tr('잠그기'),
+                onPressed: c.lock,
+                icon: const Icon(Icons.lock_outline, size: 20),
+              ),
             const SizedBox(width: 4),
           ],
         ),

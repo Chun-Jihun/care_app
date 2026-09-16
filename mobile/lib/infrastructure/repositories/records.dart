@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:sqlite3/sqlite3.dart';
 
 import '../../domain/records.dart';
+import '../../domain/record_lookup.dart';
 import '../sqlite_session.dart';
 
 final class SqliteRecords {
@@ -74,6 +75,7 @@ final class SqliteRecords {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
   }) {
@@ -93,8 +95,21 @@ final class SqliteRecords {
       ]);
     }
     if (limit != null && limit <= 0) return [];
+    if (lookup != null) {
+      where += ' AND occurred_at>=? AND occurred_at<?';
+      args.addAll([
+        lookup.start.millisecondsSinceEpoch,
+        lookup.end.millisecondsSinceEpoch,
+      ]);
+      if (lookup.kind != null) {
+        where += ' AND kind=?';
+        args.add(lookup.kind!.name);
+      }
+    }
     final term = query.trim().toLowerCase();
-    final sqlLimit = limit != null && term.isEmpty ? ' LIMIT ?' : '';
+    final sqlLimit = limit != null && term.isEmpty && lookup == null
+        ? ' LIMIT ?'
+        : '';
     if (sqlLimit.isNotEmpty) args.add(limit);
     var result =
         _readEntries(
@@ -104,8 +119,11 @@ final class SqliteRecords {
           ),
         ).where(
           (e) =>
-              term.isEmpty ||
-              (displayText?.call(e) ?? e.summary).toLowerCase().contains(term),
+              (lookup == null || lookup.matches(e)) &&
+              (term.isEmpty ||
+                  (displayText?.call(e) ?? e.summary).toLowerCase().contains(
+                    term,
+                  )),
         );
     if (limit != null) {
       result = result.take(limit);

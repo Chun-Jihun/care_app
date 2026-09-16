@@ -1,4 +1,7 @@
 import '../l10n/app_strings.dart';
+import 'ai_reply.dart';
+import 'ai_draft_page.dart';
+import 'chat_ai_notice.dart';
 
 import 'dart:async';
 
@@ -6,12 +9,47 @@ import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
 import '../domain/chat.dart';
+import '../domain/errors.dart';
+import '../domain/reviewed_input.dart';
 import 'common.dart';
 import 'editors.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   const ChatPage(this.c, {super.key});
   final CareController c;
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  bool _noticeAccepted = false;
+  CareController get c => widget.c;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(_confirmUse()),
+    );
+  }
+
+  Future<void> _confirmUse() async {
+    if (!mounted || !c.unlocked) return;
+    final session = c.captureSession();
+    final accepted = await showChatAiNotice(context);
+    if (!mounted) return;
+    try {
+      c.requireSession(session);
+    } on CareError {
+      return;
+    }
+    if (accepted) {
+      setState(() => _noticeAccepted = true);
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: c,
@@ -23,22 +61,25 @@ class ChatPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(context.tr('간병 도우미')),
           actions: [
-            PopupMenuButton<String>(
-              tooltip: context.tr('대화 수첩 전환'),
-              onSelected: (id) => attempt(context, () => c.selectPatient(id)),
-              itemBuilder: (_) => c.patients
-                  .map(
-                    (p) => PopupMenuItem(
-                      value: p.id,
-                      child: Text(context.strings.patient(p)),
-                    ),
-                  )
-                  .toList(),
-              icon: const Icon(Icons.people_outline),
-            ),
+            if (_noticeAccepted)
+              PopupMenuButton<String>(
+                tooltip: context.tr('대화 수첩 전환'),
+                onSelected: (id) => attempt(context, () => c.selectPatient(id)),
+                itemBuilder: (_) => c.patients
+                    .map(
+                      (p) => PopupMenuItem(
+                        value: p.id,
+                        child: Text(context.strings.patient(p)),
+                      ),
+                    )
+                    .toList(),
+                icon: const Icon(Icons.people_outline),
+              ),
           ],
         ),
-        body: ChatBody(key: ValueKey(c.selectedId), c: c, pid: c.selectedId!),
+        body: _noticeAccepted
+            ? ChatBody(key: ValueKey(c.selectedId), c: c, pid: c.selectedId!)
+            : const SizedBox.shrink(),
       );
     },
   );
@@ -98,7 +139,9 @@ class _ChatBodyState extends State<ChatBody> {
           context,
           context.tr('질문 보관 방식을 바꿀까요?'),
           value == ChatRetention.session
-              ? context.tr('기기에 저장한 기존 질문을 삭제합니다. 새 질문은 수첩을 잠글 때 지워집니다.')
+              ? context.tr(
+                  '기기에 저장한 기존 질문을 삭제합니다. 새 질문은 앱을 벗어나거나 수첩을 잠글 때 지워집니다.',
+                )
               : context.tr('기존 질문에도 새 기간을 적용합니다. 기간이 지난 질문과 임시 질문은 삭제됩니다.'),
           action: context.tr('변경'),
         )) {
@@ -124,7 +167,7 @@ class _ChatBodyState extends State<ChatBody> {
       error = null;
     });
     try {
-      await widget.c.addChatMessage(widget.pid, input.text);
+      await widget.c.ai.ask(widget.pid, input.text, widget.c.language);
       if (mounted) {
         input.clear();
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -179,7 +222,7 @@ class _ChatBodyState extends State<ChatBody> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    context.tr('{0} · AI 연결 전', [
+                                    context.tr('{0} · 기기 AI', [
                                       context.strings.patient(c.patient),
                                     ]),
                                     style: const TextStyle(
@@ -193,7 +236,7 @@ class _ChatBodyState extends State<ChatBody> {
                             const SizedBox(height: 7),
                             Text(
                               context.tr(
-                                '지금은 질문을 남겨두는 대화창이에요. AI 답변은 제공되지 않으며 질문이 자동 전송되지 않아요.',
+                                '질문은 기기에서 처리합니다. 기록 조회를 지원하며, 의료 조언은 검수된 근거가 준비되기 전까지 보류합니다.',
                               ),
                               style: TextStyle(height: 1.5, fontSize: 13),
                             ),
@@ -294,26 +337,29 @@ class _ChatBodyState extends State<ChatBody> {
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 8,
-                                runSpacing: 8,
-                                children:
-                                    [
-                                          context.tr('약에 관한 질문'),
-                                          context.tr('식사에 관한 질문'),
-                                          context.tr('활동에 관한 질문'),
-                                        ]
-                                        .map(
-                                          (text) => ActionChip(
-                                            label: Text(text),
-                                            onPressed: () => setState(
-                                              () => input.text = '$text: ',
+                              if (c.language == AppLanguage.korean)
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children:
+                                      [
+                                            context.tr('어제 복약 기록'),
+                                            context.tr('이번 주 식사 기록'),
+                                            context.tr('최근 7일 수분 기록'),
+                                          ]
+                                          .map(
+                                            (text) => ActionChip(
+                                              label: Text(text),
+                                              onPressed: input.text.isNotEmpty
+                                                  ? null
+                                                  : () => setState(
+                                                      () => input.text = text,
+                                                    ),
                                             ),
-                                          ),
-                                        )
-                                        .toList(),
-                              ),
+                                          )
+                                          .toList(),
+                                ),
                             ],
                           ),
                         ),
@@ -345,13 +391,15 @@ class _ChatBodyState extends State<ChatBody> {
                                     ),
                                   ),
                                 ),
+                                if (m.reply != null)
+                                  AiReplyView(c, pid, m.reply!),
                                 const SizedBox(height: 6),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Flexible(
                                       child: Text(
-                                        context.tr('{0} {1} · 답변 없음', [
+                                        context.tr('{0} {1}', [
                                           dateText(context, m.createdAt),
                                           timeText(context, m.createdAt),
                                         ]),
@@ -416,6 +464,11 @@ class _ChatBodyState extends State<ChatBody> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
+          if (sending)
+            TextButton(
+              onPressed: c.ai.cancel,
+              child: Text(context.tr('처리 취소')),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Row(
@@ -440,6 +493,28 @@ class _ChatBodyState extends State<ChatBody> {
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
+                ),
+                IconButton(
+                  tooltip: context.tr('음성으로 입력'),
+                  icon: const Icon(Icons.mic_none),
+                  onPressed: sending
+                      ? null
+                      : () async {
+                          final text = await reviewAiInput(context, c, pid);
+                          if (mounted &&
+                              context.mounted &&
+                              text != null &&
+                              c.unlocked &&
+                              c.selectedId == pid) {
+                            await attempt(context, () async {
+                              final combined = appendReviewedInput(
+                                input.text,
+                                text,
+                              );
+                              setState(() => input.text = combined);
+                            });
+                          }
+                        },
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(

@@ -1,0 +1,328 @@
+{
+  "status": "completed",
+  "medical_release_gate_result": false,
+  "checks": [
+    {
+      "id": "chat-ko",
+      "task": "chat",
+      "language": "ko",
+      "pass_criterion": "exact_filter",
+      "output": "{\"day\":\"2026-09-11\",\"item\":\"혈압\",\"kind\":\"lookup\",\"time\":\"09:30\"}",
+      "passed": true,
+      "milliseconds": 32857
+    },
+    {
+      "id": "chat-en",
+      "task": "chat",
+      "language": "en",
+      "pass_criterion": "exact_filter",
+      "output": "{\"day\":\"2026-09-11\",\"item\":null,\"kind\":\"lookup\",\"time\":\"09:30\"}",
+      "passed": false,
+      "milliseconds": 11572
+    },
+    {
+      "id": "chat-ja",
+      "task": "chat",
+      "language": "ja",
+      "pass_criterion": "exact_filter",
+      "output": "{\"day\":\"2026-09-11\",\"item\":null,\"kind\":\"medical\",\"time\":\"09:30\"}",
+      "passed": false,
+      "milliseconds": 11082
+    },
+    {
+      "id": "chat-zh_Hans",
+      "task": "chat",
+      "language": "zh_Hans",
+      "pass_criterion": "exact_filter",
+      "output": "{\"day\":\"2026-09-11\",\"item\":\"血压\",\"kind\":\"lookup\",\"time\":\"09:30\"}",
+      "passed": true,
+      "milliseconds": 11304
+    },
+    {
+      "id": "chat-zh_Hant",
+      "task": "chat",
+      "language": "zh_Hant",
+      "pass_criterion": "exact_filter",
+      "output": "{\"day\":\"2026-09-11\",\"item\":\"血壓\",\"kind\":\"lookup\",\"time\":\"09:30\"}",
+      "passed": true,
+      "milliseconds": 13571
+    },
+    {
+      "id": "ocr-ko",
+      "task": "ocr",
+      "language": "ko",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg",
+      "reference": "V12000 0.05 mg",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 737
+    },
+    {
+      "id": "ocr-en",
+      "task": "ocr",
+      "language": "en",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg",
+      "reference": "V12000 0.05 mg",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 508
+    },
+    {
+      "id": "ocr-ja",
+      "task": "ocr",
+      "language": "ja",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg",
+      "reference": "V12000 0.05 mg",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 451
+    },
+    {
+      "id": "ocr-zh-Hans",
+      "task": "ocr",
+      "language": "zh_Hans",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg",
+      "reference": "V12000 0.05 mg",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 448
+    },
+    {
+      "id": "ocr-zh-Hant",
+      "task": "ocr",
+      "language": "zh_Hant",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg",
+      "reference": "V12000 0.05 mg",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 496
+    },
+    {
+      "id": "speech-ko",
+      "task": "speech",
+      "language": "ko",
+      "pass_criterion": "nonempty_native_output",
+      "output": "12대는 11월 국회 대출하기 위해 120만 명의 험사 서을 받길 한다",
+      "reference": "시위대는 11월 국회에 제출하기 위해 120만 명의 탄원서 서명을 받길 희망한다",
+      "passed": true,
+      "milliseconds": 7390
+    },
+    {
+      "id": "speech-en",
+      "task": "speech",
+      "language": "en",
+      "pass_criterion": "nonempty_native_output",
+      "output": "You should choose your frequent flyer airline in an alliance carefully",
+      "reference": "you should choose your frequent flyer airline in an alliance carefully",
+      "passed": true,
+      "milliseconds": 4613
+    },
+    {
+      "id": "speech-ja",
+      "task": "speech",
+      "language": "ja",
+      "pass_criterion": "nonempty_native_output",
+      "output": "石期間に468試合に出場し403ゴールを記録した",
+      "reference": "在籍期間に468試合に出場し 403ゴールを記録した",
+      "passed": true,
+      "milliseconds": 5293
+    },
+    {
+      "id": "speech-zh",
+      "task": "speech",
+      "language": "zh",
+      "pass_criterion": "nonempty_native_output",
+      "output": "到目前为止 人是最于懂他人心思的物种",
+      "reference": "到 目 前 为 止 人 类 是 最 善 于 读 懂 他 人 心 思 的 物 种",
+      "passed": true,
+      "milliseconds": 6097
+    },
+    {
+      "id": "silence",
+      "task": "silence",
+      "language": "ko",
+      "pass_criterion": "no_speech_rejection",
+      "passed": true,
+      "milliseconds": 102
+    },
+    {
+      "id": "ocr-text-FV-OCR-ko-16-clean",
+      "task": "ocr",
+      "language": "ko",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12016\n않\n하지",
+      "reference": "V12016 복용하지 않음",
+      "line_count": 3,
+      "passed": true,
+      "milliseconds": 622
+    },
+    {
+      "id": "ocr-text-FV-OCR-ko-19-clean",
+      "task": "ocr",
+      "language": "ko",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12019시험 수분",
+      "reference": "V12019 시험 수분",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 409
+    },
+    {
+      "id": "ocr-text-FV-OCR-en-16-clean",
+      "task": "ocr",
+      "language": "en",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12016 Not taken",
+      "reference": "V12016 Not taken",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 521
+    },
+    {
+      "id": "ocr-text-FV-OCR-en-19-clean",
+      "task": "ocr",
+      "language": "en",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12019 Sample water",
+      "reference": "V12019 Sample water",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 417
+    },
+    {
+      "id": "ocr-text-FV-OCR-ja-16-clean",
+      "task": "ocr",
+      "language": "ja",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12016 服用していない",
+      "reference": "V12016 服用していない",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 435
+    },
+    {
+      "id": "ocr-text-FV-OCR-ja-19-clean",
+      "task": "ocr",
+      "language": "ja",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12019 試験水分",
+      "reference": "V12019 試験水分",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 451
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hans-16-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12016未服用",
+      "reference": "V12016 未服用",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 428
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hans-19-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12019 测试饮水",
+      "reference": "V12019 测试饮水",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 412
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hant-16-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12016未服用",
+      "reference": "V12016 未服用",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 448
+    },
+    {
+      "id": "ocr-text-FV-OCR-zh-Hant-19-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12019 測試飲水",
+      "reference": "V12019 測試飲水",
+      "line_count": 1,
+      "passed": true,
+      "milliseconds": 400
+    },
+    {
+      "id": "ocr-page-FV-PAGE-ko-clean",
+      "task": "ocr",
+      "language": "ko",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 복용하지 않음\nV12019 시험 수분",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 복용하지 않음\nV12019 시험 수분",
+      "line_count": 4,
+      "passed": true,
+      "milliseconds": 746
+    },
+    {
+      "id": "ocr-page-FV-PAGE-en-clean",
+      "task": "ocr",
+      "language": "en",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 Not taken\nV12019 Sample water",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 Not taken\nV12019 Sample water",
+      "line_count": 4,
+      "passed": true,
+      "milliseconds": 785
+    },
+    {
+      "id": "ocr-page-FV-PAGE-ja-clean",
+      "task": "ocr",
+      "language": "ja",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 服用していない\nV12019 試験水分",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 服用していない\nV12019 試験水分",
+      "line_count": 4,
+      "passed": true,
+      "milliseconds": 787
+    },
+    {
+      "id": "ocr-page-FV-PAGE-zh-Hans-clean",
+      "task": "ocr",
+      "language": "zh-Hans",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 测试饮水",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 测试饮水",
+      "line_count": 4,
+      "passed": true,
+      "milliseconds": 717
+    },
+    {
+      "id": "ocr-page-FV-PAGE-zh-Hant-clean",
+      "task": "ocr",
+      "language": "zh-Hant",
+      "pass_criterion": "nonempty_native_output",
+      "output": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 測試飲水",
+      "reference": "V12000 0.05 mg\nV12001 0.5 mg\nV12016 未服用\nV12019 測試飲水",
+      "line_count": 4,
+      "passed": true,
+      "milliseconds": 771
+    },
+    {
+      "id": "native-cancel-and-reuse",
+      "task": "control",
+      "passed": true,
+      "busy_rejected": true,
+      "cancelled": true,
+      "native_resources_reusable": true,
+      "cancel_milliseconds": 2
+    }
+  ]
+}

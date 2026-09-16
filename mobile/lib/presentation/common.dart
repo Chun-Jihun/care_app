@@ -233,7 +233,7 @@ class _EditorPageState extends State<EditorPage> {
             builder: (ctx) => AlertDialog(
               title: Text(context.tr('작성 중인 내용을 어떻게 할까요?')),
               content: Text(
-                context.tr('초안은 기록으로 확정되지 않아요. 잠금을 해제한 뒤 이어서 작성할 수 있습니다.'),
+                context.tr('초안은 기록으로 확정되지 않아요. 수첩에서 다시 열어 이어서 작성할 수 있습니다.'),
               ),
               actions: [
                 TextButton(

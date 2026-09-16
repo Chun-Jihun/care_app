@@ -1,5 +1,6 @@
 import '../domain/backup.dart';
 import '../domain/records.dart';
+import '../domain/ai.dart';
 
 typedef BackupRows = Map<String, List<Map<String, Object?>>>;
 
@@ -13,11 +14,13 @@ class BackupColumn {
 
 final class BackupDocument {
   static const format = 3;
-  static const version = 1;
+  // v3 adds bounded query metadata to replies; v1/v2 documents stay readable.
+  static const version = 3;
 
   static BackupRows decode(Map<String, dynamic> archive) {
     final supported =
-        archive['format'] == format && archive['document_version'] == version ||
+        archive['format'] == format &&
+            [1, 2, version].contains(archive['document_version']) ||
         archive['format'] == 2 && archive['schema'] == 3;
     if (!supported || archive['rows'] is! Map) {
       throw CareError(CareErrorCode.unsupportedBackupVersion);
@@ -30,17 +33,40 @@ final class BackupDocument {
             .toList(),
       ),
     );
+    final legacy = archive['format'] == 2 || archive['document_version'] == 1;
+    if (legacy) {
+      _validate(rows, backupColumnsV1);
+      for (final row in rows['chat_message']!) {
+        row['reply'] = null;
+      }
+    }
     validate(rows);
     return rows;
   }
 
   static void validate(BackupRows rows) {
-    if (rows.length != backupColumnsV1.length ||
-        backupColumnsV1.keys.any((t) => !rows.containsKey(t))) {
+    _validate(rows, backupColumnsV2);
+    for (final row in rows['chat_message']!) {
+      if (row['reply'] != null) {
+        try {
+          AiReply.decode(row['reply'] as String);
+        } on Object {
+          throw CareError(CareErrorCode.invalidBackupValue);
+        }
+      }
+    }
+  }
+
+  static void _validate(
+    BackupRows rows,
+    Map<String, Map<String, BackupColumn>> contract,
+  ) {
+    if (rows.length != contract.length ||
+        contract.keys.any((t) => !rows.containsKey(t))) {
       throw CareError(CareErrorCode.invalidBackupTables);
     }
     for (final table in rows.entries) {
-      final columns = backupColumnsV1[table.key]!;
+      final columns = contract[table.key]!;
       for (final row in table.value) {
         if (row.length != columns.length ||
             columns.keys.any((c) => !row.containsKey(c))) {
@@ -73,7 +99,7 @@ final class BackupDocument {
 
   // Explicit projection prevents new SQL-only fields entering old documents.
   static BackupRows project(BackupRows rows) => {
-    for (final table in backupColumnsV1.entries)
+    for (final table in backupColumnsV2.entries)
       table.key: [
         for (final row in rows[table.key]!)
           {for (final key in table.value.keys) key: row[key]},
@@ -274,5 +300,13 @@ const backupColumnsV1 = <String, Map<String, BackupColumn>>{
   'general_note_entry': {
     'patient_id': BackupColumn(),
     'entry_id': BackupColumn(),
+  },
+};
+
+final backupColumnsV2 = <String, Map<String, BackupColumn>>{
+  ...backupColumnsV1,
+  'chat_message': {
+    ...backupColumnsV1['chat_message']!,
+    'reply': const BackupColumn(required: false),
   },
 };

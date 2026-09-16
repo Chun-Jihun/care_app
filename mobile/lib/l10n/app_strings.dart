@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../domain/records.dart';
 import '../domain/drafts.dart';
 import 'catalogs.g.dart';
+import '../domain/ai.dart';
 
 enum AppLanguage {
   korean('ko', '한국어', Locale('ko')),
@@ -74,6 +75,19 @@ class AppStrings {
   }
 
   String error(Object error) {
+    if (error is AiException) {
+      return text(switch (error.code) {
+        AiFailure.unavailable => '설정에서 기기 AI 모델 파일을 먼저 설치해 주세요.',
+        AiFailure.busy => '다른 AI 작업을 처리 중이에요. 잠시 후 다시 시도해 주세요.',
+        AiFailure.cancelled => 'AI 처리가 취소되었어요. 입력은 확정되지 않았습니다.',
+        AiFailure.invalidInput =>
+          '입력이 너무 길거나 지원하지 않는 형식이에요. 짧고 선명한 입력으로 다시 시도해 주세요.',
+        AiFailure.modelInvalid => '모델 파일이 손상되었거나 앱과 호환되지 않습니다.',
+        AiFailure.failed => 'AI 처리를 완료하지 못했어요. 모델과 기기 저장 공간을 확인해 주세요.',
+        AiFailure.microphoneDenied => '음성 입력을 사용하려면 기기 설정에서 마이크 권한을 허용해 주세요.',
+        AiFailure.noSpeech => '인식할 내용을 찾지 못했어요. 원본을 확인하고 다시 시도해 주세요.',
+      });
+    }
     const fallback = '작업을 완료하지 못했습니다. 입력 내용과 기기 저장 공간을 확인하고 다시 시도해 주세요.';
     if (error is! CareError) return text(fallback);
     return text(

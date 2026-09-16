@@ -16,6 +16,7 @@ import 'package:care_notebook/presentation/common.dart';
 import 'package:care_notebook/presentation/editors.dart';
 
 import 'support.dart';
+import 'chat_ui_support.dart';
 
 void main() {
   test('L10N-01 catalogs cover metadata and preserve every placeholder', () {
@@ -218,28 +219,51 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('L10N-05 language picker works before PIN setup in all locales', (
-    tester,
-  ) async {
-    await smallScreen(tester);
-    for (final language in AppLanguage.values) {
+  testWidgets(
+    'L10N-05 language menu stays visible but disabled in lock and settings',
+    (tester) async {
+      await smallScreen(tester);
+      for (final language in AppLanguage.values) {
+        // Previously saved preferences still render; the UI cannot change them.
+        await tester.runAsync(() => c.setLanguage(language));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('languagePicker')),
+        );
+        final tile = tester.widget<ListTile>(
+          find.byKey(const ValueKey('languagePicker')),
+        );
+        expect(tile.enabled, isFalse);
+        expect(tile.onTap, isNull);
+        await tester.tap(find.byKey(const ValueKey('languagePicker')));
+        await tester.pumpAndSettle();
+        expect(find.byType(SimpleDialog), findsNothing);
+        expect(c.language, language);
+        expect(
+          tester.widget<MaterialApp>(find.byType(MaterialApp)).locale,
+          language.locale,
+        );
+        expect(find.byType(LockScreen), findsOneWidget);
+        expect(find.byType(NavigationBar), findsNothing);
+        expect(tester.takeException(), isNull);
+      }
+      await tester.runAsync(() => c.setPin('123456'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(NavigationDestination).last);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.byKey(const ValueKey('languagePicker')));
+      final tile = tester.widget<ListTile>(
+        find.byKey(const ValueKey('languagePicker')),
+      );
+      expect(tile.enabled, isFalse);
+      expect(tile.onTap, isNull);
       await tester.tap(find.byKey(const ValueKey('languagePicker')));
       await tester.pumpAndSettle();
-      final option = find.byKey(ValueKey('language-${language.code}'));
-      await tester.ensureVisible(option);
-      await tester.runAsync(() => tester.tap(option));
-      await tester.pumpAndSettle();
-      expect(c.language, language);
-      expect(
-        tester.widget<MaterialApp>(find.byType(MaterialApp)).locale,
-        language.locale,
-      );
-      expect(find.byType(LockScreen), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(SimpleDialog), findsNothing);
+      expect(c.language, AppLanguage.traditionalChinese);
       expect(tester.takeException(), isNull);
-    }
-  });
+    },
+  );
 
   testWidgets('L10N-07 English record forms keep long choices usable', (
     tester,
@@ -294,6 +318,7 @@ void main() {
         }
         await tester.tap(find.byTooltip(c.strings.text('간병 도우미 대화')));
         await tester.pumpAndSettle();
+        await acknowledgeChatNotice(tester);
         await tester.runAsync(
           () => c.setChatRetention(c.selectedId!, ChatRetention.forever),
         );

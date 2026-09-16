@@ -50,6 +50,12 @@ dependencies:
   file_picker: ^12.2.0
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
+  llama_cpp_dart: 0.9.0-dev.12
+  sherpa_onnx: 1.13.8
+  care_ort:
+    path: packages/care_ort
+  record: 7.1.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +83,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/ai/manifest.json
+    - assets/ai/licenses/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

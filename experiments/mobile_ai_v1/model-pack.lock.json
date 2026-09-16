@@ -1,0 +1,76 @@
+{
+  "manifest": {
+    "format": 1,
+    "version": "care-ai-dev-2026-09-11-v2",
+    "medical_release_gate_result": false,
+    "models": {
+      "chat": "Qwen3.5-2B SFT BF16 merge + Q4_K_M",
+      "ocr": "PP-OCRv5 trained CTC heads",
+      "speech": "Whisper small LoRA merge + INT8",
+      "vad": "Silero v6.2"
+    },
+    "files": [
+      {
+        "path": "chat/model.gguf",
+        "bytes": 1274396064,
+        "sha256": "60556a3efb1f95dfefd473d5c0b18915514d9b3056ab6b54be7750097b2a25c7"
+      },
+      {
+        "path": "chat/prompt.json",
+        "bytes": 1790,
+        "sha256": "ac075b5f8642d12ea803d8eb97dcfb8bee8db12274c76fe2e5f53076090d2fdf"
+      },
+      {
+        "path": "ocr/detector.onnx",
+        "bytes": 4766440,
+        "sha256": "c8d9b07063420ce5365c74e42532de48238feeeedcdb7a330b195708bc38a93f"
+      },
+      {
+        "path": "ocr/ko.onnx",
+        "bytes": 28089066,
+        "sha256": "57b757d7eb84f289bf896235c462afc7a22c54680f2a791cd9ec60b980a5c49a"
+      },
+      {
+        "path": "ocr/ko.json",
+        "bytes": 119148,
+        "sha256": "cd99d23d6b7aab25e8da066c744324e7790c868632ede62f5770633d68466636"
+      },
+      {
+        "path": "ocr/multi.onnx",
+        "bytes": 31205061,
+        "sha256": "6c66a9305cf0d2976a0c9b1d32012d443b32dd261bf75d173ac4a6b9fda6c708"
+      },
+      {
+        "path": "ocr/multi.json",
+        "bytes": 184337,
+        "sha256": "47b311bde97b6f671998eadf09651d8d6f42de3a00bfab346497a9d115a32e15"
+      },
+      {
+        "path": "speech/encoder.onnx",
+        "bytes": 112413411,
+        "sha256": "f8359fa15ddfd43ac00812b6940c63e6c07ea3a1ea867fb7c2bd1ce96c9b3ae7"
+      },
+      {
+        "path": "speech/decoder.onnx",
+        "bytes": 262200764,
+        "sha256": "1ca45531244d4fed139ef0f51a96d52a74860a08e644eace0cdc8a004531fcc9"
+      },
+      {
+        "path": "speech/tokens.txt",
+        "bytes": 866987,
+        "sha256": "febeed8e568f92d9ca984580bc2e6b605b867dc5ba4486f9646de381b44a8226"
+      },
+      {
+        "path": "speech/vad.onnx",
+        "bytes": 2327524,
+        "sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3"
+      }
+    ]
+  },
+  "pack": {
+    "path": "data\\mobile-ai\\care-ai-dev-2026-09-11-v2.careai",
+    "bytes": 1716572594,
+    "sha256": "b47c9ba515c0170cd4f89507a19b95871bad7aff488d6490728ff2fb271db4cb"
+  },
+  "manifest_sha256": "5c07dcf499c8727b0598950f7eb9312c3029e997639b9b2f57b10af478a04295"
+}

@@ -1,0 +1,16 @@
+{
+  "source_sha256": "e867c7f15273c58ab3118f64c0943a111eaee575910b3e823e2b2bf9e2053425",
+  "output_sha256": "60556a3efb1f95dfefd473d5c0b18915514d9b3056ab6b54be7750097b2a25c7",
+  "tensor_data_sha256": "9a3e2eca69396a59a5a8bae5790eaa4d88f83232f7cf5205e3eb8d9c6afafbd1",
+  "tensor_bytes_unchanged": true,
+  "fields": {
+    "qwen35.block_count": [
+      25,
+      24
+    ],
+    "qwen35.nextn_predict_layers": [
+      1,
+      0
+    ]
+  }
+}

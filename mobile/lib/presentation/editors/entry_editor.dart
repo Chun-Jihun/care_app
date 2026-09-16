@@ -6,7 +6,9 @@ import '../../application/care_controller.dart';
 import '../../application/draft_session.dart';
 import '../../domain/drafts.dart';
 import '../../domain/records.dart';
+import '../../domain/reviewed_input.dart';
 import '../common.dart';
+import '../ai_draft_page.dart';
 import '../draft_support.dart';
 
 Future<void> editEntry(
@@ -15,6 +17,8 @@ Future<void> editEntry(
   EntryKind kind, {
   CareEntry? entry,
   CareDraft? restored,
+  String? initialNote,
+  Map<String, String> initialFields = const {},
 }) async {
   if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
       !context.mounted) {
@@ -22,11 +26,16 @@ Future<void> editEntry(
   }
   final pid = c.selectedId!;
   final data = restored?.payload as EntryDraftPayload?;
-  final note = TextEditingController(text: data?.note ?? entry?.note);
+  final note = TextEditingController(
+    text: data?.note ?? initialNote ?? entry?.note,
+  );
   final values = {
     for (final field in kind.fields)
       field.key: TextEditingController(
-        text: data?.fields[field.key] ?? entry?.fields[field.key],
+        text:
+            data?.fields[field.key] ??
+            initialFields[field.key] ??
+            entry?.fields[field.key],
       ),
   };
   var at = data?.at ?? entry?.occurredAt ?? DateTime.now();
@@ -69,6 +78,7 @@ Future<void> editEntry(
                 )
               else
                 DropdownButtonFormField<String>(
+                  key: ValueKey('${f.key}:${values[f.key]!.text}'),
                   isExpanded: true,
                   itemHeight: null,
                   initialValue: values[f.key]!.text.isEmpty
@@ -99,6 +109,42 @@ Future<void> editEntry(
                   ? context.tr('메모 *')
                   : context.tr('추가 메모'),
               multiline: true,
+            ),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.mic_none),
+              label: Text(context.tr('음성으로 입력')),
+              onPressed: () async {
+                final reviewed = await reviewRecordInput(
+                  context,
+                  c,
+                  pid,
+                  kind: kind,
+                  currentFields: {
+                    for (final e in values.entries) e.key: e.value.text,
+                  },
+                );
+                if (context.mounted &&
+                    reviewed != null &&
+                    c.unlocked &&
+                    c.selectedId == pid) {
+                  await attempt(context, () async {
+                    final combined = appendReviewedInput(
+                      note.text,
+                      reviewed.text,
+                    );
+                    update(() {
+                      note.text = combined;
+                      for (final field in reviewed.fields.entries) {
+                        final controller = values[field.key];
+                        if (controller != null &&
+                            controller.text.trim().isEmpty) {
+                          controller.text = field.value;
+                        }
+                      }
+                    });
+                  });
+                }
+              },
             ),
             if (kind == EntryKind.medicationIntake)
               Text(

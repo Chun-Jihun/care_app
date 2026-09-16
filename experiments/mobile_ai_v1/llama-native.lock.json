@@ -1,0 +1,33 @@
+{
+  "source_sha256": "1c41947689d1f9f85edfa5ae56706e37ae8cdd03172a426e71bcd75ef9778019",
+  "output_sha256": "beae2f9feb55374a5c1d4914f170bb8140c0db3e936be55f3b14fd8b1a47db73",
+  "revision": "afeebe103bd99cda8f5dfaefcabadf890db7fda7",
+  "emulator_libraries": [
+    {
+      "name": "libllama.so",
+      "sha256": "e65d36d91f6bca54ccbb84d2af492c5d0deb02f07ea4ac007ddbbb5e56629e3e"
+    },
+    {
+      "name": "libggml.so",
+      "sha256": "98fedc693b4478daa92730789a2bac521be297dfa28a2aeeb9bdab06cf1b5d3a"
+    },
+    {
+      "name": "libggml-base.so",
+      "sha256": "66b2753d6fb01bf13ba9658de09687905522547deaa428a6bfac58034ca50d23"
+    },
+    {
+      "name": "libggml-cpu.so",
+      "sha256": "0f96b3e92c782a11219b62bfcdd96e774a244f6a466422500a4b00306db25077"
+    }
+  ],
+  "ndk": "28.2.13676358",
+  "build_type": "Release",
+  "cpu_threads": 2,
+  "emulator_cpu_flags": [
+    "SSE42",
+    "AVX",
+    "AVX2",
+    "FMA",
+    "F16C"
+  ]
+}
