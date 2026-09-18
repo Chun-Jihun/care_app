@@ -228,7 +228,7 @@ def _count_items(items: Any) -> int:
                 return 1
             raise ApiResponseError("INVALID_RESPONSE", "items.item 형식이 잘못되었습니다.")
         # Some JSON variants return one item object directly.
-        if "itemSeq" in items or "itemName" in items:
+        if any(field in items for field in ("itemSeq", "itemName", "ITEM_SEQ")):
             return 1
     raise ApiResponseError("INVALID_RESPONSE", "items 형식을 인식할 수 없습니다.")
 
@@ -364,10 +364,11 @@ def fetch_page(
     timeout_seconds: float,
     retries: int,
     opener: OpenUrl = _default_open,
+    url_builder: Callable[..., str] = build_request_url,
 ) -> PageResult:
     """Fetch one page with bounded retries and sanitized failures."""
 
-    request_url = build_request_url(
+    request_url = url_builder(
         endpoint,
         service_key,
         page_no=page_no,
@@ -411,6 +412,8 @@ def fetch_page(
                 payload = exc.read()
             except OSError:
                 payload = b""
+            finally:
+                exc.close()
             details = _http_error_details(payload)
             retryable = exc.code == 429 or 500 <= exc.code <= 599
             if retryable and attempt < retries:
