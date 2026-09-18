@@ -1,0 +1,181 @@
+{
+  "notice": "Synthetic test-only fixture; contains no medical or patient data.",
+  "schema": [
+    "CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+    "CREATE TABLE blobs(id INTEGER PRIMARY KEY, sha256 TEXT UNIQUE NOT NULL,\n            raw_size INTEGER NOT NULL, payload BLOB NOT NULL)",
+    "CREATE TABLE sources(id TEXT PRIMARY KEY, metadata TEXT NOT NULL)",
+    "CREATE TABLE drug_records(id INTEGER PRIMARY KEY, source_id TEXT NOT NULL,\n            item_seq TEXT NOT NULL, counterpart_seq TEXT NOT NULL, item_name TEXT NOT NULL,\n            page_no INTEGER NOT NULL, row_no INTEGER NOT NULL,\n            left_blob INTEGER NOT NULL, right_blob INTEGER NOT NULL, rest_blob INTEGER NOT NULL,\n            record_sha256 TEXT NOT NULL)",
+    "CREATE TABLE document_pages(id INTEGER PRIMARY KEY, source_id TEXT NOT NULL,\n            page_no INTEGER NOT NULL, label TEXT NOT NULL, text_blob INTEGER NOT NULL,\n            image_blob INTEGER, text_sha256 TEXT NOT NULL, UNIQUE(source_id,page_no))",
+    "CREATE VIRTUAL TABLE document_search USING fts5(text,content='')",
+    "CREATE TABLE page_assets(page_id INTEGER NOT NULL, ordinal INTEGER NOT NULL,\n            blob_id INTEGER NOT NULL, description TEXT NOT NULL, PRIMARY KEY(page_id,ordinal))"
+  ],
+  "tables": {
+    "metadata": [
+      {
+        "key": "package",
+        "value": "{\"approval_state\":\"staged_unreviewed\",\"clinical_review_completed\":false,\"codec\":\"zlib\",\"created_at\":\"2026-09-18T06:12:59Z\",\"do_not_train\":true,\"kind\":\"documents\",\"max_block_bytes\":16777216,\"mobile_bundle\":false,\"purpose\":\"development_preview\",\"runtime_rag_eligible\":false,\"schema\":\"care-knowledge-preview-v1\"}"
+      }
+    ],
+    "blobs": [
+      {
+        "id": 1,
+        "sha256": "03f01276281f630a28ad518b7fc8ed89995d921d495be0ad634db5284a2c30a6",
+        "raw_size": 96,
+        "payload": {
+          "base64": "eJx7O3Xlm5aNCm/mTXi9uOfNvNbX3R2vu5foKbxZuOHVxi2vNu9ReDOj483MHa+X7lF4tX3H656G1wvnKLydOfXN3B1vp66EKucKrswryUgtyUxWSM7PS8ksyczPU8jPy6nUAwCjnzfx"
+        }
+      },
+      {
+        "id": 2,
+        "sha256": "cd3d5566692260d84137c507af373e93448ef739fc00cd6be4b2ef3c6d0f1a66",
+        "raw_size": 42,
+        "payload": {
+          "base64": "eJwLrswryUgtyUxWKE5Nzs9LUShITE/VU/BLLUstUsjMSwOSxYlpqSWVegBRqw9x"
+        }
+      },
+      {
+        "id": 3,
+        "sha256": "9639fb35bdbce0f81c105c1d07aec64ff1b37e91cec4a74f5f28ed63bda83d04",
+        "raw_size": 61,
+        "payload": {
+          "base64": "eJyLjlbyDHH1jfdz9HVV0jHQUQquzCvJSC3JTFYoKMpPKU0uUYrVgaoJdg0EKwlxDQ7RNVSKjQUAQO4SFQ=="
+        }
+      },
+      {
+        "id": 4,
+        "sha256": "96c0c7b97adce6a0272b088aae06577fb8cd6c9bee9e60dbdef31d530db005ba",
+        "raw_size": 33,
+        "payload": {
+          "base64": "eJyLjlby9YwICQ1yjfcMcfWND3YNVNIx0FEKcQ0O0TVSio0FAKJaCSQ="
+        }
+      },
+      {
+        "id": 5,
+        "sha256": "aa1e1bbf222a5e5e69638e6dabb8fa11189580f03224931133e0769afd0125da",
+        "raw_size": 65536,
+        "payload": {
+          "base64": "eJztyjsKwkAUAMA+p3gnWGy8X0hlkVZQIYVVCAh+sEjhiXbfIZJzyHRTTP30OTzytkReTnldI++v+v6WOJRjtOfa5jGnX7TzuKt0Vdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xdd1Xf/PvgFD3OPp"
+        }
+      },
+      {
+        "id": 6,
+        "sha256": "f9ed9ccb90721462f2176c60b8ed9376e8c54d84a6fb3aaf0fd23b377a1ad542",
+        "raw_size": 65536,
+        "payload": {
+          "base64": "eJztyrEJwkAUANDeKf4ER5rsJ1YW1wpRsEgVBMEoFimcKPeHMHOE173ijfP6/pboSh/ttbSp5v0X7VI3lcP6OebpmbdH5HDO6xI56rqu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu6/vsf38N4gw="
+        }
+      },
+      {
+        "id": 7,
+        "sha256": "b97efd839a0d1cf60c41cb8d1805f9fb9d6b68721390596c8b11265e099f24cb",
+        "raw_size": 9928,
+        "payload": {
+          "base64": "eJztyrEJwkAUANA+U/wJjjTZT1JZXCtEIYVVEASjWKRwotwfQoewfK9+8yfaqballm5/HXK85+UWOR3zvEVe1/35LtGXIdpj+6WcdV3XdV3XdV3XdV3XdV3XdV3XdV3XdV3XdV3Xdf2f/QuzTtrc"
+        }
+      },
+      {
+        "id": 8,
+        "sha256": "208435f386d48dc2576db649e8c0e0324ce31c4cd96d38d259ce0187f9570870",
+        "raw_size": 131,
+        "payload": {
+          "base64": "eJyLjlZy9vdz8Qzx9PdT0jHUiTbVMdMxj43ViVZy9Q0IiVTSMdBRUgJx/UJ9fEC8vNKcHBA/OCQo1DkkNMgVJBhdUlSaqlOtVKFkpVSpVAvWH+rn6ezvApZW+jB/RsPhlY8aVjzf2gQ2Lco1yB8kYxAbCwByCifm"
+        }
+      }
+    ],
+    "sources": [
+      {
+        "id": "synthetic",
+        "metadata": "{\"clinical_reviewed_at\":null,\"publication_or_revision_date\":\"2020-01-01\",\"publisher\":\"Test publisher\",\"source_sha256\":\"test-version\",\"title\":\"Synthetic guide\",\"url\":\"https://example.invalid/fixture\"}"
+      }
+    ],
+    "drug_records": [
+      {
+        "id": 1,
+        "source_id": "synthetic",
+        "item_seq": "TEST-1",
+        "counterpart_seq": "TEST-2",
+        "item_name": "Synthetic product",
+        "page_no": 2,
+        "row_no": 3,
+        "left_blob": 3,
+        "right_blob": 4,
+        "rest_blob": 8,
+        "record_sha256": "b3e049a70d7934f15fb26b378f78ef6bd0b66d56137eedc91c3fe09682d650ee"
+      }
+    ],
+    "document_pages": [
+      {
+        "id": 1,
+        "source_id": "synthetic",
+        "page_no": 1,
+        "label": "1",
+        "text_blob": 1,
+        "image_blob": null,
+        "text_sha256": "03f01276281f630a28ad518b7fc8ed89995d921d495be0ad634db5284a2c30a6"
+      },
+      {
+        "id": 2,
+        "source_id": "synthetic",
+        "page_no": 2,
+        "label": "2",
+        "text_blob": 2,
+        "image_blob": null,
+        "text_sha256": "cd3d5566692260d84137c507af373e93448ef739fc00cd6be4b2ef3c6d0f1a66"
+      }
+    ],
+    "page_assets": []
+  },
+  "manifest": {
+    "schema": "care-knowledge-preview-v1",
+    "purpose": "development_preview",
+    "approval_state": "staged_unreviewed",
+    "clinical_review_completed": false,
+    "runtime_rag_eligible": false,
+    "mobile_bundle": false,
+    "do_not_train": true,
+    "kind": "documents",
+    "created_at": "2026-09-18T06:12:59Z",
+    "codec": "zlib",
+    "max_block_bytes": 16777216,
+    "database": "knowledge.sqlite3",
+    "database_bytes": 81920,
+    "database_sha256": "d6a12e733e195c4046f3b1abac5d081e103170b334104dc5403ba2901ba57d06",
+    "stats": {
+      "input_bytes": 144182,
+      "records": 1,
+      "pages": 2,
+      "assets": 0,
+      "roundtrip_verified_records": 1,
+      "unique_blocks": 8
+    }
+  },
+  "expected_record": {
+    "ITEM_SEQ": "TEST-1",
+    "MIXTURE_ITEM_SEQ": "TEST-2",
+    "ITEM_NAME": "Synthetic product",
+    "CONDITION": {
+      "repeat": "검사용 예외 조건. 0.5 미만일 때만.\n",
+      "times": 3000
+    },
+    "EMPTY": "",
+    "NULL": null,
+    "ZERO": 0,
+    "UNICODE": "😀é 終",
+    "STRUCTURE": [
+      true,
+      {
+        "x": "y"
+      }
+    ]
+  },
+  "search_rows": [
+    [
+      1,
+      "Synthetic condition only."
+    ],
+    [
+      2,
+      "Synthetic second page."
+    ]
+  ]
+}

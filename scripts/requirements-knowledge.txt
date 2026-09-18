@@ -1,0 +1,4 @@
+# Optional build-time document tools; not app/runtime dependencies.
+pypdf==6.10.0
+Pillow==12.3.0
+# Also provide a local Poppler pdftoppm executable via --pdftoppm.

@@ -243,7 +243,7 @@ def _as_int(value: Any, field: str) -> int:
         raise StagingError(f"raw page의 {field}가 정수가 아닙니다.") from exc
 
 
-def _load_verified_rows(
+def load_verified_rows(
     raw_dir: Path, raw_manifest: Mapping[str, Any]
 ) -> tuple[list[dict[str, Any]], dict[str, str]]:
     download = raw_manifest.get("download")
@@ -607,7 +607,7 @@ def stage_snapshot(
     actual_manifest_hash = sha256_file(raw_manifest_path)
     if locked_manifest_hash and actual_manifest_hash != locked_manifest_hash:
         raise StagingError("raw manifest SHA-256이 data sources lock과 다릅니다.")
-    rows, page_hashes = _load_verified_rows(raw_dir, raw_manifest)
+    rows, page_hashes = load_verified_rows(raw_dir, raw_manifest)
 
     grouped: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
