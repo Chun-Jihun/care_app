@@ -71,7 +71,7 @@ void main() {
       ).backupSelection(password, BackupSelection(patientIds: {restored.id}));
       final document = await decode(bytes);
       expect(document['format'], 3);
-      expect(document['document_version'], 3);
+      expect(document['document_version'], 4);
       expect(document.containsKey('schema'), false);
       expect(jsonEncode(document), isNot(contains('internal_marker')));
       document['document_version'] = 999;

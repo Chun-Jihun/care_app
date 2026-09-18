@@ -14,13 +14,13 @@ class BackupColumn {
 
 final class BackupDocument {
   static const format = 3;
-  // v3 adds bounded query metadata to replies; v1/v2 documents stay readable.
-  static const version = 3;
+  // v4 adds an optional exact intake-status filter; earlier replies stay readable.
+  static const version = 4;
 
   static BackupRows decode(Map<String, dynamic> archive) {
     final supported =
         archive['format'] == format &&
-            [1, 2, version].contains(archive['document_version']) ||
+            [1, 2, 3, version].contains(archive['document_version']) ||
         archive['format'] == 2 && archive['schema'] == 3;
     if (!supported || archive['rows'] is! Map) {
       throw CareError(CareErrorCode.unsupportedBackupVersion);

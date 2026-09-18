@@ -107,28 +107,40 @@ final class SqliteRecords {
       }
     }
     final term = query.trim().toLowerCase();
-    final sqlLimit = limit != null && term.isEmpty && lookup == null
-        ? ' LIMIT ?'
-        : '';
-    if (sqlLimit.isNotEmpty) args.add(limit);
-    var result =
-        _readEntries(
-          _store.connection.select(
-            'SELECT * FROM care_entry WHERE $where ORDER BY occurred_at DESC,id DESC$sqlLimit',
-            args,
-          ),
-        ).where(
-          (e) =>
-              (lookup == null || lookup.matches(e)) &&
-              (term.isEmpty ||
-                  (displayText?.call(e) ?? e.summary).toLowerCase().contains(
-                    term,
-                  )),
-        );
-    if (limit != null) {
-      result = result.take(limit);
+    final result = <CareEntry>[];
+    int? beforeTime;
+    String? beforeId;
+    // Keyset batches bound memory even when a rare search term matches old data.
+    // The stable id tie-breaker prevents gaps between equal timestamps.
+    while (true) {
+      final cursor = beforeTime == null
+          ? ''
+          : ' AND (occurred_at<? OR (occurred_at=? AND id<?))';
+      final batchSize = limit != null && term.isEmpty && lookup == null
+          ? limit
+          : 200;
+      final rows = _store.connection.select(
+        'SELECT * FROM care_entry WHERE $where$cursor ORDER BY occurred_at DESC,id DESC LIMIT ?',
+        [
+          ...args,
+          if (beforeTime != null) ...[beforeTime, beforeTime, beforeId],
+          batchSize,
+        ],
+      );
+      for (final entry in _readEntries(rows)) {
+        if ((lookup == null || lookup.matches(entry)) &&
+            (term.isEmpty ||
+                (displayText?.call(entry) ?? entry.summary)
+                    .toLowerCase()
+                    .contains(term))) {
+          result.add(entry);
+          if (limit != null && result.length == limit) return result;
+        }
+      }
+      if (rows.length < batchSize) return result;
+      beforeTime = rows.last['occurred_at'] as int;
+      beforeId = rows.last['id'] as String;
     }
-    return result.toList();
   }
 
   CareEntry saveEntry(

@@ -9,7 +9,7 @@ final class SqliteTasks {
     _store.patient(pid);
     return _store.connection
         .select(
-          'SELECT * FROM care_task WHERE patient_id=? ORDER BY done,due_at',
+          'SELECT * FROM care_task WHERE patient_id=? ORDER BY done,due_at,id',
           [pid],
         )
         .map(
@@ -36,6 +36,13 @@ final class SqliteTasks {
     _store.patient(pid);
     if (title.trim().isEmpty) {
       throw CareError(CareErrorCode.taskTitleRequired);
+    }
+    if (title.length > 2000) {
+      throw CareError(CareErrorCode.fieldTooLong, labels: ['할 일']);
+    }
+    if (note.length > 20000) throw CareError(CareErrorCode.noteTooLong);
+    if (dueAt.year < 1900 || dueAt.year > 2200) {
+      throw CareError(CareErrorCode.invalidEntryTime);
     }
     final taskId = id ?? RecordIds.next();
     if (id != null) {

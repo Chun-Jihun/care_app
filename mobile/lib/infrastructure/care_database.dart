@@ -78,11 +78,16 @@ class CareDatabase implements NotebookRepository {
       SchemaMigrations(store._store, store.verifyIntegrity).migrate();
       store.verifyIntegrity();
       for (final name in ['care', 'identity']) {
-        for (final version in [1, 2]) {
+        for (var version = 1; version < schemaVersion; version++) {
           final backup = File(
             p.join(directory, '$name.migration-v$version.bak'),
           );
-          if (backup.existsSync()) backup.deleteSync();
+          // A cleanup failure cannot make a verified database unavailable.
+          try {
+            if (backup.existsSync()) backup.deleteSync();
+          } on FileSystemException {
+            // Retry after the next successful open, never restore over new data.
+          }
         }
       }
       store.pruneChats();

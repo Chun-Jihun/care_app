@@ -6,6 +6,7 @@ import '../../domain/records.dart';
 import '../common.dart';
 import '../settings.dart' show contactCard;
 import '../editors.dart';
+import '../task_list.dart';
 
 List<Widget> todayContent(
   BuildContext context,
@@ -15,7 +16,6 @@ List<Widget> todayContent(
   final now = DateTime.now();
   final entries = c.records.entries(c.selectedId!, day: now);
   final recent = c.records.entries(c.selectedId!, limit: 5);
-  final tasks = c.tasks;
   final water = entries
       .where((e) => e.kind == EntryKind.meal)
       .fold<double>(
@@ -135,13 +135,7 @@ List<Widget> todayContent(
       action: context.tr('추가'),
       onAction: () => editTask(context, c),
     ),
-    if (tasks.isEmpty)
-      EmptyCard(
-        context.tr('기억할 일을 적어 두세요'),
-        context.tr('진료 일정, 준비물, 생활 속 할 일을 관리할 수 있어요.'),
-        icon: Icons.check_circle_outline,
-      ),
-    ...tasks.map((task) => _taskCard(context, c, task)),
+    TaskOverview(c),
     Section(context.tr('최근 기록')),
     if (recent.isEmpty)
       EmptyCard(
@@ -168,39 +162,4 @@ Widget _stat(String label, String value) => Column(
       ),
     ),
   ],
-);
-Widget _taskCard(BuildContext context, CareController c, CareTask task) => Card(
-  child: ListTile(
-    leading: Semantics(
-      label: context.tr('{0} 완료', [task.title]),
-      child: Checkbox(
-        value: task.done,
-        onChanged: (v) => attempt(context, () async {
-          await c.taskBook.completeTask(c.selectedId!, task.id, v!);
-        }),
-      ),
-    ),
-    title: Text(
-      task.title,
-      style: TextStyle(
-        decoration: task.done ? TextDecoration.lineThrough : null,
-      ),
-    ),
-    subtitle: Text(
-      '${dateText(context, task.dueAt)} ${timeText(context, task.dueAt)}${task.reminder ? context.tr(' · 알림') : ''}${task.note.isEmpty ? '' : '\n${task.note}'}',
-    ),
-    onTap: () => editTask(context, c, task: task),
-    trailing: IconButton(
-      tooltip: context.tr('할 일 삭제'),
-      icon: const Icon(Icons.close, size: 19),
-      onPressed: () async {
-        if (await confirm(context, context.tr('할 일을 삭제할까요?'), task.title) &&
-            context.mounted) {
-          await attempt(context, () async {
-            await c.taskBook.deleteTask(c.selectedId!, task.id);
-          });
-        }
-      },
-    ),
-  ),
 );

@@ -44,6 +44,8 @@ try {
             & $flutterCommand analyze --no-pub
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $flutterCommand test --no-pub
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & $dartCommand run tool/storage_crash_probe.dart
         }
         'BuildAndroid' { & $flutterCommand build apk --release --target-platform=android-arm64 }
         'Run' { & $flutterCommand run }

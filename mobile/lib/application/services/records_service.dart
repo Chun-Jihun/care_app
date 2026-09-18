@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/records.dart';
+import '../../domain/record_lookup.dart';
 import '../session_access.dart';
 
 final class RecordsService {
@@ -8,6 +9,16 @@ final class RecordsService {
   final SessionAccess _scope;
   final _cache = QueryCache();
   void invalidate() => _cache.clear();
+  List<CareEntry> lookup(String pid, RecordLookup lookup, {int limit = 51}) {
+    _scope.requirePatient(pid);
+    return _cache.get(
+      jsonEncode(['lookup', pid, lookup.toJson(), limit]),
+      () => List<CareEntry>.unmodifiable(
+        _scope.repository.entries(pid, lookup: lookup, limit: limit),
+      ),
+    );
+  }
+
   CareEntry? entry(String pid, String id) {
     _scope.requirePatient(pid);
     return _cache.get(

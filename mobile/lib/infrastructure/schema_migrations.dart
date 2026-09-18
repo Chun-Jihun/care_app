@@ -7,51 +7,58 @@ import 'sqlite_session.dart';
 
 final class SchemaMigrations {
   SchemaMigrations(this._store, this._verify);
-  static const version = 4;
+  static const version = 5;
   final SqliteSession _store;
   final void Function() _verify;
   String get directory => _store.directory;
   void migrate() {
-    final version =
-        _store.connection.select('PRAGMA user_version').first.values.first
+    final source =
+        _store.connection.select('PRAGMA user_version').single.values.single
             as int;
-    final identityVersion =
+    final identity =
         _store.connection
                 .select('PRAGMA identity.user_version')
-                .first
+                .single
                 .values
-                .first
+                .single
             as int;
-    if (version > SchemaMigrations.version ||
-        identityVersion > SchemaMigrations.version) {
+    if (source > version || identity > version) {
       throw CareError(CareErrorCode.newerStorageVersion);
     }
-    if (version == SchemaMigrations.version &&
-        identityVersion == SchemaMigrations.version) {
-      return;
-    }
-    if (version == 1 && identityVersion == 1) {
-      _upgradeChatSchema();
-      _upgradeDraftSchema();
-      _upgradeAiSchema();
-      return;
-    }
-    if (version == 2 && identityVersion == 2) {
-      _upgradeDraftSchema();
-      _upgradeAiSchema();
-      return;
-    }
-    if (version == 3 && identityVersion == 3) {
-      _upgradeAiSchema();
-      return;
-    }
-    if (version != 0 || identityVersion != 0) {
+    if (source != identity) {
       throw CareError(CareErrorCode.storageVersionMismatch);
     }
-    if (_store.connection
-        .select("SELECT name FROM sqlite_master WHERE type='table'")
-        .isNotEmpty) {
-      throw CareError(CareErrorCode.unknownStorageFormat);
+    if (source == version) return;
+    if (source == 0) {
+      for (final schema in ['main', 'identity']) {
+        if (_store.connection
+            .select("SELECT name FROM $schema.sqlite_master WHERE type='table'")
+            .isNotEmpty) {
+          throw CareError(CareErrorCode.unknownStorageFormat);
+        }
+      }
+    }
+    if (source > 0) {
+      for (final name in ['care', 'identity']) {
+        File(p.join(directory, '$name.db'))
+            .copySync(p.join(directory, '$name.migration-v$source.bak'));
+      }
+    }
+    // All upgrade steps and both schema versions commit only after validation.
+    // On failure SQLite rolls back and encrypted copies remain for recovery.
+    _store.transaction(() {
+      _apply(source);
+      _verify();
+    });
+  }
+
+  void _apply(int source) {
+    if (source > 0) {
+      if (source == 1) _upgradeChatSchema();
+      if (source <= 2) _upgradeDraftSchema();
+      if (source <= 3) _upgradeAiSchema();
+      _upgradeIndexes();
+      return;
     }
     _store.transaction(() {
       _store.connection.execute('''
@@ -96,57 +103,29 @@ final class SchemaMigrations {
     _upgradeChatSchema();
     _upgradeDraftSchema();
     _upgradeAiSchema();
+    _upgradeIndexes();
   }
 
   void _upgradeAiSchema() {
-    _store.transaction(() {
-      _store.connection.execute('''
+    _store.connection.execute('''
         ALTER TABLE chat_message ADD COLUMN reply TEXT CHECK(reply IS NULL OR length(reply)<=8192);
         PRAGMA user_version=4;
         PRAGMA identity.user_version=4;
       ''');
-    });
-    _verify();
   }
 
   void _upgradeChatSchema() {
-    final backups = <File>[];
-    try {
-      for (final name in ['care', 'identity']) {
-        backups.add(
-          File(p.join(directory, '$name.db'))
-              .copySync(p.join(directory, '$name.migration-v1.bak')),
-        );
-      }
-      _store.transaction(() {
-        _store.connection.execute('''
+    _store.connection.execute('''
           CREATE TABLE chat_policy(patient_id TEXT PRIMARY KEY,retention TEXT NOT NULL CHECK(retention IN ('session','7d','30d','forever')),FOREIGN KEY(patient_id) REFERENCES patient_context(id) ON DELETE CASCADE);
           CREATE TABLE chat_message(id TEXT PRIMARY KEY,patient_id TEXT NOT NULL,text TEXT NOT NULL CHECK(length(text)>0 AND length(text)<=20000),created_at INTEGER NOT NULL,expires_at INTEGER,FOREIGN KEY(patient_id) REFERENCES patient_context(id) ON DELETE CASCADE);
           CREATE INDEX chat_timeline ON chat_message(patient_id,created_at,id);
           PRAGMA user_version=2;
           PRAGMA identity.user_version=2;
         ''');
-      });
-    } finally {
-      for (final file in backups) {
-        if (file.existsSync()) {
-          file.deleteSync();
-        }
-      }
-    }
   }
 
   void _upgradeDraftSchema() {
-    final backups = <File>[];
-    try {
-      for (final name in ['care', 'identity']) {
-        backups.add(
-          File(p.join(directory, '$name.db'))
-              .copySync(p.join(directory, '$name.migration-v2.bak')),
-        );
-      }
-      _store.transaction(() {
-        _store.connection.execute('''
+    _store.connection.execute('''
           CREATE TABLE record_draft(
             id TEXT PRIMARY KEY, patient_id TEXT, type TEXT NOT NULL
               CHECK(type IN ('entry','medication','intake','task','visit','checkin')),
@@ -159,12 +138,19 @@ final class SchemaMigrations {
           PRAGMA user_version=3;
           PRAGMA identity.user_version=3;
         ''');
-      });
-      _verify();
-    } finally {
-      for (final file in backups) {
-        if (file.existsSync()) file.deleteSync();
-      }
-    }
+  }
+
+  void _upgradeIndexes() {
+    _store.connection.execute("""
+      DROP INDEX IF EXISTS entry_timeline;
+      DROP INDEX IF EXISTS entry_kind;
+      CREATE INDEX entry_timeline ON care_entry(patient_id,occurred_at DESC,id DESC);
+      CREATE INDEX entry_kind ON care_entry(patient_id,kind,occurred_at DESC,id DESC);
+      CREATE INDEX IF NOT EXISTS chat_expiration ON chat_message(expires_at) WHERE expires_at IS NOT NULL;
+      CREATE INDEX IF NOT EXISTS draft_expiration ON record_draft(expires_at) WHERE expires_at IS NOT NULL;
+      CREATE INDEX IF NOT EXISTS task_schedule ON care_task(patient_id,done,due_at,id);
+      PRAGMA user_version=5;
+      PRAGMA identity.user_version=5;
+    """);
   }
 }

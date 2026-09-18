@@ -73,6 +73,41 @@ void main() {
     c.dispose();
     await root.delete(recursive: true);
   });
+  test('follow-up filters expire after deletion, background, patient changes or a non-lookup turn', () async {
+    Future<void> ask(String text) =>
+        c.ai.ask(c.selectedId!, text, AppLanguage.korean);
+    await ask('오늘 복용 거부 기록');
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(pid).last.reply!.lookup!.intakeStatus, 'refused');
+    await ask('그럼 수분은?');
+    expect(c.chat.messages(pid).last.reply!.lookup!.requiredField, 'water_ml');
+    expect(c.chat.messages(pid).last.reply!.lookup!.intakeStatus, isEmpty);
+    await c.chat.add(pid, 'a manual question starts a different context');
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(pid).last.reply!.kind, AiReplyKind.clarify);
+    await ask('오늘 복약 기록');
+    await c.chat.delete(pid, c.chat.messages(pid).last.id);
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(pid).last.reply!.kind, AiReplyKind.clarify);
+    await ask('오늘 복약 기록');
+    final other = await c.profiles.createPatient();
+    await c.selectPatient(other.id);
+    await c.chat.setRetention(other.id, ChatRetention.forever);
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(other.id).last.reply!.kind, AiReplyKind.clarify);
+    await c.selectPatient(pid);
+    await ask('오늘 복약 기록');
+    await ask('약 추천해줘');
+    expect(c.chat.messages(pid).last.reply!.kind, AiReplyKind.medicalHold);
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(pid).last.reply!.kind, AiReplyKind.clarify);
+    await c.disableAppLock('123456');
+    await ask('오늘 복약 기록');
+    c.handleBackground();
+    await ask('그럼 어제는?');
+    expect(c.chat.messages(pid).last.reply!.kind, AiReplyKind.clarify);
+    expect(ai.calls, 0);
+  });
   test('only selected records are returned; identifiers masked; reply retention follows question', () async {
     await c.profiles.updatePatient(
       pid,
@@ -99,7 +134,7 @@ void main() {
     await c.unlockPin('123456');
     expect(c.chat.messages(pid).single.reply!.sources.single.id, entry.id);
     await c.chat.setRetention(pid, ChatRetention.session);
-    await c.ai.ask(pid, '2026-09-11 09:30 혈압', AppLanguage.korean);
+    await c.ai.ask(pid, '2026-09-11 09:30에 측정한 혈압을 찾아줘', AppLanguage.korean);
     c.lock();
     await c.unlockPin('123456');
     expect(c.chat.messages(pid), isEmpty);
@@ -196,7 +231,11 @@ void main() {
     'background without app lock cancels both queued and running AI replies',
     () async {
       await c.disableAppLock('123456');
-      final queued = c.ai.ask(pid, '2026-09-11 09:30 혈압', AppLanguage.korean);
+      final queued = c.ai.ask(
+        pid,
+        '2026-09-11 09:30에 측정한 혈압을 찾아줘',
+        AppLanguage.korean,
+      );
       c.handleBackground();
       await queued;
       expect(c.unlocked, isTrue);
@@ -204,7 +243,11 @@ void main() {
       expect(c.chat.messages(pid).single.reply, isNull);
 
       ai.pending = Completer<String>();
-      final running = c.ai.ask(pid, '2026-09-11 09:30 혈압', AppLanguage.korean);
+      final running = c.ai.ask(
+        pid,
+        '2026-09-11 09:30에 측정한 혈압을 찾아줘',
+        AppLanguage.korean,
+      );
       final assertion = expectLater(running, throwsA(isA<CareError>()));
       while (ai.calls == 0) {
         await Future<void>.delayed(Duration.zero);
@@ -222,7 +265,11 @@ void main() {
 
   test('late reply is discarded when locked or question is deleted', () async {
     ai.pending = Completer<String>();
-    final operation = c.ai.ask(pid, '2026-09-11 09:30 혈압', AppLanguage.korean);
+    final operation = c.ai.ask(
+      pid,
+      '2026-09-11 09:30에 측정한 혈압을 찾아줘',
+      AppLanguage.korean,
+    );
     final assertion = expectLater(operation, throwsA(isA<CareError>()));
     while (ai.calls == 0) {
       await Future<void>.delayed(Duration.zero);
@@ -236,7 +283,11 @@ void main() {
     await c.unlockPin('123456');
     expect(c.chat.messages(pid).single.reply, isNull);
     ai.pending = Completer<String>();
-    final second = c.ai.ask(pid, '2026-09-11 09:30 혈압', AppLanguage.korean);
+    final second = c.ai.ask(
+      pid,
+      '2026-09-11 09:30에 측정한 혈압을 찾아줘',
+      AppLanguage.korean,
+    );
     while (ai.calls < 2) {
       await Future<void>.delayed(Duration.zero);
     }

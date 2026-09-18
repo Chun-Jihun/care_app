@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../domain/ai.dart';
 import '../../domain/notebook_context.dart';
+import '../../domain/record_lookup.dart';
 import '../../l10n/app_strings.dart';
 import '../ai_query_policy.dart';
 import '../record_lookup_parser.dart';
@@ -17,6 +18,14 @@ final class AiService {
   final ChatService _chat;
   final LocalAiRuntime _runtime;
   bool _asking = false;
+  ({
+    int epoch,
+    int revision,
+    String pid,
+    String messageId,
+    RecordLookup lookup,
+  })?
+  _previous;
   Future<AiModelStatus> status() => _runtime.status();
   Future<void> removeModels() async {
     final epoch = _scope.capture();
@@ -33,7 +42,11 @@ final class AiService {
     _scope.check(epoch);
   }
 
-  void cancel() => _runtime.cancel();
+  void cancel() {
+    _previous = null;
+    _runtime.cancel();
+  }
+
   Future<void> dispose() => _runtime.dispose();
 
   Future<void> ask(String pid, String question, AppLanguage language) async {
@@ -44,8 +57,17 @@ final class AiService {
     }
     final epoch = _scope.capture();
     _asking = true;
-    final revision = _chat.revision;
     try {
+      final revision = _chat.revision;
+      final prior = _previous;
+      final previous =
+          prior?.epoch == epoch &&
+              prior?.revision == revision &&
+              prior?.pid == pid &&
+              _chat.messages(pid).lastOrNull?.id == prior?.messageId
+          ? prior!.lookup
+          : null;
+      _previous = null;
       final message = await _chat.append(pid, question);
       _scope.check(epoch);
       // Background cleanup can end a chat while its question is being saved,
@@ -54,7 +76,11 @@ final class AiService {
       AiReply reply;
       final guard = AiQueryPolicy.guard(question);
       final lookup = guard == null
-          ? RecordLookupParser.parse(question, now: DateTime.now())
+          ? RecordLookupParser.parse(
+              question,
+              now: DateTime.now(),
+              previous: previous,
+            )
           : null;
       final preflight = AiQueryPolicy.preflight(question);
       if (guard != null) {
@@ -147,6 +173,15 @@ final class AiService {
       }
       _scope.check(epoch);
       await _chat.attachReply(pid, message.id, reply, revision);
+      if (reply.lookup case final lookup?) {
+        _previous = (
+          epoch: epoch,
+          revision: revision,
+          pid: pid,
+          messageId: message.id,
+          lookup: lookup,
+        );
+      }
     } finally {
       _asking = false;
     }

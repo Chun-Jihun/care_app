@@ -344,9 +344,9 @@ class _ChatBodyState extends State<ChatBody> {
                                   runSpacing: 8,
                                   children:
                                       [
-                                            context.tr('어제 복약 기록'),
-                                            context.tr('이번 주 식사 기록'),
-                                            context.tr('최근 7일 수분 기록'),
+                                            context.tr('어제 약 먹었어?'),
+                                            context.tr('이번 주 뭐 먹었어?'),
+                                            context.tr('오늘 물 마신 기록'),
                                           ]
                                           .map(
                                             (text) => ActionChip(

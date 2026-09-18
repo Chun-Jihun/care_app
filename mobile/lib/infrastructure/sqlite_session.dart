@@ -17,16 +17,27 @@ final class SqliteSession {
   T transaction<T>(T Function() body) {
     final depth = _transactionDepth++;
     final savepoint = 'care_$depth';
+    var began = false;
     try {
       connection.execute(
         depth == 0 ? 'BEGIN IMMEDIATE' : 'SAVEPOINT $savepoint',
       );
+      began = true;
       final result = body();
       connection.execute(depth == 0 ? 'COMMIT' : 'RELEASE $savepoint');
       return result;
     } catch (_) {
-      connection.execute(depth == 0 ? 'ROLLBACK' : 'ROLLBACK TO $savepoint');
-      if (depth != 0) connection.execute('RELEASE $savepoint');
+      if (began) {
+        try {
+          connection.execute(
+            depth == 0 ? 'ROLLBACK' : 'ROLLBACK TO $savepoint',
+          );
+          if (depth != 0) connection.execute('RELEASE $savepoint');
+        } on SqliteException {
+          // SQLite may already have rolled back after a disk/full I/O failure.
+          // Preserve the original failure instead of a secondary rollback error.
+        }
+      }
       rethrow;
     } finally {
       _transactionDepth--;

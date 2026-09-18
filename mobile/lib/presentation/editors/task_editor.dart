@@ -61,6 +61,12 @@ Future<void> editTask(
               value: reminder,
               onChanged: (v) => update(() => reminder = v),
             ),
+            if (reminder && !at.isAfter(DateTime.now()))
+              Text(
+                context.tr(
+                  '지난 시각의 할 일은 저장되지만 알림은 예약되지 않아요. 알림을 받으려면 미래 시각을 선택해 주세요.',
+                ),
+              ),
           ],
           save: () async {
             await draft.complete();

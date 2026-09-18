@@ -42,6 +42,10 @@ checkpoint-*/
 # Downloaded or generated datasets and evaluation outputs
 /data/*
 !/data/.gitkeep
+# Downloaded medical references stay local; version metadata and code instead.
+/docs/*.pdf
+/docs/*.html
+/docs/*_files/
 /artifacts/data/raw/
 /artifacts/data/staged/
 /artifacts/eval/**/results/

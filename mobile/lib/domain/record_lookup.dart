@@ -11,12 +11,13 @@ final class RecordLookup {
     this.kind,
     this.item = '',
     this.requiredField = '',
+    this.intakeStatus = '',
   });
 
   final DateTime start, end;
   final int fromMinute, untilMinute;
   final EntryKind? kind;
-  final String item, requiredField;
+  final String item, requiredField, intakeStatus;
 
   bool matches(CareEntry entry) {
     final at = entry.occurredAt;
@@ -26,6 +27,7 @@ final class RecordLookup {
         minute < fromMinute ||
         minute >= untilMinute ||
         (kind != null && entry.kind != kind) ||
+        (intakeStatus.isNotEmpty && entry.fields['status'] != intakeStatus) ||
         (requiredField.isNotEmpty &&
             (entry.fields[requiredField] ?? '').trim().isEmpty)) {
       return false;
@@ -49,11 +51,24 @@ final class RecordLookup {
     'kind': kind?.name,
     'item': item,
     'requiredField': requiredField,
+    if (intakeStatus.isNotEmpty) 'intakeStatus': intakeStatus,
   };
 
   static RecordLookup fromJson(Object? raw) {
     if (raw is! Map ||
-        raw.length != 7 ||
+        (raw.length != 7 && raw.length != 8) ||
+        raw.keys.any(
+          (key) => !const [
+            'start',
+            'end',
+            'fromMinute',
+            'untilMinute',
+            'kind',
+            'item',
+            'requiredField',
+            'intakeStatus',
+          ].contains(key),
+        ) ||
         !raw.keys.toSet().containsAll([
           'start',
           'end',
@@ -86,6 +101,13 @@ final class RecordLookup {
         (raw['requiredField'] == 'water_ml' && kind != EntryKind.meal)) {
       throw const FormatException('invalid lookup');
     }
+    final status = raw.containsKey('intakeStatus') ? raw['intakeStatus'] : '';
+    if (status is! String ||
+        (status.isNotEmpty &&
+            (!intakeLabels.containsKey(status) ||
+                kind != EntryKind.medicationIntake))) {
+      throw const FormatException('invalid intake filter');
+    }
     return RecordLookup(
       start: start,
       end: end,
@@ -94,6 +116,7 @@ final class RecordLookup {
       kind: kind,
       item: raw['item'] as String,
       requiredField: raw['requiredField'] as String,
+      intakeStatus: status,
     );
   }
 

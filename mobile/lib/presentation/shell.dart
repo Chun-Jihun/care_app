@@ -294,6 +294,20 @@ class _CareShellState extends State<CareShell> {
         decoration: InputDecoration(
           hintText: context.tr('이 수첩의 기록 검색'),
           prefixIcon: Icon(Icons.search),
+          suffixIcon: search.text.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: context.tr('검색어 지우기'),
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    searchTimer?.cancel();
+                    setState(() {
+                      search.clear();
+                      query = '';
+                      journalLimit = 50;
+                    });
+                  },
+                ),
         ),
         onChanged: (v) {
           searchTimer?.cancel();
@@ -316,13 +330,19 @@ class _CareShellState extends State<CareShell> {
             ChoiceChip(
               label: Text(context.tr('전체')),
               selected: filter == null,
-              onSelected: (_) => setState(() => filter = null),
+              onSelected: (_) => setState(() {
+                filter = null;
+                journalLimit = 50;
+              }),
             ),
             ...EntryKind.values.map(
               (k) => ChoiceChip(
                 label: Text(context.tr(k.label)),
                 selected: filter == k,
-                onSelected: (_) => setState(() => filter = k),
+                onSelected: (_) => setState(() {
+                  filter = k;
+                  journalLimit = 50;
+                }),
               ),
             ),
           ],
@@ -342,7 +362,10 @@ class _CareShellState extends State<CareShell> {
                 lastDate: DateTime(2100),
               );
               if (date != null && mounted) {
-                setState(() => day = date);
+                setState(() {
+                  day = date;
+                  journalLimit = 50;
+                });
               }
             },
             icon: const Icon(Icons.calendar_month, size: 18),
@@ -353,8 +376,25 @@ class _CareShellState extends State<CareShell> {
           if (day != null)
             IconButton(
               tooltip: context.tr('날짜 필터 해제'),
-              onPressed: () => setState(() => day = null),
+              onPressed: () => setState(() {
+                day = null;
+                journalLimit = 50;
+              }),
               icon: const Icon(Icons.close, size: 18),
+            ),
+          if (query.isNotEmpty || day != null || filter != null)
+            TextButton(
+              onPressed: () {
+                searchTimer?.cancel();
+                setState(() {
+                  search.clear();
+                  query = '';
+                  day = null;
+                  filter = null;
+                  journalLimit = 50;
+                });
+              },
+              child: Text(context.tr('검색 조건 초기화')),
             ),
           Text(
             entries.length > journalLimit

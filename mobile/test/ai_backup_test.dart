@@ -107,6 +107,71 @@ void main() {
     final restored = c.patients.singleWhere((p) => p.id != pid).id;
     expect(testRepository(c).chatMessages(restored).single.reply, isNull);
   });
+  test('version 3 period metadata remains importable', () async {
+    await reply(await source());
+    final bytes = await testVault(c).backupSelection(
+      password,
+      BackupSelection(patientIds: {pid}, chats: true),
+    );
+    final data = jsonDecode(
+      utf8.decode(await VaultCrypto.passwordOpen(bytes, password)),
+    ) as Map;
+    data['document_version'] = 3;
+    final old = await VaultCrypto.passwordSeal(
+      Uint8List.fromList(utf8.encode(jsonEncode(data))),
+      password,
+    );
+    await c.importSelection(old, password);
+    final restored = c.patients.singleWhere((p) => p.id != pid).id;
+    final lookup = testRepository(c)
+        .chatMessages(restored)
+        .single
+        .reply!
+        .lookup!;
+    expect(lookup.start, DateTime(2020));
+    expect(lookup.intakeStatus, isEmpty);
+  });
+  test(
+    'version 4 exact intake status survives selective backup and restore',
+    () async {
+      final entry = await c.records.saveEntry(
+        pid,
+        kind: EntryKind.medicationIntake,
+        occurredAt: DateTime(2020),
+        fields: {'medicine': 'synthetic A', 'status': 'refused'},
+      );
+      final question = await c.chat.append(pid, 'synthetic status lookup');
+      await c.chat.attachReply(
+        pid,
+        question.id,
+        AiReply(
+          AiReplyKind.records,
+          sources: [AiReference(entry.id, entry.version)],
+          lookup: RecordLookup(
+            start: DateTime(2020),
+            end: DateTime(2020, 1, 2),
+            kind: EntryKind.medicationIntake,
+            intakeStatus: 'refused',
+          ),
+        ),
+        c.chat.revision,
+      );
+      final bytes = await testVault(c).backupSelection(
+        password,
+        BackupSelection(patientIds: {pid}, chats: true),
+      );
+      await c.importSelection(bytes, password);
+      final restored = c.patients.singleWhere((p) => p.id != pid).id;
+      final answer = testRepository(c).chatMessages(restored).single.reply!;
+      expect(answer.lookup!.intakeStatus, 'refused');
+      expect(
+        answer.lookup!.matches(
+          testRepository(c).entry(restored, answer.sources.single.id)!,
+        ),
+        isTrue,
+      );
+    },
+  );
   test('version 2 reply without query metadata remains importable', () async {
     await reply(await source());
     final bytes = await testVault(c).backupSelection(
@@ -116,7 +181,7 @@ void main() {
     final data = jsonDecode(
       utf8.decode(await VaultCrypto.passwordOpen(bytes, password)),
     ) as Map;
-    expect(data['document_version'], 3);
+    expect(data['document_version'], 4);
     data['document_version'] = 2;
     for (final row in (data['rows'] as Map)['chat_message'] as List) {
       final value = jsonDecode(row['reply'] as String) as Map;
