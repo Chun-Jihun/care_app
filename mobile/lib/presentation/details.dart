@@ -10,6 +10,8 @@ import '../domain/reviewed_input.dart';
 import 'common.dart';
 import 'ai_draft_page.dart';
 import 'editors.dart';
+import 'accessible_image.dart';
+import 'photo_thumbnail.dart';
 
 class EntryDetails extends StatelessWidget {
   const EntryDetails(this.c, this.pid, this.id, {super.key});
@@ -61,8 +63,8 @@ class EntryDetails extends StatelessWidget {
                     title: Text(
                       context.tr(field.label),
                       style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF68796E),
+                        fontSize: 14,
+                        color: Color(0xFF52655A),
                       ),
                     ),
                     subtitle: SelectableText(
@@ -84,7 +86,7 @@ class EntryDetails extends StatelessWidget {
             Section(context.tr('사진')),
             Text(
               context.tr('음식·처방자료 등을 첨부하세요. 사진 위치 정보는 제거하고 암호화해 저장합니다.'),
-              style: TextStyle(height: 1.5, color: Color(0xFF68796E)),
+              style: TextStyle(height: 1.5, color: Color(0xFF52655A)),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -105,78 +107,127 @@ class EntryDetails extends StatelessWidget {
             ),
             for (final a in attachments)
               Card(
-                child: ListTile(
-                  leading: const Icon(Icons.photo_outlined, color: forest),
-                  title: Text(context.tr('첨부 사진')),
-                  subtitle: Text('${(a.bytes / 1024).ceil()} KB'),
-                  onTap: () {
-                    final photo = c.photo(pid, id, a.id);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(builder: (_) => PhotoPage(photo)),
-                    );
-                  },
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: context.tr('사진에서 글자 읽기'),
-                        icon: const Icon(Icons.document_scanner_outlined),
-                        onPressed: () async {
-                          await attempt(context, () async {
-                            final epoch = c.captureSession();
-                            final image = await c.photo(pid, id, a.id);
-                            if (!context.mounted) return;
-                            final reviewed = await reviewRecordInput(
-                              context,
-                              c,
-                              pid,
-                              photo: image,
-                              kind: e.kind,
-                              currentFields: e.fields,
-                            );
-                            if (!context.mounted || reviewed == null) return;
-                            c.requireSession(epoch);
-                            final current = c.records.entry(pid, id);
-                            if (current == null) return;
-                            await editEntry(
-                              context,
-                              c,
-                              current.kind,
-                              entry: current,
-                              initialNote: appendReviewedInput(
-                                current.note,
-                                reviewed.text,
+                child: Column(
+                  children: [
+                    Semantics(
+                      button: true,
+                      child: InkWell(
+                        onTap: () {
+                          final photo = c.photo(pid, id, a.id);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => PhotoPage(photo),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  PhotoThumbnail(
+                                    c,
+                                    pid,
+                                    id,
+                                    a.id,
+                                    key: ValueKey(a.id),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      context.tr('첨부 사진 {0}', [
+                                        attachments.indexOf(a) + 1,
+                                      ]),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              initialFields: {
-                                for (final field in reviewed.fields.entries)
-                                  if ((current.fields[field.key] ?? '')
-                                      .trim()
-                                      .isEmpty)
-                                    field.key: field.value,
-                              },
-                            );
-                          });
-                        },
+                              const SizedBox(height: 8),
+                              Text(
+                                '${context.tr('기록일')}: ${dateText(context, e.occurredAt)}',
+                              ),
+                              Text(
+                                '${(a.bytes / 1024).ceil()} KB',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: forest,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        tooltip: context.tr('사진 삭제'),
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () async {
-                          if (await confirm(
-                                context,
-                                context.tr('사진을 삭제할까요?'),
-                                context.tr('이 기록에 저장된 사진을 삭제합니다.'),
-                              ) &&
-                              context.mounted) {
-                            await attempt(context, () async {
-                              await c.records.deleteAttachment(pid, a.id);
-                            });
-                          }
-                        },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          TextButton.icon(
+                            label: Text(context.tr('사진에서 글자 읽기')),
+                            icon: const Icon(Icons.document_scanner_outlined),
+                            onPressed: () async {
+                              await attempt(context, () async {
+                                final epoch = c.captureSession();
+                                final image = await c.photo(pid, id, a.id);
+                                if (!context.mounted) return;
+                                final reviewed = await reviewRecordInput(
+                                  context,
+                                  c,
+                                  pid,
+                                  photo: image,
+                                  kind: e.kind,
+                                  currentFields: e.fields,
+                                );
+                                if (!context.mounted || reviewed == null) {
+                                  return;
+                                }
+                                c.requireSession(epoch);
+                                final current = c.records.entry(pid, id);
+                                if (current == null) return;
+                                await editEntry(
+                                  context,
+                                  c,
+                                  current.kind,
+                                  entry: current,
+                                  initialNote: appendReviewedInput(
+                                    current.note,
+                                    reviewed.text,
+                                  ),
+                                  initialFields: {
+                                    for (final field in reviewed.fields.entries)
+                                      if ((current.fields[field.key] ?? '')
+                                          .trim()
+                                          .isEmpty)
+                                        field.key: field.value,
+                                  },
+                                );
+                              });
+                            },
+                          ),
+                          IconButton(
+                            tooltip: context.tr('사진 삭제'),
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () async {
+                              if (await confirm(
+                                    context,
+                                    context.tr('사진을 삭제할까요?'),
+                                    context.tr('이 기록에 저장된 사진을 삭제합니다.'),
+                                  ) &&
+                                  context.mounted) {
+                                await attempt(context, () async {
+                                  await c.records.deleteAttachment(pid, a.id);
+                                });
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             if (e.version > 1)
@@ -245,10 +296,10 @@ class PhotoPage extends StatelessWidget {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        return Center(
-          child: InteractiveViewer(
-            maxScale: 8,
-            child: Image.memory(snapshot.data!, gaplessPlayback: false),
+        return SafeArea(
+          child: AccessibleImage(
+            bytes: snapshot.data!,
+            semanticLabel: context.tr('첨부 사진'),
           ),
         );
       },

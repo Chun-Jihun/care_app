@@ -20,10 +20,29 @@ final class VaultPhotos {
     Uint8List source, {
     void Function()? beforeCommit,
   }) async {
+    _state.database.attachments(pid, eid);
+    await _storePhoto(source, (id, wrapped, bytes) {
+      _state.database.addAttachment(pid, eid, id, wrapped, bytes);
+    }, beforeCommit: beforeCommit);
+  }
+
+  Future<void> completeDraftWithPhoto(
+    String pid,
+    String draftId,
+    Uint8List source, {
+    void Function()? beforeCommit,
+  }) => _storePhoto(source, (id, wrapped, bytes) {
+    _state.database.completeDraftWithPhoto(pid, draftId, id, wrapped, bytes);
+  }, beforeCommit: beforeCommit);
+
+  Future<void> _storePhoto(
+    Uint8List source,
+    void Function(String id, String wrapped, int bytes) commit, {
+    void Function()? beforeCommit,
+  }) async {
     if (source.length > 20 * 1024 * 1024) {
       throw CareError(CareErrorCode.photoTooLarge);
     }
-    _state.database.attachments(pid, eid);
     final normalized = await Isolate.run(() => normalizePhoto(source));
     final id = CareDatabase.newId();
     final key = VaultCrypto.randomBytes();
@@ -43,13 +62,7 @@ final class VaultPhotos {
     try {
       await file.writeAsBytes(encrypted, flush: true);
       beforeCommit?.call();
-      _state.database.addAttachment(
-        pid,
-        eid,
-        id,
-        base64Encode(wrapped),
-        encrypted.length,
-      );
+      commit(id, base64Encode(wrapped), encrypted.length);
     } catch (_) {
       if (await file.exists()) {
         await file.delete();
@@ -58,7 +71,11 @@ final class VaultPhotos {
     }
   }
 
-  static Uint8List normalizePhoto(Uint8List source) {
+  static void validatePhoto(Uint8List source) {
+    _validatedDecoder(source);
+  }
+
+  static img.Decoder _validatedDecoder(Uint8List source) {
     if (source.length > 20 * 1024 * 1024) {
       throw CareError(CareErrorCode.photoTooLarge);
     }
@@ -80,6 +97,11 @@ final class VaultPhotos {
     if (info.numFrames != 1) {
       throw CareError(CareErrorCode.animatedPhotoUnsupported);
     }
+    return decoder;
+  }
+
+  static Uint8List normalizePhoto(Uint8List source) {
+    final decoder = _validatedDecoder(source);
     final decoded = decoder.decodeFrame(0);
     if (decoded == null) throw CareError(CareErrorCode.photoDecodeFailed);
     final oriented = img.bakeOrientation(decoded);

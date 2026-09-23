@@ -23,7 +23,7 @@ Future<bool> chooseDraftRetention(
           padding: EdgeInsets.all(16),
           child: Text(
             context.tr(
-              '일기·약·복약·할 일·진료 준비·내 상태의 작성 중 내용을 기기에 암호화해 보관합니다. 기간은 마지막 자동 저장부터 계산하며 설정에서 바꿀 수 있어요.',
+              '작성 중인 내용은 암호화해 자동 저장해요. 마지막 저장부터 보관하며, 기간은 설정에서 바꿀 수 있어요.',
             ),
           ),
         ),

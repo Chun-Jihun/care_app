@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
 import '../domain/knowledge.dart';
+import '../domain/drug_safety.dart';
 import 'packed_knowledge_drugs.dart';
 
 const _maxBlock = 16 * 1024 * 1024;
@@ -21,7 +22,8 @@ const _unreviewed = {
 Never _fail(String message) => throw KnowledgePackageException(message);
 String _digest(List<int> bytes) => sha256.convert(bytes).toString();
 
-/// Opens only development review packages. No network or medical-generation API.
+/// Reads pinned offline packages with strict declared review-state checks.
+/// Clinical question/passage authorization is owned by the application catalog.
 /// Hashing, queries and decompression run off the Flutter UI isolate.
 class LocalKnowledgePackage implements KnowledgeReviewReader {
   LocalKnowledgePackage._(this.directory, this._manifest, this._modified);
@@ -40,7 +42,29 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
   static Future<LocalKnowledgePackage> openForReview(
     String directory, {
     String? expectedHash,
+  }) => _open(directory, expectedHash: expectedHash, approved: false);
+
+  /// Call only after authenticating the complete files to the app allowlist.
+  /// There is no in-app promotion operation or approval inferred from a hash.
+  static Future<LocalKnowledgePackage> openApproved(
+    String directory, {
+    required String expectedHash,
+  }) => _open(directory, expectedHash: expectedHash, approved: true);
+
+  static Future<LocalKnowledgePackage> _open(
+    String directory, {
+    String? expectedHash,
+    required bool approved,
   }) => Isolate.run(() async {
+    final states = approved
+        ? <String, Object>{
+            'approval_state': 'approved',
+            'clinical_review_completed': true,
+            'runtime_rag_eligible': true,
+            'mobile_bundle': true,
+            'do_not_train': true,
+          }
+        : _unreviewed;
     final manifestFile = File(p.join(directory, 'manifest.json'));
     if (await manifestFile.length() > 1024 * 1024) {
       _fail('패키지 정보가 허용 크기를 초과했습니다.');
@@ -51,14 +75,15 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
           'care-knowledge-preview-v1',
           'care-knowledge-preview-v2',
         ].contains(m['schema']) ||
-        m['purpose'] != 'development_preview' ||
+        m['purpose'] !=
+            (approved ? 'medical_reference' : 'development_preview') ||
         m['database'] != 'knowledge.sqlite3' ||
         m['codec'] != 'zlib' ||
         m['max_block_bytes'] != _maxBlock ||
         !const ['documents', 'drugs'].contains(m['kind']) ||
         (m['schema'] == 'care-knowledge-preview-v2' &&
             m['packed_layout'] != 'field_values_delta_index_v1') ||
-        _unreviewed.entries.any((e) => m[e.key] != e.value)) {
+        states.entries.any((e) => m[e.key] != e.value)) {
       _fail('지원하지 않는 패키지 또는 검수 상태입니다.');
     }
     final file = File(p.join(directory, 'knowledge.sqlite3'));
@@ -110,7 +135,7 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
         'codec',
         'kind',
         'max_block_bytes',
-        ..._unreviewed.keys,
+        ...states.keys,
       ]) {
         if (internal[key] != m[key]) _fail('패키지 내부 정보가 일치하지 않습니다.');
       }
@@ -321,7 +346,150 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
     }),
   );
 
-  Never clinicalContext(String question) => _fail('미검수 자료는 의료 답변에 사용할 수 없습니다.');
+  /// Product identity only; no inference about equivalence, dosage or safety.
+  /// Entire normalized names match; partial names return candidates requiring
+  /// user selection. Packed records are scanned in order off the UI isolate.
+  Future<DrugNameMatches> findDrugName(String query) => Isolate.run(
+    () => _read((db) {
+      final key = _drugName(query);
+      if (key.length < 2 || key.length > 200) {
+        return const DrugNameMatches([], false);
+      }
+      final exact = <String, DrugIdentity>{},
+          partial = <String, DrugIdentity>{};
+      var exactTruncated = false, partialTruncated = false;
+      void consider(Map<String, dynamic> record) {
+        final code = '${record['ITEM_SEQ'] ?? record['itemSeq'] ?? ''}';
+        final name = '${record['ITEM_NAME'] ?? record['itemName'] ?? ''}';
+        if (code.isEmpty || name.isEmpty) return;
+        final normalized = _drugName(name);
+        final candidate = DrugIdentity(code, name);
+        if (code == query.trim() || normalized == key) {
+          if (exact.containsKey(code)) return;
+          if (exact.length < 21) {
+            exact[code] = candidate;
+          } else {
+            exactTruncated = true;
+          }
+        } else if (normalized.contains(key)) {
+          if (partial.containsKey(code)) return;
+          if (partial.length < 21) {
+            partial[code] = candidate;
+          } else {
+            partialTruncated = true;
+          }
+        }
+      }
+
+      if (_packed) {
+        final packed = PackedKnowledgeDrugs(db, (id) => _blob(db, id));
+        for (final group in db.select(
+          'SELECT first_record,record_count FROM record_groups ORDER BY first_record',
+        )) {
+          final first = group['first_record'] as int;
+          final count = group['record_count'] as int;
+          if (count < 1 || count > 512) _fail('제품 식별 목록을 확인할 수 없습니다.');
+          for (var id = first; id < first + count; id++) {
+            consider(packed.record(id)['record'] as Map<String, dynamic>);
+          }
+        }
+      } else {
+        for (final row in db.select(
+          'SELECT item_seq,item_name FROM drug_records ORDER BY id',
+        )) {
+          consider({
+            'ITEM_SEQ': row['item_seq'],
+            'ITEM_NAME': row['item_name'],
+          });
+        }
+      }
+      final selected = exact.isNotEmpty ? exact : partial;
+      final unique = selected.values.toList();
+      return DrugNameMatches(
+        unique.take(20).toList(),
+        exact.isNotEmpty,
+        truncated:
+            unique.length > 20 ||
+            (exact.isNotEmpty ? exactTruncated : partialTruncated),
+      );
+    }),
+  );
+
+  Never clinicalContext(String question) =>
+      _fail('의료 답변에는 승인된 발췌 선택 경로를 사용해야 합니다.');
+
+  /// Bounded full rows in one worker; truncation is explicit and never a clean result.
+  Future<DurRecords> drugSafetyRows(Set<String> codes) => Isolate.run(
+    () => _read((db) {
+      if (!_packed ||
+          codes.isEmpty ||
+          codes.length > 30 ||
+          codes.any((c) => !RegExp(r'^\d{9}$').hasMatch(c))) {
+        _fail('지원하지 않는 약물 조회입니다.');
+      }
+      final packed = PackedKnowledgeDrugs(db, (id) => _blob(db, id));
+      final selected = <int>{};
+      var complete = true;
+      for (final code in codes) {
+        final rows = packed.lookup(code, 1001);
+        if (rows.length > 1000) complete = false;
+        selected.addAll(rows.take(1000).map((r) => r['id'] as int));
+        if (selected.length > 3000) return DurRecords([], complete: false);
+      }
+      final records = <DurRecord>[];
+      for (final id in selected) {
+        final row = packed.record(id);
+        final sourceId = row['source_id'] as String;
+        final meta = jsonDecode(
+          db.select('SELECT metadata FROM sources WHERE id=?', [
+                sourceId,
+              ]).single['metadata']
+              as String,
+        ) as Map;
+        records.add(
+          DurRecord(
+            id: id,
+            packageHash: packageHash,
+            operation: meta['operation'] as String? ?? '',
+            source: _source(db, sourceId),
+            page: row['page_no'] as int,
+            row: row['row_no'] as int,
+            fields: (row['record'] as Map<String, dynamic>).map(
+              (key, value) => MapEntry(key, value?.toString() ?? ''),
+            ),
+          ),
+        );
+      }
+      return DurRecords(records, complete: complete);
+    }),
+  );
+
+  Future<Set<String>> drugOperations() => Isolate.run(
+    () => _read(
+      (db) => {
+        for (final row in db.select('SELECT metadata FROM sources'))
+          (jsonDecode(row['metadata'] as String) as Map)['operation']
+                  as String? ??
+              '',
+      },
+    ),
+  );
+}
+
+String _drugName(String name) =>
+    name.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+
+class DrugIdentity {
+  const DrugIdentity(this.code, this.name);
+  final String code, name;
+}
+
+class DrugNameMatches {
+  const DrugNameMatches(this.candidates, this.exact, {this.truncated = false});
+  final List<DrugIdentity> candidates;
+  final bool exact, truncated;
+  DrugIdentity? get identified =>
+      exact && !truncated && candidates.length == 1 ? candidates.single : null;
 }
 
 Object? _canonical(Object? value) {

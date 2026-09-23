@@ -25,6 +25,10 @@ import 'dart:async';
 
 import '../domain/ai.dart';
 import 'services/ai_service.dart';
+import 'medical_answer_service.dart';
+import '../domain/knowledge_installation.dart';
+import '../domain/drug_safety.dart';
+import 'services/medication_safety_service.dart';
 
 /// Session lifecycle and composition. Feature services own feature operations.
 class CareController extends ChangeNotifier {
@@ -33,10 +37,17 @@ class CareController extends ChangeNotifier {
     PlatformServices platform, {
     this._aiRuntime = const UnavailableAiRuntime(),
     this.microphone,
+    this.knowledge,
+    this.medicalAnswers,
+    this.drugCatalog,
   }) : _vault = vault,
        _platform = platform;
   final LocalAiRuntime _aiRuntime;
   final MicrophoneCapture Function()? microphone;
+  final KnowledgeLibrary? knowledge;
+  final MedicalAnswerService? medicalAnswers;
+  final Future<DrugCatalog> Function()? drugCatalog;
+  late final medicationSafety = MedicationSafetyService(_scope, drugCatalog);
   final NotebookVault _vault;
   final PlatformServices _platform;
   bool _ready = false, _unlocked = false, _hasPin = false, _busy = false;
@@ -84,11 +95,36 @@ class CareController extends ChangeNotifier {
   late final checkins = CheckinService(_scope);
   late final drafts = DraftService(
     _scope,
+    _vault,
     busy: () => _busy,
     notify: draftsChanged,
   );
   late final chat = ChatService(_scope);
-  late final ai = AiService(_scope, contextTasks, chat, _aiRuntime);
+  late final ai = AiService(
+    _scope,
+    contextTasks,
+    chat,
+    _aiRuntime,
+    medical: medicalAnswers,
+  );
+
+  Future<void> installKnowledge(
+    void Function(double) progress, {
+    void Function()? checkCancelled,
+  }) async {
+    final library = knowledge;
+    if (library == null) return;
+    final epoch = captureSession();
+    final path = await _external(library.pickBundle);
+    _check(epoch);
+    if (path == null) return;
+    await library.install(path, progress, () {
+      _check(epoch);
+      checkCancelled?.call();
+    });
+    _check(epoch);
+  }
+
   late final backups = BackupService(
     _scope,
     _vault,
@@ -313,7 +349,11 @@ class CareController extends ChangeNotifier {
         impact == ChangeImpact.photos) {
       records.invalidate();
     }
-    if (all || impact == ChangeImpact.medications) medicationBook.invalidate();
+    if (all ||
+        impact == ChangeImpact.medications ||
+        impact == ChangeImpact.records) {
+      medicationBook.invalidate();
+    }
     if (all || impact == ChangeImpact.tasks) taskBook.invalidate();
     if (all ||
         impact == ChangeImpact.visits ||

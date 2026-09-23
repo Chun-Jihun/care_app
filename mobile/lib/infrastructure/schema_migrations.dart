@@ -7,7 +7,7 @@ import 'sqlite_session.dart';
 
 final class SchemaMigrations {
   SchemaMigrations(this._store, this._verify);
-  static const version = 5;
+  static const version = 6;
   final SqliteSession _store;
   final void Function() _verify;
   String get directory => _store.directory;
@@ -57,7 +57,8 @@ final class SchemaMigrations {
       if (source == 1) _upgradeChatSchema();
       if (source <= 2) _upgradeDraftSchema();
       if (source <= 3) _upgradeAiSchema();
-      _upgradeIndexes();
+      if (source < 5) _upgradeIndexes();
+      if (source < 6) _upgradeProducts();
       return;
     }
     _store.transaction(() {
@@ -104,6 +105,7 @@ final class SchemaMigrations {
     _upgradeDraftSchema();
     _upgradeAiSchema();
     _upgradeIndexes();
+    _upgradeProducts();
   }
 
   void _upgradeAiSchema() {
@@ -138,6 +140,24 @@ final class SchemaMigrations {
           PRAGMA user_version=3;
           PRAGMA identity.user_version=3;
         ''');
+  }
+
+  void _upgradeProducts() {
+    _store.connection.execute('''
+      CREATE TABLE medication_product(
+        patient_id TEXT NOT NULL, medication_id TEXT NOT NULL,
+        medication_version INTEGER NOT NULL CHECK(medication_version>0),
+        item_code TEXT NOT NULL CHECK(length(item_code)=9),
+        product_name TEXT NOT NULL CHECK(length(product_name)>0 AND length(product_name)<=1000),
+        release_id TEXT NOT NULL CHECK(length(release_id)=64),
+        confirmed_at INTEGER NOT NULL,
+        PRIMARY KEY(patient_id,medication_id),
+        FOREIGN KEY(patient_id,medication_id) REFERENCES medication(patient_id,id) ON DELETE CASCADE);
+      CREATE TRIGGER invalidate_medication_product AFTER UPDATE ON medication
+        BEGIN DELETE FROM medication_product WHERE patient_id=NEW.patient_id AND medication_id=NEW.id; END;
+      PRAGMA user_version=6;
+      PRAGMA identity.user_version=6;
+    ''');
   }
 
   void _upgradeIndexes() {

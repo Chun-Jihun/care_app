@@ -11,6 +11,9 @@ import '../domain/reviewed_input.dart';
 import '../l10n/app_strings.dart';
 import 'common.dart';
 import 'ai_field_choices.dart';
+import 'accessible_image.dart';
+import 'status_message.dart';
+import 'ai_settings.dart';
 
 Future<String?> reviewAiInput(
   BuildContext context,
@@ -69,6 +72,7 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
   int operation = 0;
   Object? error;
   late final int session;
+  late Future<AiModelStatus> modelStatus = widget.c.ai.status();
   @override
   void initState() {
     super.initState();
@@ -266,12 +270,10 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
             ),
           ),
           if (widget.photo != null)
-            SizedBox(
-              height: 230,
-              child: InteractiveViewer(
-                maxScale: 8,
-                child: Image.memory(widget.photo!),
-              ),
+            AccessibleImage(
+              bytes: widget.photo!,
+              semanticLabel: context.tr('첨부 사진'),
+              viewportHeight: 230,
             ),
           const SizedBox(height: 16),
           if (recording)
@@ -281,36 +283,81 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
             ),
           if (working) ...[
             const LinearProgressIndicator(),
-            Text(context.tr('기기에서 처리 중…')),
+            StatusMessage(context.tr('기기에서 처리 중…')),
           ],
           if ((!ready || widget.photo == null) && !working)
-            FilledButton.icon(
-              onPressed: recording ? stop : start,
-              icon: Icon(
-                recording
-                    ? Icons.stop
-                    : widget.photo == null
-                    ? Icons.mic
-                    : Icons.document_scanner_outlined,
-              ),
-              label: Text(
-                context.tr(
-                  recording
-                      ? '녹음 마치기'
-                      : widget.photo == null
-                      ? ready
-                            ? '이어서 녹음'
-                            : '녹음 시작'
-                      : '글자 읽기',
-                ),
-              ),
+            FutureBuilder<AiModelStatus>(
+              future: modelStatus,
+              builder: (context, snapshot) {
+                if (recording || snapshot.data?.installed == true) {
+                  return FilledButton.icon(
+                    onPressed: recording ? stop : start,
+                    icon: Icon(
+                      recording
+                          ? Icons.stop
+                          : widget.photo == null
+                          ? Icons.mic
+                          : Icons.document_scanner_outlined,
+                    ),
+                    label: Text(
+                      context.tr(
+                        recording
+                            ? '녹음 마치기'
+                            : widget.photo == null
+                            ? ready
+                                  ? '이어서 녹음'
+                                  : '녹음 시작'
+                            : '글자 읽기',
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return StatusMessage(context.tr('AI 준비 상태 확인 중…'));
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    StatusMessage(
+                      context.tr(
+                        snapshot.hasError
+                            ? 'AI 준비 상태를 확인하지 못했어요.'
+                            : snapshot.data?.supported == false
+                            ? '이 환경에서는 AI 입력을 사용할 수 없어요. 직접 입력해 주세요.'
+                            : 'AI 설치 후 사용할 수 있어요. 직접 입력은 지금도 가능합니다.',
+                      ),
+                    ),
+                    if (snapshot.data?.supported != false)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.settings_outlined),
+                        label: Text(context.tr('AI·근거자료 관리')),
+                        onPressed: () async {
+                          await openAiSettings(context, widget.c);
+                          if (valid) {
+                            setState(() {
+                              modelStatus = widget.c.ai.status();
+                            });
+                          }
+                        },
+                      ),
+                    TextButton(
+                      onPressed: () => setState(() {
+                        modelStatus = widget.c.ai.status();
+                      }),
+                      child: Text(context.tr('다시 확인')),
+                    ),
+                  ],
+                );
+              },
             ),
           if (error != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(errorText(context, error!)),
+              child: StatusMessage(errorText(context, error!), isError: true),
             ),
           if (ready) ...[
+            if (!working && !recording)
+              StatusMessage(context.tr('입력할 초안이 준비되었습니다.')),
             ...[
               ExpansionTile(
                 key: const ValueKey('ocrOriginal'),

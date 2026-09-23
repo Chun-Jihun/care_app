@@ -33,9 +33,16 @@ abstract interface class NotebookVault {
   void close();
   Future<void> cleanup({bool removeOrphans = true});
   Future<void> wipe();
+  Future<void> validatePhoto(Uint8List data);
   Future<void> addPhoto(
     String pid,
     String eid,
+    Uint8List data, {
+    void Function()? beforeCommit,
+  });
+  Future<void> completeDraftWithPhoto(
+    String pid,
+    String draftId,
     Uint8List data, {
     void Function()? beforeCommit,
   });

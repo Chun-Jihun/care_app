@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import '../pending_photo_field.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -10,6 +13,7 @@ import '../../domain/reviewed_input.dart';
 import '../common.dart';
 import '../ai_draft_page.dart';
 import '../draft_support.dart';
+import '../record_fields.dart';
 
 Future<void> editEntry(
   BuildContext context,
@@ -18,6 +22,7 @@ Future<void> editEntry(
   CareEntry? entry,
   CareDraft? restored,
   String? initialNote,
+  Uint8List? initialPhoto,
   Map<String, String> initialFields = const {},
 }) async {
   if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
@@ -25,6 +30,7 @@ Future<void> editEntry(
     return;
   }
   final pid = c.selectedId!;
+  Uint8List? photo = initialPhoto;
   final data = restored?.payload as EntryDraftPayload?;
   final note = TextEditingController(
     text: data?.note ?? initialNote ?? entry?.note,
@@ -39,6 +45,7 @@ Future<void> editEntry(
       ),
   };
   var at = data?.at ?? entry?.occurredAt ?? DateTime.now();
+  final fieldsKey = GlobalKey<RecordFieldsState>();
   final draft = DraftSession(
     c,
     patientId: pid,
@@ -60,6 +67,14 @@ Future<void> editEntry(
           title:
               '${context.tr(kind.label)} ${entry == null ? context.tr('기록') : context.tr('수정')}',
           draft: draft,
+          initiallyDirty: initialPhoto != null,
+          draftExitNotice: () => photo == null
+              ? null
+              : context.tr(
+                  '사진은 저장을 눌러야 보관돼요. 초안에는 글만 보관되므로 나갔다 돌아오면 사진을 다시 선택해 주세요.',
+                ),
+          revealError: (error) async =>
+              await fieldsKey.currentState?.revealError(error) ?? false,
           content: (update) => [
             Text(
               context.tr('{0} · 직접 작성한 기록', [
@@ -67,48 +82,27 @@ Future<void> editEntry(
               ]),
               style: const TextStyle(color: forest),
             ),
-            dateButton(context, at, update, (v) => at = v),
-            for (final f in kind.fields)
-              if (f.choices.isEmpty)
-                textField(
-                  values[f.key]!,
-                  '${context.tr(f.label)}${f.required ? ' *' : ''}',
-                  numeric: f.numeric,
-                  multiline: f.key == 'instruction',
-                )
-              else
-                DropdownButtonFormField<String>(
-                  key: ValueKey('${f.key}:${values[f.key]!.text}'),
-                  isExpanded: true,
-                  itemHeight: null,
-                  initialValue: values[f.key]!.text.isEmpty
-                      ? null
-                      : values[f.key]!.text,
-                  decoration: InputDecoration(
-                    labelText:
-                        '${context.tr(f.label)}${f.required ? ' *' : ''}',
-                  ),
-                  items: [
-                    if (!f.required)
-                      DropdownMenuItem(
-                        value: '',
-                        child: Text(context.tr('선택하지 않음')),
-                      ),
-                    ...f.choices.entries.map(
-                      (e) => DropdownMenuItem(
-                        value: e.key,
-                        child: Text(context.tr(e.value)),
-                      ),
-                    ),
-                  ],
-                  onChanged: (v) => values[f.key]!.text = v ?? '',
-                ),
-            textField(
-              note,
-              kind == EntryKind.generalNote
-                  ? context.tr('메모 *')
-                  : context.tr('추가 메모'),
-              multiline: true,
+            PendingPhotoField(
+              c: c,
+              pid: pid,
+              photo: photo,
+              kind: kind,
+              currentFields: {
+                for (final e in values.entries) e.key: e.value.text,
+              },
+              onChanged: (value) => update(() => photo = value),
+              onReviewed: (reviewed) {
+                update(() {
+                  note.text = appendReviewedInput(note.text, reviewed.text);
+                  for (final field in reviewed.fields.entries) {
+                    final controller = values[field.key];
+                    if (controller != null && controller.text.trim().isEmpty) {
+                      controller.text = field.value;
+                    }
+                  }
+                });
+                fieldsKey.currentState?.revealPopulatedDetails();
+              },
             ),
             OutlinedButton.icon(
               icon: const Icon(Icons.mic_none),
@@ -142,9 +136,22 @@ Future<void> editEntry(
                         }
                       }
                     });
+                    fieldsKey.currentState?.revealPopulatedDetails();
                   });
                 }
               },
+            ),
+            if (kind == EntryKind.handoff)
+              Text(context.tr('다음에 돌볼 사람에게 전할 내용과 확인할 일을 적어요.')),
+            dateButton(context, at, update, (v) => at = v),
+            if (kind.fields.isNotEmpty)
+              RecordFields(key: fieldsKey, kind: kind, values: values),
+            textField(
+              note,
+              kind == EntryKind.generalNote
+                  ? context.tr('메모 *')
+                  : context.tr('추가 메모'),
+              multiline: true,
             ),
             if (kind == EntryKind.medicationIntake)
               Text(
@@ -152,13 +159,9 @@ Future<void> editEntry(
                   '실제 있었던 복용 상태를 기록해 주세요. 처방 변경은 약 목록에서 따로 기록할 수 있습니다.',
                 ),
               ),
-            Text(
-              context.tr('사진은 저장 후 기록 상세에서 추가할 수 있어요.'),
-              style: TextStyle(color: Color(0xFF66766E)),
-            ),
           ],
           save: () async {
-            await draft.complete();
+            await draft.complete(photo: photo);
           },
         ),
       ),

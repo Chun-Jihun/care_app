@@ -9,10 +9,19 @@ import '../record_lookup_parser.dart';
 import '../context_tasks.dart';
 import '../session_access.dart';
 import 'chat_service.dart';
+import '../medical_answer_service.dart';
+import '../knowledge_search.dart';
 
 /// Coordinates scope and retention. Inference has no repository access.
 final class AiService {
-  AiService(this._scope, this._tasks, this._chat, this._runtime);
+  AiService(
+    this._scope,
+    this._tasks,
+    this._chat,
+    this._runtime, {
+    this.medical,
+  });
+  final MedicalAnswerService? medical;
   final SessionAccess _scope;
   final ContextTasks _tasks;
   final ChatService _chat;
@@ -83,7 +92,42 @@ final class AiService {
             )
           : null;
       final preflight = AiQueryPolicy.preflight(question);
-      if (guard != null) {
+      if (guard == AiReplyKind.urgent || guard == AiReplyKind.notebookScope) {
+        reply = AiReply(guard!);
+      } else if (medical != null &&
+          (guard == AiReplyKind.medicalHold ||
+              (lookup == null &&
+                  KnowledgeSearch.concepts(question).isNotEmpty))) {
+        final patient = _scope.repository.patients().firstWhere(
+          (p) => p.id == pid,
+        );
+        var masked = question;
+        for (final identity in [patient.alias, patient.contact]) {
+          if (identity.trim().isNotEmpty) {
+            masked = masked.replaceAll(identity, '[private]');
+          }
+        }
+        final task = _tasks.create(ContextSelection(patientId: pid));
+        reply = await task.run((_) async {
+          final answer = await medical!.answer(masked);
+          _scope.check(epoch);
+          final result = AiReply(
+            answer.hold == null
+                ? AiReplyKind.evidence
+                : AiReplyKind.medicalHold,
+            citations: answer.citations,
+            evidenceHold: answer.hold,
+            model: answer.hold == null
+                ? 'qwen35-2b-sft-v1/evidence-select-v1'
+                : '',
+          );
+          // Persisted replies share the legacy 8192-character bound. Escaped
+          // source text can be larger than its visible character count.
+          return result.encode().length <= 8192
+              ? result
+              : AiReply(AiReplyKind.medicalHold);
+        });
+      } else if (guard != null) {
         reply = AiReply(guard);
       } else if (lookup != null) {
         final matches = _scope.repository.entries(

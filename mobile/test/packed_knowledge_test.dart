@@ -36,6 +36,22 @@ void main() {
     await directory.delete(recursive: true);
   });
 
+  test('partial product names never identify a product; exact full names and codes can', () async {
+    final reader = await LocalKnowledgePackage.openForReview(directory.path);
+    final exact = await reader.findDrugName('Synthetic product');
+    expect(exact.identified?.code, 'TEST-1');
+    expect((await reader.findDrugName('Synthetic')).identified, isNull);
+    expect(
+      (await reader.findDrugName('TEST-1')).identified?.name,
+      'Synthetic product',
+    );
+    expect(
+      (await reader.findDrugName('Synthetic product 500mg')).identified,
+      isNull,
+    );
+    expect((await reader.findDrugName('unknown product')).candidates, isEmpty);
+  });
+
   test(
     'Python v2 fields, Unicode and group boundaries restore exactly in Dart',
     () async {

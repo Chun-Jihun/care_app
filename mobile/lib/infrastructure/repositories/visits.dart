@@ -76,12 +76,13 @@ final class SqliteVisits {
 
   List<CareEntry> visitEntries(String pid, String id) {
     _store.scoped('visit_preparation', pid, id);
-    return _store.connection
-        .select(
-          'SELECT e.* FROM care_entry e JOIN visit_source s ON s.patient_id=e.patient_id AND s.entry_id=e.id WHERE s.patient_id=? AND s.visit_id=? ORDER BY e.occurred_at',
-          [pid, id],
+    return _records
+        .readEntries(
+          _store.connection.select(
+            'SELECT e.* FROM care_entry e JOIN visit_source s ON s.patient_id=e.patient_id AND s.entry_id=e.id WHERE s.patient_id=? AND s.visit_id=? ORDER BY e.occurred_at,e.id',
+            [pid, id],
+          ),
         )
-        .map(_records.readRow)
         .toList();
   }
 

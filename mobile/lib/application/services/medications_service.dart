@@ -18,6 +18,16 @@ final class MedicationService {
     );
   }
 
+  List<CareEntry> intakes(String pid, String medId, DateTime day) {
+    _scope.requirePatient(pid);
+    return _cache.get(
+      jsonEncode(['intakes', pid, medId, day.year, day.month, day.day]),
+      () => List<CareEntry>.unmodifiable(
+        _scope.repository.medicationIntakes(pid, medId, day),
+      ),
+    );
+  }
+
   List<MedicationPlan> medicationPlans(String pid, String id) {
     _scope.requirePatient(pid);
     return _cache.get(

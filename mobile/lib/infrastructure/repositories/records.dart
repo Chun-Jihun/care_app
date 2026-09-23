@@ -47,7 +47,9 @@ final class SqliteRecords {
     return row == null ? null : readRow(row);
   }
 
-  Iterable<CareEntry> _readEntries(List<Row> rows) sync* {
+  /// Rows from a patient-scoped SELECT, hydrated in bounded groups by kind.
+  /// Shared by timeline and visit reads to avoid a query per source record.
+  Iterable<CareEntry> readEntries(List<Row> rows) sync* {
     for (var start = 0; start < rows.length; start += 200) {
       final batch = rows.skip(start).take(200).toList();
       final details = <String, Row>{};
@@ -75,6 +77,8 @@ final class SqliteRecords {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    DateTime? from,
+    DateTime? until,
     RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
@@ -95,6 +99,14 @@ final class SqliteRecords {
       ]);
     }
     if (limit != null && limit <= 0) return [];
+    if (from != null) {
+      where += ' AND occurred_at>=?';
+      args.add(from.millisecondsSinceEpoch);
+    }
+    if (until != null) {
+      where += ' AND occurred_at<?';
+      args.add(until.millisecondsSinceEpoch);
+    }
     if (lookup != null) {
       where += ' AND occurred_at>=? AND occurred_at<?';
       args.addAll([
@@ -117,7 +129,7 @@ final class SqliteRecords {
           ? ''
           : ' AND (occurred_at<? OR (occurred_at=? AND id<?))';
       final batchSize = limit != null && term.isEmpty && lookup == null
-          ? limit
+          ? (limit - result.length).clamp(1, 200)
           : 200;
       final rows = _store.connection.select(
         'SELECT * FROM care_entry WHERE $where$cursor ORDER BY occurred_at DESC,id DESC LIMIT ?',
@@ -127,7 +139,7 @@ final class SqliteRecords {
           batchSize,
         ],
       );
-      for (final entry in _readEntries(rows)) {
+      for (final entry in readEntries(rows)) {
         if ((lookup == null || lookup.matches(entry)) &&
             (term.isEmpty ||
                 (displayText?.call(entry) ?? entry.summary)
@@ -153,10 +165,6 @@ final class SqliteRecords {
     Map<String, String> fields = const {},
   }) {
     _store.patient(patientId);
-    validateEntry(kind, fields, note);
-    if (occurredAt.year < 1900 || occurredAt.year > 2200) {
-      throw CareError(CareErrorCode.invalidEntryTime);
-    }
     final entryId = id ?? RecordIds.next();
     return _store.transaction(
       () => writeEntry(
@@ -182,6 +190,12 @@ final class SqliteRecords {
     required String note,
     required Map<String, String> fields,
   }) {
+    // All writers, including linked medication intake, share the same limits
+    // that selective backup restoration enforces.
+    validateEntry(kind, fields, note);
+    if (occurredAt.year < 1900 || occurredAt.year > 2200) {
+      throw CareError(CareErrorCode.invalidEntryTime);
+    }
     if (!isNew) {
       _store.scoped('care_entry', patientId, id);
       final old = readRow(

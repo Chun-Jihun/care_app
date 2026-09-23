@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'accessible_image.dart';
+
 import '../domain/knowledge.dart';
 
 /// Offline evidence viewer. Resolves a pinned citation before showing any text.
-/// Currently reachable only from the separate, unreviewed development preview.
+/// Used by development discovery and by separately authorized medical citations.
 class KnowledgeDocumentPage extends StatefulWidget {
   const KnowledgeDocumentPage({
     super.key,
     required this.reader,
     required this.citation,
+    this.reviewed = false,
   });
   final KnowledgeReviewReader reader;
   final KnowledgeCitation citation;
+  final bool reviewed;
   @override
   State<KnowledgeDocumentPage> createState() => _KnowledgeDocumentPageState();
 }
@@ -80,17 +84,22 @@ class _KnowledgeDocumentPageState extends State<KnowledgeDocumentPage> {
             children: [
               Text(source.title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
-              const Text('개발용 자료 · 임상 검수 전 · 의료 답변에 사용하지 않음'),
+              Text(
+                widget.reviewed
+                    ? '답변에 사용한 원문 · 표시된 버전과 위치를 확인하세요.'
+                    : '개발용 자료 · 임상 검수 전 · 의료 답변에 사용하지 않음',
+              ),
               Text('발행기관: ${source.publisher}'),
               Text('발행·개정일: ${source.publicationDate ?? '확인 대기'}'),
               Text('앱 내부 검수일: ${source.reviewDate ?? '미검수'}'),
               Text('원본 파일 기준 $page / ${source.pageCount}쪽'),
-              SelectableText('원문 링크: ${source.url}'),
+              SelectableText('원문 링크: ${source.url}', minLines: 2),
               ExpansionTile(
                 title: const Text('문서 버전 확인'),
                 children: [
                   SelectableText(
                     '원문: ${source.version}\n패키지: ${document.citation.packageHash}\n본문: ${document.citation.textHash}',
+                    minLines: 2,
                   ),
                 ],
               ),
@@ -103,6 +112,7 @@ class _KnowledgeDocumentPageState extends State<KnowledgeDocumentPage> {
                   child: SelectableText(
                     excerpt,
                     key: const Key('knowledge-excerpt'),
+                    minLines: 2,
                   ),
                 ),
               ],
@@ -137,46 +147,34 @@ class _KnowledgeDocumentPageState extends State<KnowledgeDocumentPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '텍스트 추출 검수 전입니다. 표·그림·문맥은 원래 페이지와 함께 확인하세요. '
+                  '${widget.reviewed ? '' : '텍스트 추출 검수 전입니다. '}표·그림·문맥은 원래 페이지와 함께 확인하세요. '
                   '페이지 이미지는 ${source.rasterDpi ?? 144} DPI이며 확대에는 한계가 있습니다.',
                 ),
               ],
               const SizedBox(height: 16),
               if (_showPage && document.pageImage != null)
-                SizedBox(
-                  height: 650,
-                  child: InteractiveViewer(
-                    key: ValueKey(document.citation.textHash),
-                    minScale: 1,
-                    maxScale: 5,
-                    child: Image.memory(
-                      document.pageImage!,
-                      semanticLabel: '${source.title} 원본 $page쪽',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) =>
-                          const Text('페이지 이미지를 읽을 수 없습니다.'),
-                    ),
-                  ),
+                AccessibleImage(
+                  key: ValueKey(document.citation.textHash),
+                  viewportHeight: 520,
+                  maxScale: 5,
+                  bytes: document.pageImage!,
+                  semanticLabel: '${source.title} 원본 $page쪽',
                 )
               else
                 SelectableText.rich(
                   _text(document.text, document.citation, context),
                   key: const Key('knowledge-body'),
+                  minLines: 2,
                 ),
               for (final asset in document.assets) ...[
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 420,
-                  child: InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 5,
-                    child: Image.memory(
-                      asset.bytes,
-                      semanticLabel: asset.description,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) => const Text('그림을 읽을 수 없습니다.'),
-                    ),
-                  ),
+                AccessibleImage(
+                  viewportHeight: 320,
+                  maxScale: 5,
+                  bytes: asset.bytes,
+                  semanticLabel: asset.description.isEmpty
+                      ? source.title
+                      : asset.description,
                 ),
                 if (asset.description.isNotEmpty) Text(asset.description),
               ],

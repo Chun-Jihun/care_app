@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'record_lookup.dart';
+import 'knowledge.dart';
+import 'medical_evidence.dart';
 
 enum AiReplyKind {
   records,
@@ -11,6 +13,7 @@ enum AiReplyKind {
   urgent,
   notebookScope,
   unavailable,
+  evidence,
 }
 
 final class AiReference {
@@ -27,18 +30,26 @@ final class AiReply {
     this.model = '',
     this.lookup,
     this.hasMore = false,
-  }) : sources = List.unmodifiable(sources);
+    List<KnowledgeCitation> citations = const [],
+    this.evidenceHold,
+  }) : sources = List.unmodifiable(sources),
+       citations = List.unmodifiable(citations);
   final AiReplyKind kind;
   final List<AiReference> sources;
   final String model;
   final RecordLookup? lookup;
   final bool hasMore;
+  final List<KnowledgeCitation> citations;
+  final EvidenceHold? evidenceHold;
   String encode() => jsonEncode({
     'kind': kind.name,
     'sources': sources.map((e) => e.toJson()).toList(),
     'model': model,
     if (lookup != null) 'lookup': lookup!.toJson(),
     if (hasMore) 'hasMore': true,
+    if (citations.isNotEmpty)
+      'citations': citations.map((c) => c.toJson()).toList(),
+    if (evidenceHold != null) 'evidenceHold': evidenceHold!.name,
   });
   static AiReply decode(String value) {
     if (value.length > 8192) throw const FormatException('reply too large');
@@ -52,6 +63,8 @@ final class AiReply {
             'model',
             'lookup',
             'hasMore',
+            'citations',
+            'evidenceHold',
           ].contains(k),
         ) ||
         data['sources'] is! List ||
@@ -94,12 +107,40 @@ final class AiReply {
         (data['hasMore'] == true && (lookup == null || sources.length != 8))) {
       throw const FormatException('invalid lookup reply');
     }
+    final rawCitations = data['citations'];
+    if (rawCitations != null &&
+        (rawCitations is! List || rawCitations.length > 3)) {
+      throw const FormatException('invalid citations');
+    }
+    final citations = (rawCitations as List? ?? [])
+        .map(KnowledgeCitation.fromJson)
+        .toList();
+    final evidenceHold = data.containsKey('evidenceHold')
+        ? EvidenceHold.values
+              .where((v) => v.name == data['evidenceHold'])
+              .firstOrNull
+        : null;
+    if ((kind == AiReplyKind.evidence) != citations.isNotEmpty ||
+        citations
+                .map(
+                  (c) =>
+                      '${c.packageHash}:${c.sourceId}:${c.pageNumber}:${c.excerptStart}',
+                )
+                .toSet()
+                .length !=
+            citations.length ||
+        (data.containsKey('evidenceHold') &&
+            (evidenceHold == null || kind != AiReplyKind.medicalHold))) {
+      throw const FormatException('invalid medical reply');
+    }
     return AiReply(
       kind,
       sources: sources,
       model: data['model'] as String,
       lookup: lookup,
       hasMore: data['hasMore'] == true,
+      citations: citations,
+      evidenceHold: evidenceHold,
     );
   }
 }

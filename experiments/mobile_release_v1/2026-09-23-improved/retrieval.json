@@ -1,0 +1,191 @@
+{
+  "evaluation_eligible": false,
+  "medical_release_gate_result": false,
+  "package_sha256": "6d678794d7d4d54b3fa8d4afbcfcdf48569e39050afeb115f729ec8b356fbdf0",
+  "metric": "topic title match at 3; not clinical relevance",
+  "cases": [
+    {
+      "id": "retrieval-1",
+      "query": "자꾸 넘어질까 걱정돼요",
+      "expected_title_terms": [
+        "fall",
+        "falling"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 8,
+      "titles_at_3": [
+        "family caregivers: protect your loved ones from falling",
+        "family caregivers: protect your loved ones from falling",
+        "family caregivers: protect your loved ones from falling"
+      ],
+      "milliseconds": 83
+    },
+    {
+      "id": "retrieval-2",
+      "query": "집에서 미끄러지지 않도록 정리하고 싶어요",
+      "expected_title_terms": [
+        "fall",
+        "falling"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 8,
+      "titles_at_3": [
+        "family caregivers: protect your loved ones from falling",
+        "family caregivers: protect your loved ones from falling",
+        "family caregivers: protect your loved ones from falling"
+      ],
+      "milliseconds": 58
+    },
+    {
+      "id": "retrieval-3",
+      "query": "돌보는 가족끼리 역할을 나누고 싶어요",
+      "expected_title_terms": [
+        "sharing",
+        "caregiving"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 11,
+      "titles_at_3": [
+        "sharing caregiving responsibilities | national institute on aging",
+        "sharing caregiving responsibilities | national institute on aging",
+        "sharing caregiving responsibilities | national institute on aging"
+      ],
+      "milliseconds": 43
+    },
+    {
+      "id": "retrieval-4",
+      "query": "처음 간병을 시작해서 막막해요",
+      "expected_title_terms": [
+        "getting started"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 9,
+      "titles_at_3": [
+        "getting started with caregiving | national institute on aging",
+        "getting started with caregiving | national institute on aging",
+        "brushing: information for caregivers"
+      ],
+      "milliseconds": 35
+    },
+    {
+      "id": "retrieval-5",
+      "query": "식사할 때 어떻게 도와줄까요",
+      "expected_title_terms": [
+        "eating"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 12,
+      "titles_at_3": [
+        "how to support someone you care for with eating - social care and support guide - nhs",
+        "how to support someone you care for with eating - social care and support guide - nhs",
+        "how to support someone you care for with eating - social care and support guide - nhs"
+      ],
+      "milliseconds": 57
+    },
+    {
+      "id": "retrieval-6",
+      "query": "입이 마르다고 하세요",
+      "expected_title_terms": [
+        "dry mouth"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 5,
+      "titles_at_3": [
+        "dry mouth and older adults:  information for caregivers",
+        "dry mouth and older adults:  information for caregivers",
+        "dry mouth and older adults:  information for caregivers"
+      ],
+      "milliseconds": 27
+    },
+    {
+      "id": "retrieval-7",
+      "query": "양치질을 도와주고 싶어요",
+      "expected_title_terms": [
+        "brushing"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 10,
+      "titles_at_3": [
+        "brushing: information for caregivers",
+        "brushing: information for caregivers",
+        "brushing: information for caregivers"
+      ],
+      "milliseconds": 50
+    },
+    {
+      "id": "retrieval-8",
+      "query": "몸을 씻길 때 어떻게 도와주나요",
+      "expected_title_terms": [
+        "keep clean"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 12,
+      "titles_at_3": [
+        "how to help someone you care for keep clean - care and support guide - nhs",
+        "how to help someone you care for keep clean - care and support guide - nhs",
+        "how to help someone you care for keep clean - care and support guide - nhs"
+      ],
+      "milliseconds": 69
+    },
+    {
+      "id": "retrieval-9",
+      "query": "침대에서 이동할 때 도움을 주고 싶어요",
+      "expected_title_terms": [
+        "move, lift"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 3,
+      "titles_at_3": [
+        "how to move, lift and handle someone else - social care and support guide - nhs",
+        "how to help someone you care for keep clean - care and support guide - nhs",
+        "how to help someone you care for keep clean - care and support guide - nhs"
+      ],
+      "milliseconds": 17
+    },
+    {
+      "id": "retrieval-10",
+      "query": "퇴원 전에 질문할 내용을 준비하고 싶어요",
+      "expected_title_terms": [
+        "discharge"
+      ],
+      "covered_topic": true,
+      "hit_at_3": true,
+      "returned": 12,
+      "titles_at_3": [
+        "strategy 4: idea discharge planning (tool 2a)",
+        "strategy 4: idea discharge planning (tool 2a)",
+        "strategy 4: idea discharge planning (tool 2b)"
+      ],
+      "milliseconds": 45
+    },
+    {
+      "id": "retrieval-11",
+      "query": "욕창 예방 체위 변경 간격",
+      "expected_title_terms": [],
+      "covered_topic": false,
+      "hit_at_3": null,
+      "returned": 0,
+      "titles_at_3": [],
+      "milliseconds": 18
+    },
+    {
+      "id": "retrieval-12",
+      "query": "당뇨 환자 인슐린 용량 조절",
+      "expected_title_terms": [],
+      "covered_topic": false,
+      "hit_at_3": null,
+      "returned": 0,
+      "titles_at_3": [],
+      "milliseconds": 8
+    }
+  ]
+}

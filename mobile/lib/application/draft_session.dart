@@ -82,9 +82,9 @@ class DraftSession {
     }
   }
 
-  Future<void> complete() async {
+  Future<void> complete({Uint8List? photo}) async {
     flush(force: true);
-    await _c.drafts.complete(patientId, id, _session);
+    await _c.drafts.complete(patientId, id, _session, photo: photo);
     _finished = true;
     _timer?.cancel();
   }

@@ -1,3 +1,6 @@
+
+import '../ports.dart';
+
 import 'package:flutter/foundation.dart';
 
 import '../../domain/drafts.dart';
@@ -5,8 +8,14 @@ import '../../domain/records.dart';
 import '../session_access.dart';
 
 final class DraftService {
-  DraftService(this._scope, {required this._busy, required this._notify});
+  DraftService(
+    this._scope,
+    this._vault, {
+    required this._busy,
+    required this._notify,
+  });
   final SessionAccess _scope;
+  final NotebookVault _vault;
   final bool Function() _busy;
   final VoidCallback _notify;
   final _flushers = <VoidCallback>{};
@@ -84,7 +93,12 @@ final class DraftService {
     );
   }
 
-  Future<void> complete(String? pid, String id, int session) async {
+  Future<void> complete(
+    String? pid,
+    String id,
+    int session, {
+    Uint8List? photo,
+  }) async {
     _scope.check(session);
     final draft = list(pid).where((d) => d.id == id).firstOrNull;
     final impact = switch (draft?.type) {
@@ -94,6 +108,19 @@ final class DraftService {
       DraftType.checkin => ChangeImpact.checkins,
       _ => ChangeImpact.records,
     };
+    if (photo != null) {
+      if (pid == null) throw CareError(CareErrorCode.draftSourceMismatch);
+      return _scope.run((epoch) async {
+        _scope.requirePatient(pid);
+        await _vault.completeDraftWithPhoto(
+          pid,
+          id,
+          photo,
+          beforeCommit: () => _scope.check(epoch),
+        );
+        await _scope.changed(ChangeImpact.all);
+      });
+    }
     return _scope.write(
       pid,
       impact,

@@ -103,6 +103,16 @@ void main() {
     await store.install(pack.path, (_) {}, () {});
     expect(await store.installed(), true);
     await ModelStore(store.root, manifest).verify();
+    // Reinstall in the same process must not trust its earlier hash cache.
+    // Cancellation must also apply when a complete installation already exists.
+    await expectLater(
+      store.install(
+        pack.path,
+        (_) {},
+        () => throw const AiException(AiFailure.cancelled),
+      ),
+      throwsA(isA<AiException>()),
+    );
     await File(store.path('chat/model.gguf'))
         .writeAsBytes(List.filled(contents.length, 0));
     await expectLater(
@@ -112,10 +122,11 @@ void main() {
     final interrupted = Directory('${store.root.path}/install-abandoned');
     await interrupted.create();
     await File('${interrupted.path}/partial').writeAsString('partial');
-    final fresh = ModelStore(store.root, manifest);
-    await fresh.install(pack.path, (_) {}, () {});
-    await fresh.verify();
+    await store.install(pack.path, (_) {}, () {});
+    await ModelStore(store.root, manifest).verify();
     expect(await interrupted.exists(), false);
-    expect(await File(fresh.path('chat/model.gguf')).readAsBytes(), contents);
+    expect(await File(store.path('chat/model.gguf')).readAsBytes(), contents);
+    await File('${store.directory.path}/complete').writeAsString('partial');
+    expect(await store.installed(), false);
   });
 }

@@ -1,3 +1,4 @@
+import 'intake_picker.dart';
 import 'sections/today.dart';
 import 'sections/medications.dart';
 import 'sections/visits.dart';
@@ -81,7 +82,11 @@ class _CareShellState extends State<CareShell> {
       ),
     );
     if (kind != null && mounted) {
-      await editEntry(context, c, kind);
+      if (kind == EntryKind.medicationIntake) {
+        await chooseIntake(context, c);
+      } else {
+        await editEntry(context, c, kind);
+      }
     }
   }
 
@@ -111,47 +116,6 @@ class _CareShellState extends State<CareShell> {
               },
               icon: const Icon(Icons.chat_bubble_outline, size: 21),
             ),
-            PopupMenuButton<String>(
-              tooltip: context.tr('수첩 전환'),
-              onSelected: (id) => attempt(context, () async {
-                await c.selectPatient(id);
-                if (!mounted) return;
-                searchTimer?.cancel();
-                setState(() {
-                  journalLimit = 50;
-                  search.clear();
-                  query = '';
-                  filter = null;
-                  day = null;
-                });
-              }),
-              itemBuilder: (_) => c.patients
-                  .map(
-                    (p) => PopupMenuItem(
-                      value: p.id,
-                      child: Text(context.strings.patient(p)),
-                    ),
-                  )
-                  .toList(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    const Icon(Icons.person_outline, size: 18),
-                    const SizedBox(width: 5),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 110),
-                      child: Text(
-                        context.strings.patient(c.patient),
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    const Icon(Icons.expand_more, size: 18),
-                  ],
-                ),
-              ),
-            ),
             if (c.hasPin)
               IconButton(
                 tooltip: context.tr('잠그기'),
@@ -175,6 +139,47 @@ class _CareShellState extends State<CareShell> {
                   key: ValueKey('$tab-${c.selectedId}'),
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
+                    PopupMenuButton<String>(
+                      tooltip: context.tr('수첩 전환'),
+                      onSelected: (id) => attempt(context, () async {
+                        await c.selectPatient(id);
+                        if (!mounted) return;
+                        searchTimer?.cancel();
+                        setState(() {
+                          journalLimit = 50;
+                          search.clear();
+                          query = '';
+                          filter = null;
+                          day = null;
+                        });
+                      }),
+                      itemBuilder: (_) => c.patients
+                          .map(
+                            (p) => PopupMenuItem(
+                              value: p.id,
+                              child: Text(context.strings.patient(p)),
+                            ),
+                          )
+                          .toList(),
+                      child: Container(
+                        key: const ValueKey('notebook-switch'),
+                        constraints: const BoxConstraints(
+                          minHeight: 48,
+                          minWidth: 48,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.person_outline, size: 18),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(context.strings.patient(c.patient)),
+                            ),
+                            const Icon(Icons.expand_more, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
                     if (c.drafts.count(c.selectedId) > 0 ||
                         c.drafts.count(null) > 0)
                       Card(
@@ -261,7 +266,8 @@ class _CareShellState extends State<CareShell> {
             NavigationDestination(
               icon: Icon(Icons.assignment_outlined),
               selectedIcon: Icon(Icons.assignment),
-              label: context.tr('진료 준비'),
+              label: context.tr('진료'),
+              tooltip: context.tr('진료 준비'),
             ),
             NavigationDestination(
               icon: Icon(Icons.settings_outlined),
@@ -400,7 +406,7 @@ class _CareShellState extends State<CareShell> {
             entries.length > journalLimit
                 ? context.tr('{0}건 이상', [journalLimit])
                 : context.tr('{0}건', [entries.length]),
-            style: const TextStyle(color: Color(0xFF68796E)),
+            style: const TextStyle(color: Color(0xFF52655A)),
           ),
         ],
       ),

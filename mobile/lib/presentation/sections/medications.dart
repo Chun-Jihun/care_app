@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_strings.dart';
 import '../../application/care_controller.dart';
 import '../common.dart';
+import '../medication_today.dart';
 import '../details.dart';
 import '../editors.dart';
+import '../medication_safety_page.dart';
 
 List<Widget> medicationContent(
   BuildContext context,
@@ -18,9 +20,18 @@ List<Widget> medicationContent(
   );
   return [
     Section(context.tr('약과 복약 기록')),
+    OutlinedButton.icon(
+      onPressed: () => Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => MedicationSafetyPage(c, c.selectedId!),
+        ),
+      ),
+      icon: const Icon(Icons.fact_check_outlined),
+      label: Text(context.tr('약물 주의자료 확인')),
+    ),
     Text(
       context.tr('처방받은 내용과 실제 복용 상태를 함께 관리해요.'),
-      style: TextStyle(color: Color(0xFF68796E), height: 1.5),
+      style: TextStyle(color: Color(0xFF52655A), height: 1.5),
     ),
     SwitchListTile(
       contentPadding: EdgeInsets.zero,
@@ -73,6 +84,8 @@ List<Widget> medicationContent(
                 m.times.isEmpty ? context.tr('정해둔 시각 없음') : m.times.join(' · '),
                 style: const TextStyle(color: forest),
               ),
+              const SizedBox(height: 8),
+              MedicationTodayStatus(c, m),
               if (m.active)
                 Align(
                   alignment: Alignment.centerRight,

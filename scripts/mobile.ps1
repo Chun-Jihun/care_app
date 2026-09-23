@@ -26,7 +26,11 @@ if ($Action -eq 'SetupAndroid') {
     }
     1..100 | ForEach-Object { 'y' } | & $sdkManager "--sdk_root=$env:ANDROID_HOME" --licenses | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Android SDK license setup failed.' }
-    & $sdkManager "--sdk_root=$env:ANDROID_HOME" 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
+    # Keep fresh machines aligned with the app's explicit compile SDK.
+    $appGradle = Get-Content -LiteralPath (Join-Path $projectRoot 'mobile/android/app/build.gradle.kts') -Raw
+    if ($appGradle -notmatch '(?m)^\s*compileSdk\s*=\s*(\d+)\s*$') { throw 'Expected an explicit compileSdk in mobile/android/app/build.gradle.kts.' }
+    $compileApi = $Matches[1]
+    & $sdkManager "--sdk_root=$env:ANDROID_HOME" 'platform-tools' "platforms;android-$compileApi" 'build-tools;36.0.0'
     if ($LASTEXITCODE -ne 0) { throw 'Android SDK setup failed.' }
     exit 0
 }
@@ -35,7 +39,7 @@ try {
     switch ($Action) {
         'Dependencies' { & $flutterCommand pub get }
         'Analyze' { & $flutterCommand analyze }
-        'Test' { & $flutterCommand test }
+        'Test' { & $flutterCommand test --concurrency=2 }
         'Validate' {
             # Uses installed dependencies and never starts a device or installs models.
             $dartCommand = Join-Path $toolRoot 'flutter\bin\cache\dart-sdk\bin\dart.exe'
@@ -43,7 +47,7 @@ try {
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $flutterCommand analyze --no-pub
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            & $flutterCommand test --no-pub
+            & $flutterCommand test --no-pub --concurrency=2
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $dartCommand run tool/storage_crash_probe.dart
         }

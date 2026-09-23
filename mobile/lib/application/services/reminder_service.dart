@@ -18,7 +18,7 @@ final class ReminderService {
     if (notificationsEnabled) {
       for (final p in db.patients()) {
         if (db.setting('imported_muted:${p.id}') == 'true') continue;
-        for (final t in db.tasks(p.id).where((t) => !t.done && t.reminder)) {
+        for (final t in db.tasks(p.id, done: false).where((t) => t.reminder)) {
           final source = 'task:${p.id}:${t.id}';
           definitions.add('$source:${t.dueAt.millisecondsSinceEpoch}');
           reminders.add(Reminder(Reminder.idFor(source), t.dueAt));

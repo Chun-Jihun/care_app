@@ -10,12 +10,13 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../domain/ai.dart';
+import '../../domain/medical_evidence.dart';
 import 'model_store.dart';
 import 'chat_engine.dart';
 import 'ocr_engine.dart';
 import 'speech_engine.dart';
 
-final class DeviceAiRuntime implements LocalAiRuntime {
+final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
   // The pinned iOS Sherpa framework hides OrtGetApiBase. Keep AI disabled
   // there until an OCR C-API bridge is linked and verified on a Mac/device.
   bool get _supported =>
@@ -164,6 +165,19 @@ final class DeviceAiRuntime implements LocalAiRuntime {
       question,
     );
   });
+  @override
+  Future<String> selectEvidence(
+    String question,
+    List<ReviewedPassage> passages,
+  ) => _run((epoch) async {
+    final store = await _ready(epoch, ['chat/model.gguf']);
+    return _chat.selectEvidence(
+      store.path('chat/model.gguf'),
+      question,
+      passages,
+    );
+  });
+
   @override
   Future<OcrDraft> recognize(Uint8List image, String language) =>
       _run((epoch) async {

@@ -14,13 +14,13 @@ class BackupColumn {
 
 final class BackupDocument {
   static const format = 3;
-  // v4 adds an optional exact intake-status filter; earlier replies stay readable.
-  static const version = 4;
+  // v5 adds immutable medical citations/hold reasons. v1-v4 remain readable.
+  static const version = 5;
 
   static BackupRows decode(Map<String, dynamic> archive) {
     final supported =
         archive['format'] == format &&
-            [1, 2, 3, version].contains(archive['document_version']) ||
+            [1, 2, 3, 4, version].contains(archive['document_version']) ||
         archive['format'] == 2 && archive['schema'] == 3;
     if (!supported || archive['rows'] is! Map) {
       throw CareError(CareErrorCode.unsupportedBackupVersion);

@@ -61,6 +61,17 @@ Future<void> editTask(
               value: reminder,
               onChanged: (v) => update(() => reminder = v),
             ),
+            if (reminder && !c.notificationsEnabled)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.notifications_outlined),
+                label: Text(context.tr('알림 켜기')),
+                onPressed: () => attempt(context, () async {
+                  await c.enableNotifications(true);
+                  if (context.mounted) update(() {});
+                }),
+              ),
+            if (reminder && !c.importedRemindersEnabled(pid))
+              Text(context.tr('복원한 수첩 · 알림 허용 필요')),
             if (reminder && !at.isAfter(DateTime.now()))
               Text(
                 context.tr(

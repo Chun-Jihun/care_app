@@ -3,6 +3,7 @@ import '../domain/chat.dart';
 import '../domain/drafts.dart';
 import '../domain/ai.dart';
 import '../domain/record_lookup.dart';
+import '../domain/drug_safety.dart';
 
 /// Internal application persistence port. Screens and AI receive feature APIs,
 /// never this full repository or its implementation.
@@ -38,6 +39,8 @@ abstract interface class NotebookRepository {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    DateTime? from,
+    DateTime? until,
     RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
@@ -62,7 +65,14 @@ abstract interface class NotebookRepository {
     required String instruction,
     required List<String> times,
   });
+  List<CareEntry> medicationIntakes(String pid, String medId, DateTime day);
   List<MedicationPlan> medicationPlans(String pid, String id);
+  void confirmMedicationProduct(
+    String pid,
+    String id,
+    int version,
+    MedicationProduct? product,
+  );
   void archiveMedication(String pid, String id, bool archive);
   CareEntry recordIntake(
     String pid,
@@ -73,7 +83,8 @@ abstract interface class NotebookRepository {
     String reaction = '',
     DateTime? scheduledAt,
   });
-  List<CareTask> tasks(String pid);
+  List<CareTask> tasks(String pid, {bool? done, int? limit});
+  int taskCount(String pid, {bool? done});
   CareTask saveTask(
     String pid, {
     String? id,
@@ -102,7 +113,7 @@ abstract interface class NotebookRepository {
     required String stress,
     String note = '',
   });
-  List<CaregiverCheckin> checkins();
+  List<CaregiverCheckin> checkins({int? limit});
   void deleteCheckin(String id);
   DraftRetention? get draftRetention;
   void setDraftRetention(DraftRetention value, {DateTime? now});

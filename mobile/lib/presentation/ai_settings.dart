@@ -4,6 +4,7 @@ import '../application/care_controller.dart';
 import '../domain/ai.dart';
 import '../l10n/app_strings.dart';
 import 'common.dart';
+import 'knowledge_settings.dart';
 
 class AiSettings extends StatefulWidget {
   const AiSettings(this.c, {super.key});
@@ -170,3 +171,16 @@ class _AiSettingsState extends State<AiSettings> {
     ),
   );
 }
+
+Future<void> openAiSettings(BuildContext context, CareController c) =>
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(context.tr('AI·근거자료 관리'))),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [AiSettings(c), KnowledgeSettings(c)],
+          ),
+        ),
+      ),
+    );

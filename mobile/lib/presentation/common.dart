@@ -112,10 +112,13 @@ class Section extends StatelessWidget {
       spacing: 12,
       runSpacing: 4,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.w700),
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
         ),
         if (action != null)
           TextButton(onPressed: onAction, child: Text(action!)),
@@ -193,12 +196,18 @@ class EditorPage extends StatefulWidget {
     required this.save,
     this.saveLabel,
     this.draft,
+    this.revealError,
+    this.initiallyDirty = false,
+    this.draftExitNotice,
   });
   final String title;
+  final bool initiallyDirty;
+  final String? Function()? draftExitNotice;
   final String? saveLabel;
   final List<Widget> Function(StateSetter setState) content;
   final Future<void> Function() save;
   final DraftSession? draft;
+  final Future<bool> Function(Object error)? revealError;
   @override
   State<EditorPage> createState() => _EditorPageState();
 }
@@ -207,10 +216,11 @@ class _EditorPageState extends State<EditorPage> {
   bool saving = false;
   bool dirty = false, leaving = false, confirming = false;
   Object? error;
+  final errorAnchor = GlobalKey();
   @override
   void initState() {
     super.initState();
-    dirty = widget.draft?.saved ?? false;
+    dirty = widget.initiallyDirty || (widget.draft?.saved ?? false);
   }
 
   void changed() {
@@ -231,9 +241,13 @@ class _EditorPageState extends State<EditorPage> {
             context: context,
             useRootNavigator: false,
             builder: (ctx) => AlertDialog(
-              title: Text(context.tr('작성 중인 내용을 어떻게 할까요?')),
+              scrollable: true,
+              title: Text(context.tr('작성 중인 초안')),
               content: Text(
-                context.tr('초안은 기록으로 확정되지 않아요. 수첩에서 다시 열어 이어서 작성할 수 있습니다.'),
+                [
+                  context.tr('초안은 기록으로 확정되지 않아요. 수첩에서 다시 열어 이어서 작성할 수 있습니다.'),
+                  ?widget.draftExitNotice?.call(),
+                ].join('\n\n'),
               ),
               actions: [
                 TextButton(
@@ -280,44 +294,64 @@ class _EditorPageState extends State<EditorPage> {
     },
     child: Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: AbsorbPointer(
-        absorbing: saving,
-        child: Form(
-          onChanged: changed,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-            children: [
-              if (widget.draft case final draft?)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: ValueListenableBuilder<DraftStatus>(
-                    valueListenable: draft.status,
-                    builder: (_, text, _) => Text(
-                      context.strings.draftStatus(text),
-                      style: const TextStyle(color: forest),
-                    ),
-                  ),
+      body: Column(
+        children: [
+          Expanded(
+            child: AbsorbPointer(
+              absorbing: saving,
+              child: Form(
+                onChanged: changed,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  children: [
+                    if (widget.draft case final draft?)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: ValueListenableBuilder<DraftStatus>(
+                          valueListenable: draft.status,
+                          builder: (_, text, _) => Semantics(
+                            liveRegion: text == DraftStatus.failed,
+                            child: Text(
+                              context.strings.draftStatus(text),
+                              style: const TextStyle(color: forest),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ...widget
+                        .content(
+                          (action) => setState(() {
+                            action();
+                            dirty = true;
+                            widget.draft?.changed();
+                          }),
+                        )
+                        .expand((w) => [w, const SizedBox(height: 16)]),
+                    if (error != null)
+                      Padding(
+                        key: errorAnchor,
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            errorText(context, error!),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ...widget
-                  .content(
-                    (action) => setState(() {
-                      action();
-                      dirty = true;
-                      widget.draft?.changed();
-                    }),
-                  )
-                  .expand((w) => [w, const SizedBox(height: 16)]),
-              if (error != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    errorText(context, error!),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              FilledButton(
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
                 onPressed: () async {
                   if (saving) {
                     return;
@@ -341,6 +375,21 @@ class _EditorPageState extends State<EditorPage> {
                         saving = false;
                         error = e is EditorCancelled ? null : e;
                       });
+                      if (e is! EditorCancelled) {
+                        FocusScope.of(this.context).unfocus();
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          if (!mounted) return;
+                          final handled =
+                              await widget.revealError?.call(e) ?? false;
+                          if (!handled &&
+                              mounted &&
+                              errorAnchor.currentContext != null) {
+                            await Scrollable.ensureVisible(
+                              errorAnchor.currentContext!,
+                            );
+                          }
+                        });
+                      }
                     }
                   }
                 },
@@ -355,9 +404,9 @@ class _EditorPageState extends State<EditorPage> {
                       : Text(widget.saveLabel ?? context.tr('저장')),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     ),
   );

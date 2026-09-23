@@ -1,4 +1,5 @@
 import 'language_picker.dart';
+import 'checkin_history_page.dart';
 import 'ai_settings.dart';
 import 'app_lock_settings.dart';
 import '../l10n/app_strings.dart';
@@ -34,7 +35,6 @@ Widget contactCard(BuildContext context, CareController c) => Card(
 );
 List<Widget> settingsContent(BuildContext context, CareController c) => [
   LanguagePicker(c),
-  AiSettings(c),
   Section(context.tr('내 수첩 설정')),
   Text(context.tr('기록은 이 기기에 암호화해 보관됩니다.'), style: TextStyle(color: forest)),
   Section(
@@ -123,41 +123,14 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     action: context.tr('상태 기록'),
     onAction: () => addCheckin(context, c),
   ),
-  if (c.checkins.checkins().isEmpty)
-    EmptyCard(
-      context.tr('나의 상태도 챙겨 주세요'),
-      context.tr('수면, 피로, 스트레스와 필요한 도움을 따로 기록할 수 있어요.'),
-      icon: Icons.favorite_outline,
-    ),
-  ...c.checkins.checkins().map(
-    (r) => Card(
-      child: ListTile(
-        title: Text(dateText(context, r.occurredAt)),
-        subtitle: Text(
-          [
-            context.tr('피로: {0}', [r.fatigue]),
-            context.tr('수면: {0}', [r.sleep]),
-            context.tr('스트레스: {0}', [r.stress]),
-            r.note,
-          ].join('\n'),
-        ),
-        trailing: IconButton(
-          tooltip: context.tr('내 상태 기록 삭제'),
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () async {
-            if (await confirm(
-                  context,
-                  context.tr('내 상태 기록을 삭제할까요?'),
-                  context.tr('선택한 기록을 삭제합니다.'),
-                ) &&
-                context.mounted) {
-              await attempt(context, () async {
-                await c.checkins.deleteCheckin(r.id);
-              });
-            }
-          },
-        ),
-      ),
+  Card(
+    child: ListTile(
+      leading: const Icon(Icons.favorite_outline, color: forest),
+      title: Text(context.tr('돌보는 나의 상태')),
+      subtitle: Text(context.tr('수면, 피로, 스트레스와 필요한 도움을 따로 기록할 수 있어요.')),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => CheckinHistoryPage(c))),
     ),
   ),
   Section(context.tr('백업과 복원')),
@@ -185,15 +158,23 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     context.tr(
       '앱 삭제나 기기 분실에 대비해 백업을 별도로 보관해 주세요. 백업 비밀번호를 잊으면 복원할 수 없습니다. 현재 버전은 첨부 사진 합계 50MB까지 백업을 지원합니다.',
     ),
-    style: TextStyle(fontSize: 13, height: 1.6, color: Color(0xFF68796E)),
+    style: TextStyle(fontSize: 14, height: 1.6, color: Color(0xFF52655A)),
   ),
   Section(context.tr('연락처')),
   contactCard(context, c),
+  Card(
+    child: ListTile(
+      leading: const Icon(Icons.tune),
+      title: Text(context.tr('AI·근거자료 관리')),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => openAiSettings(context, c),
+    ),
+  ),
   const SizedBox(height: 28),
   Center(
     child: Text(
       context.tr('간병수첩 0.1.0 · 직접 기록하는 돌봄'),
-      style: TextStyle(color: Color(0xFF68796E)),
+      style: TextStyle(color: Color(0xFF52655A)),
     ),
   ),
   TextButton(

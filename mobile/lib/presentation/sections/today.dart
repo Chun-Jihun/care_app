@@ -1,3 +1,8 @@
+import '../photo_record_flow.dart';
+import '../medication_today.dart';
+import '../chat_page.dart';
+import '../intake_picker.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_strings.dart';
@@ -31,104 +36,66 @@ List<Widget> todayContent(
       .length;
   return [
     Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Wrap(
+        spacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text(
-            context.strings.day(now),
-            style: const TextStyle(color: Color(0xFF68796E)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.tr('오늘의 돌봄'),
-            style: Theme.of(context).textTheme.headlineLarge
-                ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1),
-          ),
-        ],
-      ),
-    ),
-    Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: forest,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.spa_outlined, color: Color(0xFFBDDAB9)),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.tr('차곡차곡, 오늘의 기록'),
-                  style: TextStyle(color: Color(0xFFD5E8CE)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            entries.isEmpty
-                ? context.tr('작은 변화부터\n편하게 남겨 보세요.')
-                : context.tr('오늘 {0}개의 기록을\n차곡차곡 남겼어요.', [entries.length]),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 25,
-              height: 1.4,
-              fontWeight: FontWeight.w700,
+          Semantics(
+            header: true,
+            child: Text(
+              context.tr('오늘의 돌봄'),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(height: 22),
-          Row(
-            children: [
-              Expanded(
-                child: _stat(
-                  context.tr('수분 기록'),
-                  '${water.toStringAsFixed(water % 1 == 0 ? 0 : 1)} mL',
-                ),
-              ),
-              Container(width: 1, height: 42, color: Colors.white24),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 24),
-                  child: _stat(
-                    context.tr('복용함 기록'),
-                    context.tr('{0}건', [taken]),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
           Text(
-            context.tr('입력된 기록의 합계입니다.'),
-            style: TextStyle(color: Color(0xFFD5E8CE), fontSize: 12),
+            context.strings.day(now),
+            style: const TextStyle(color: Color(0xFF52655A)),
           ),
         ],
       ),
     ),
-    Section(context.tr('빠르게 남기기')),
-    Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children:
-          [
-                EntryKind.meal,
-                EntryKind.medicationIntake,
-                EntryKind.symptom,
-                EntryKind.activity,
-              ]
-              .map(
-                (k) => ActionChip(
-                  avatar: Icon(kindIcon(k), size: 18, color: forest),
-                  label: Text(context.tr(k.label)),
-                  onPressed: () => editEntry(context, c, k),
-                ),
-              )
-              .toList(),
+    LayoutBuilder(
+      builder: (context, constraints) {
+        final largeText = MediaQuery.textScalerOf(context).scale(16) > 24;
+        final width = largeText
+            ? constraints.maxWidth
+            : (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          key: const ValueKey('quick-records'),
+          spacing: 12,
+          runSpacing: 8,
+          children:
+              [
+                    EntryKind.meal,
+                    EntryKind.medicationIntake,
+                    EntryKind.symptom,
+                    EntryKind.activity,
+                  ]
+                  .map(
+                    (kind) => SizedBox(
+                      width: width,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(48, 56),
+                        ),
+                        icon: Icon(kindIcon(kind)),
+                        label: Text(context.tr(kind.label)),
+                        onPressed: () => kind == EntryKind.medicationIntake
+                            ? chooseIntake(context, c)
+                            : editEntry(context, c, kind),
+                      ),
+                    ),
+                  )
+                  .toList(),
+        );
+      },
+    ),
+    OutlinedButton.icon(
+      icon: const Icon(Icons.add_a_photo_outlined),
+      label: Text(context.tr('사진으로 기록')),
+      onPressed: () => startPhotoRecord(context, c),
     ),
     Section(
       context.tr('할 일'),
@@ -136,6 +103,37 @@ List<Widget> todayContent(
       onAction: () => editTask(context, c),
     ),
     TaskOverview(c),
+    if (c.medications.isNotEmpty) ...[
+      Section(
+        context.tr('오늘의 복약'),
+        action: context.tr('복약 기록'),
+        onAction: () => chooseIntake(context, c),
+      ),
+      for (final med in c.medications.take(3))
+        Card(
+          child: ListTile(
+            title: Text(med.name),
+            subtitle: MedicationTodayStatus(c, med),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => recordIntake(context, c, med),
+          ),
+        ),
+      if (c.medications.length > 3)
+        Text(context.tr('전체 약과 기록은 약 목록에서 확인할 수 있어요.')),
+    ],
+    Card(
+      child: ListTile(
+        leading: const Icon(Icons.chat_bubble_outline, color: forest),
+        title: Text(context.tr('간병 도우미 대화')),
+        subtitle: Text(context.tr('기록을 찾아보고 궁금한 내용을 물어보세요.')),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () =>
+            Navigator.of(context)
+                .push(MaterialPageRoute<void>(builder: (_) => ChatPage(c))),
+      ),
+    ),
+    Section(context.tr('연락이 필요할 때')),
+    contactCard(context, c),
     Section(context.tr('최근 기록')),
     if (recent.isEmpty)
       EmptyCard(
@@ -143,23 +141,24 @@ List<Widget> todayContent(
         context.tr('아래 기록하기를 눌러 식사나 오늘의 상태를 남겨 보세요.'),
       ),
     ...recent.map((e) => EntryTile(e, onTap: () => openEntry(e))),
-    Section(context.tr('연락이 필요할 때')),
-    contactCard(context, c),
-  ];
-}
-
-Widget _stat(String label, String value) => Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Text(label, style: const TextStyle(color: Color(0xFFD5E8CE), fontSize: 12)),
-    const SizedBox(height: 4),
-    Text(
-      value,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 23,
-        fontWeight: FontWeight.w700,
+    Section(context.tr('차곡차곡, 오늘의 기록')),
+    Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${context.tr('수분 기록')}: ${water.toStringAsFixed(water % 1 == 0 ? 0 : 1)} mL',
+            ),
+            Text('${context.tr('복용함 기록')}: ${context.tr('{0}건', [taken])}'),
+            Text(
+              context.tr('입력된 기록의 합계입니다.'),
+              style: const TextStyle(color: Color(0xFF52655A)),
+            ),
+          ],
+        ),
       ),
     ),
-  ],
-);
+  ];
+}

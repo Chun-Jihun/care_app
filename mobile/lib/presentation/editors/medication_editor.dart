@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import '../../domain/reviewed_input.dart';
+import '../pending_photo_field.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -8,6 +12,7 @@ import '../../domain/drafts.dart';
 import '../../domain/records.dart';
 import '../common.dart';
 import '../draft_support.dart';
+import '../medication_times_field.dart';
 
 Future<void> editMedication(
   BuildContext context,
@@ -19,6 +24,7 @@ Future<void> editMedication(
       !context.mounted) {
     return;
   }
+  Uint8List? photo;
   final data = restored?.payload as MedicationDraftPayload?;
   final pid = c.selectedId!,
       name = TextEditingController(text: data?.name ?? medication?.name),
@@ -49,17 +55,39 @@ Future<void> editMedication(
               ? context.tr('약 추가')
               : context.tr('처방 지시 기록'),
           draft: draft,
-          content: (_) => [
+          draftExitNotice: () => photo == null
+              ? null
+              : context.tr(
+                  '사진은 저장을 눌러야 보관돼요. 초안에는 글만 보관되므로 나갔다 돌아오면 사진을 다시 선택해 주세요.',
+                ),
+          content: (update) => [
+            PendingPhotoField(
+              c: c,
+              pid: pid,
+              photo: photo,
+              onChanged: (value) => update(() => photo = value),
+              onReviewed: (reviewed) => update(
+                () => instruction.text = appendReviewedInput(
+                  instruction.text,
+                  reviewed.text,
+                ),
+              ),
+            ),
+            if (photo != null)
+              Text(
+                context.tr(
+                  '저장하면 사진 원본도 약 이름의 진료·연락 기록으로 함께 보관해요. 약 이름과 복용 시각은 직접 확인해 주세요.',
+                ),
+              ),
             textField(name, context.tr('약 이름 *')),
             textField(
               instruction,
               context.tr('의료진의 처방·복용 지시 원문'),
               multiline: true,
             ),
-            textField(
-              times,
-              context.tr('매일 확인할 시각 (선택)'),
-              hint: '08:00, 18:00',
+            MedicationTimesField(
+              controller: times,
+              onChanged: () => update(() {}),
             ),
             Text(
               context.tr(
@@ -68,7 +96,7 @@ Future<void> editMedication(
             ),
           ],
           save: () async {
-            await draft.complete();
+            await draft.complete(photo: photo);
           },
         ),
       ),

@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -37,12 +38,27 @@ final class VaultStore implements NotebookVault {
   @override
   void close() => _state.close();
   @override
+  Future<void> validatePhoto(Uint8List data) =>
+      Isolate.run(() => VaultPhotos.validatePhoto(data));
+  @override
   Future<void> addPhoto(
     String pid,
     String eid,
     Uint8List source, {
     void Function()? beforeCommit,
   }) => _photos.addPhoto(pid, eid, source, beforeCommit: beforeCommit);
+  @override
+  Future<void> completeDraftWithPhoto(
+    String pid,
+    String draftId,
+    Uint8List data, {
+    void Function()? beforeCommit,
+  }) => _photos.completeDraftWithPhoto(
+    pid,
+    draftId,
+    data,
+    beforeCommit: beforeCommit,
+  );
   @override
   Future<Uint8List> photo(String pid, String eid, String id) =>
       _photos.photo(pid, eid, id);

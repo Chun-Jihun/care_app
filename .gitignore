@@ -58,6 +58,7 @@ checkpoint-*/
 
 # Local notebooks and backups are sensitive even when encrypted
 *.carebackup
+*.careknowledge
 *.enc
 *.db
 *.db-*

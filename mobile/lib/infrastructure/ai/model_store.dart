@@ -28,8 +28,18 @@ final class ModelStore {
   }
 
   final _verified = <String>{};
-  Future<bool> installed() async =>
-      File(p.join(directory.path, 'complete')).exists();
+  Future<bool> installed() async {
+    final marker = File(p.join(directory.path, 'complete'));
+    if (await FileSystemEntity.type(directory.path, followLinks: false) !=
+            FileSystemEntityType.directory ||
+        await FileSystemEntity.type(marker.path, followLinks: false) !=
+            FileSystemEntityType.file) {
+      return false;
+    }
+    return await marker.length() == id.length &&
+        ascii.decode(await marker.readAsBytes(), allowInvalid: true) == id;
+  }
+
   Future<void> verify({Iterable<String>? names}) async {
     if (!await installed()) throw const AiException(AiFailure.unavailable);
     final requested =
@@ -61,6 +71,7 @@ final class ModelStore {
     void Function(double) progress,
     void Function() check,
   ) async {
+    check();
     await root.create(recursive: true);
     // Only this store writes install-* in its private model root, and runtime
     // serialization guarantees there is no concurrent installation to delete.
@@ -71,7 +82,11 @@ final class ModelStore {
     }
     if (await installed()) {
       try {
+        // Explicit reinstallation is also the repair action. A prior in-memory
+        // verification cannot establish that the current disk files are intact.
+        _verified.clear();
         await verify();
+        check();
         progress(1);
         return;
       } on AiException catch (e) {
@@ -154,12 +169,18 @@ Future<void> verifyModelFiles(
   Set<String>? names,
 }) async {
   final manifest = jsonDecode(utf8.decode(bytes)) as Map;
+  if (await FileSystemEntity.type(directory, followLinks: false) !=
+      FileSystemEntityType.directory) {
+    throw const AiException(AiFailure.modelInvalid);
+  }
   for (final row in manifest['files'] as List) {
     final name = row['path'] as String;
     if (names != null && !names.contains(name)) continue;
     _checkName(name);
     final file = File(p.join(directory, name));
-    if (await FileSystemEntity.type(file.path, followLinks: false) !=
+    if (await FileSystemEntity.type(file.parent.path, followLinks: false) !=
+            FileSystemEntityType.directory ||
+        await FileSystemEntity.type(file.path, followLinks: false) !=
             FileSystemEntityType.file ||
         await file.length() != row['bytes'] ||
         (await sha256.bind(file.openRead()).first).toString() !=

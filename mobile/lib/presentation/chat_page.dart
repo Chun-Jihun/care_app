@@ -2,6 +2,7 @@ import '../l10n/app_strings.dart';
 import 'ai_reply.dart';
 import 'ai_draft_page.dart';
 import 'chat_ai_notice.dart';
+import 'status_message.dart';
 
 import 'dart:async';
 
@@ -96,6 +97,7 @@ class ChatBody extends StatefulWidget {
 class _ChatBodyState extends State<ChatBody> {
   final input = TextEditingController(), scroll = ScrollController();
   bool sending = false;
+  bool responseReady = false;
   int policyRevision = 0;
   Object? error;
   Timer? expiry;
@@ -104,6 +106,7 @@ class _ChatBodyState extends State<ChatBody> {
   void loadMessages() {
     policy = widget.c.chat.retention(widget.pid);
     messages = widget.c.chatMessages(widget.pid);
+    if (messages.isEmpty) responseReady = false;
   }
 
   @override
@@ -164,11 +167,13 @@ class _ChatBodyState extends State<ChatBody> {
     }
     setState(() {
       sending = true;
+      responseReady = false;
       error = null;
     });
     try {
       await widget.c.ai.ask(widget.pid, input.text, widget.c.language);
       if (mounted) {
+        setState(() => responseReady = true);
         input.clear();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (scroll.hasClients) {
@@ -238,7 +243,7 @@ class _ChatBodyState extends State<ChatBody> {
                               context.tr(
                                 '질문은 기기에서 처리합니다. 기록 조회를 지원하며, 의료 조언은 검수된 근거가 준비되기 전까지 보류합니다.',
                               ),
-                              style: TextStyle(height: 1.5, fontSize: 13),
+                              style: TextStyle(height: 1.5, fontSize: 14),
                             ),
                           ],
                         ),
@@ -252,6 +257,7 @@ class _ChatBodyState extends State<ChatBody> {
                                 key: ValueKey('$policy-$policyRevision'),
                                 initialValue: policy,
                                 isExpanded: true,
+                                itemHeight: null,
                                 decoration: InputDecoration(
                                   labelText: context.tr('질문 보관 방식'),
                                   contentPadding: EdgeInsets.symmetric(
@@ -332,7 +338,7 @@ class _ChatBodyState extends State<ChatBody> {
                                 ),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Color(0xFF68796E),
+                                  color: Color(0xFF52655A),
                                   height: 1.6,
                                 ),
                               ),
@@ -404,8 +410,8 @@ class _ChatBodyState extends State<ChatBody> {
                                           timeText(context, m.createdAt),
                                         ]),
                                         style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF68796E),
+                                          fontSize: 14,
+                                          color: Color(0xFF52655A),
                                         ),
                                       ),
                                     ),
@@ -459,11 +465,10 @@ class _ChatBodyState extends State<ChatBody> {
           if (error != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                errorText(context, error!),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+              child: StatusMessage(errorText(context, error!), isError: true),
             ),
+          if (responseReady && !sending)
+            StatusMessage(context.tr('답변이 준비되었습니다.')),
           if (sending)
             TextButton(
               onPressed: c.ai.cancel,

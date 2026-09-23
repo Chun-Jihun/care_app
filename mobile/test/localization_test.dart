@@ -227,6 +227,11 @@ void main() {
         // Previously saved preferences still render; the UI cannot change them.
         await tester.runAsync(() => c.setLanguage(language));
         await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('languagePicker')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.ensureVisible(
           find.byKey(const ValueKey('languagePicker')),
         );

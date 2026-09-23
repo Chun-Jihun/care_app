@@ -85,6 +85,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/ai/manifest.json
+    - assets/knowledge/releases/
     - assets/ai/licenses/
 
   # To add assets to your application, add an assets section, like this:

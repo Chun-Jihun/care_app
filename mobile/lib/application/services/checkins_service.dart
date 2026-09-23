@@ -8,11 +8,13 @@ final class CheckinService {
   final SessionAccess _scope;
   final _cache = QueryCache();
   void invalidate() => _cache.clear();
-  List<CaregiverCheckin> checkins() {
+  List<CaregiverCheckin> checkins({int? limit}) {
     _scope.requirePatient(null);
     return _cache.get(
-      jsonEncode(['checkins']),
-      () => List<CaregiverCheckin>.unmodifiable(_scope.repository.checkins()),
+      jsonEncode(['checkins', limit]),
+      () => List<CaregiverCheckin>.unmodifiable(
+        _scope.repository.checkins(limit: limit),
+      ),
     );
   }
 

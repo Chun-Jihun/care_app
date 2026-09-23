@@ -113,6 +113,8 @@ final class SqliteBackup {
                   : reply.kind,
               sources: references,
               model: reply.model,
+              citations: reply.citations,
+              evidenceHold: reply.evidenceHold,
               lookup: reply.kind == AiReplyKind.records && references.isEmpty
                   ? null
                   : reply.lookup,

@@ -9,6 +9,9 @@ import 'presentation/app.dart';
 import 'infrastructure/ai/device_ai_runtime.dart';
 import 'infrastructure/ai/memory_recorder.dart';
 import 'infrastructure/ai/licenses.dart';
+import 'infrastructure/device_knowledge_library.dart';
+import 'application/medical_answer_service.dart';
+import 'application/reviewed_knowledge_catalog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,10 +22,18 @@ Future<void> main() async {
   try {
     final secrets = DeviceSecretStore();
     language = AppLanguage.fromCode(await secrets.read('app.language'));
+    final ai = DeviceAiRuntime();
+    final knowledge = DeviceKnowledgeLibrary();
     final controller = CareController(
       VaultStore(await DevicePlatformServices.prepareDirectory(), secrets),
       DevicePlatformServices(),
-      aiRuntime: DeviceAiRuntime(),
+      aiRuntime: ai,
+      knowledge: knowledge,
+      drugCatalog: knowledge.drugCatalog,
+      medicalAnswers: MedicalAnswerService(
+        ReviewedKnowledgeCatalog(knowledge, const []),
+        ai,
+      ),
       microphone: MemoryRecorder.new,
     );
     await controller.initialize();

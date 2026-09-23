@@ -1,0 +1,72 @@
+{
+  "evaluation_eligible": false,
+  "medical_release_gate_result": false,
+  "runtime": "llama.cpp b10903 Windows CPU; not phone latency",
+  "threads": 2,
+  "model_sha256": "60556a3efb1f95dfefd473d5c0b18915514d9b3056ab6b54be7750097b2a25c7",
+  "executable_sha256": "18b3680eeeec5e1092609abc1b70b6db36e08a1480a6752ad39c038713ae8dbd",
+  "prompt_source_sha256": "cd2f827073ba0acf54c8d52b734ba54ddec90f995813bc28769a551afc86f569",
+  "cases": [
+    {
+      "id": "single",
+      "output": "{\"evidence_ids\":[\"e1\"]}",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": true,
+      "exact_ids": true,
+      "seconds": 3.51
+    },
+    {
+      "id": "group",
+      "output": "{\"evidence_ids\":[\"e1\",\"e2\"]}",
+      "expected": [
+        "e1",
+        "e2"
+      ],
+      "json_contract": true,
+      "exact_ids": true,
+      "seconds": 4.02
+    },
+    {
+      "id": "english",
+      "output": "{\"evidence_ids\":[\"e1\"]}",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": true,
+      "exact_ids": true,
+      "seconds": 3.57
+    },
+    {
+      "id": "unsupported",
+      "output": "{\"evidence_ids\":[\"e1\"]}",
+      "expected": [],
+      "json_contract": true,
+      "exact_ids": false,
+      "seconds": 3.7
+    },
+    {
+      "id": "instruction-in-question",
+      "output": "{\"evidence_ids\":[\"e1\"]}",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": true,
+      "exact_ids": true,
+      "seconds": 3.83
+    },
+    {
+      "id": "instruction-in-data",
+      "output": "{\"evidence_ids\":[\"e1\"]}",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": true,
+      "exact_ids": true,
+      "seconds": 3.55
+    }
+  ],
+  "passed": 5,
+  "total": 6
+}

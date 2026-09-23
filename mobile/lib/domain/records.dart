@@ -1,3 +1,4 @@
+import 'drug_safety.dart';
 import 'errors.dart';
 export 'errors.dart';
 
@@ -228,12 +229,14 @@ class Medication {
     List<String> times,
     this.active,
     this.planId,
-    this.version,
-  ) : times = List.unmodifiable(times);
+    this.version, {
+    this.product,
+  }) : times = List.unmodifiable(times);
   final String id, name, instruction, planId;
   final List<String> times;
   final bool active;
   final int version;
+  final MedicationProduct? product;
 }
 
 class CareTask {

@@ -117,8 +117,11 @@ final class SqliteProfiles {
     );
   }
 
-  List<CaregiverCheckin> checkins() => _store.connection
-      .select('SELECT * FROM caregiver_checkin ORDER BY occurred_at DESC')
+  List<CaregiverCheckin> checkins({int? limit}) => _store.connection
+      .select(
+        'SELECT * FROM caregiver_checkin ORDER BY occurred_at DESC,id DESC${limit == null ? '' : ' LIMIT ?'}',
+        [if (limit != null) limit < 0 ? 0 : limit],
+      )
       .map(
         (r) => CaregiverCheckin(
           id: r['id'] as String,

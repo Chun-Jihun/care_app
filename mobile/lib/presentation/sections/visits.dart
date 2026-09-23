@@ -11,7 +11,7 @@ List<Widget> visitContent(BuildContext context, CareController c) => [
   Section(context.tr('진료를 준비해요')),
   Text(
     context.tr('물어볼 질문과 보여줄 기록을 한곳에 모아 두세요.'),
-    style: TextStyle(color: Color(0xFF68796E), height: 1.5),
+    style: TextStyle(color: Color(0xFF52655A), height: 1.5),
   ),
   const SizedBox(height: 16),
   if (c.visits.isEmpty)

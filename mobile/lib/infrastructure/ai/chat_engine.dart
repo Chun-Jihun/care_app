@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:llama_cpp_dart/llama_cpp_dart.dart';
 
 import '../../domain/ai.dart';
+import '../../domain/medical_evidence.dart';
+import '../../domain/evidence_selection_prompt.dart';
 
 final class LocalChatEngine {
   bool _cancelled = false;
@@ -20,9 +22,33 @@ final class LocalChatEngine {
       throw const AiException(AiFailure.invalidInput);
     }
     final template = jsonDecode(await File(promptPath).readAsString()) as Map;
+    return _generate(
+      model,
+      '${template['prefix']}$question${template['suffix']}',
+    );
+  }
+
+  Future<String> selectEvidence(
+    String model,
+    String question,
+    List<ReviewedPassage> passages,
+  ) {
+    _cancelled = false;
+    return _generate(
+      model,
+      evidenceSelectionPrompt(question, passages),
+      contextSize: 4096,
+    );
+  }
+
+  Future<String> _generate(
+    String model,
+    String prompt, {
+    int contextSize = 2048,
+  }) async {
     final params = ModelParams(path: model, gpuLayers: 0);
-    const context = ContextParams(
-      nCtx: 2048,
+    final context = ContextParams(
+      nCtx: contextSize,
       nBatch: 256,
       nUbatch: 64,
       nThreads: 2,
@@ -41,7 +67,7 @@ final class LocalChatEngine {
       final result = StringBuffer();
       try {
         await for (final event in session.generate(
-          prompt: '${template['prefix']}$question${template['suffix']}',
+          prompt: prompt,
           addSpecial: true,
           sampler: const SamplerParams(
             greedy: true,

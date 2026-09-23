@@ -1,0 +1,908 @@
+{
+  "schema": "care-release-audit-v1",
+  "checked_date": "2026-09-23",
+  "medical_release_gate_result": false,
+  "packages": {
+    "documents": {
+      "database_sha256": "6d678794d7d4d54b3fa8d4afbcfcdf48569e39050afeb115f729ec8b356fbdf0",
+      "bytes": 8081408,
+      "records": 0,
+      "clinical_review_completed": false,
+      "sources": [
+        {
+          "id": "175a18532e5b39a9ff3434ef0e965ab7532ab10d38a2f402a8e69170a8bb0019",
+          "title": "Strategy 4: IDEA Discharge Planning (Tool 2a)",
+          "publisher": "AHRQ",
+          "url": "https://www.ahrq.gov/sites/default/files/wysiwyg/professionals/systems/hospital/engagingfamilies/strategy4/Strat4_Tool_2a_IDEAL_Checklist_508.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "1e3be1454e301f06a9aea81042f59da774fbfb28370b4e1f3f1f6ca63ff3d5b4",
+          "title": "Getting Started With Caregiving | National Institute on Aging",
+          "publisher": "NIH NIA",
+          "url": "https://www.nia.nih.gov/health/caregiving/getting-started-caregiving",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "3fe2a26e879975134b6168db394d4856b2af7846ad0239911ab9a379e1bb6ad9",
+          "title": "How to move, lift and handle someone else - Social care and support guide - NHS",
+          "publisher": "NHS",
+          "url": "https://www.nhs.uk/social-care-and-support/practical-tips-if-you-care-for-someone/how-to-move-lift-and-handle-someone-else/",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "4f275dc29ab5e861a996bad2507fe0ec2106f4a3f140cf01335ad7b34b1d5766",
+          "title": "Brushing: Information for Caregivers",
+          "publisher": "NIH NIDCR",
+          "url": "https://www.nidcr.nih.gov/sites/default/files/2023-12/oral-health-aging-brushing.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "5b829d5fbd24bfa22665ce26b958b2873c350f48a6d1306b7fd1f0c85977c3b9",
+          "title": "Sharing Caregiving Responsibilities | National Institute on Aging",
+          "publisher": "NIH NIA",
+          "url": "https://www.nia.nih.gov/health/caregiving/sharing-caregiving-responsibilities",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "7f642f604d4a346ec79f84ee3e187d18b5a2a85536bd026a19ed890132b0cd2f",
+          "title": "Medicines: tips for carers - Social care and support guide - NHS",
+          "publisher": "NHS",
+          "url": "https://www.nhs.uk/social-care-and-support/practical-tips-if-you-care-for-someone/medicines-tips-for-carers/",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "88a35e867c8a93a5b390b499769a6e303c2528ed46fe9099361e82270dcf73f1",
+          "title": "Family Caregivers: Protect Your Loved Ones from Falling",
+          "publisher": "CDC",
+          "url": "https://www.cdc.gov/steadi/pdf/steadi-caregiverbrochure.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "8df3721aeb313087e2a44f36ecc48d00e04ac163189cdb74be5c665c23ad7210",
+          "title": "Flossing: Information for Caregivers",
+          "publisher": "NIH NIDCR",
+          "url": "https://www.nidcr.nih.gov/sites/default/files/2023-12/flossing-info-for-caregivers.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "957a0a1a1d69020dafe062b0d6d1a2252d0a0796def92a269abe6281c7e44df3",
+          "title": "How to support someone you care for with eating - Social care and support guide - NHS",
+          "publisher": "NHS",
+          "url": "https://www.nhs.uk/social-care-and-support/practical-tips-if-you-care-for-someone/how-to-support-someone-you-care-for-with-eating/",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "997702f7ef0f4d4d92616c8eb9343d7404dcbcc950dda171751c1d1b1f0f3b45",
+          "title": "Check For Safety A Home Fall Prevention Checklist For Older Adults ",
+          "publisher": "CDC",
+          "url": "https://www.cdc.gov/steadi/pdf/steadi-brochure-checkforsafety-508.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dfa446d581c8523c06be99fd4567f666a551cbd9ccdfe69c37b4353497e944df",
+          "title": "How to help someone you care for keep clean - Care and support guide - NHS",
+          "publisher": "NHS",
+          "url": "https://www.nhs.uk/social-care-and-support/practical-tips-if-you-care-for-someone/how-to-help-someone-you-care-for-keep-clean/",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "e25c8bdcde7879cb400bbad7a2daaba72020e5beb2341d51d0cda5e9b35ce3bb",
+          "title": "Dry Mouth and Older Adults:  Information for Caregivers",
+          "publisher": "NIH NIDCR",
+          "url": "https://www.nidcr.nih.gov/sites/default/files/2023-12/dry-mouth-and-older-adults.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "title": "Strategy 4: IDEA Discharge Planning (Tool 2b)",
+          "publisher": "AHRQ",
+          "url": "https://www.ahrq.gov/sites/default/files/wysiwyg/professionals/systems/hospital/engagingfamilies/strategy4/Strat4_Tool_2b_IDEAL_Booklet_508.pdf",
+          "original_matches": true,
+          "published": null,
+          "collected": null,
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        }
+      ],
+      "pages": [
+        {
+          "source_id": "175a18532e5b39a9ff3434ef0e965ab7532ab10d38a2f402a8e69170a8bb0019",
+          "page": 1,
+          "characters": 2056,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "175a18532e5b39a9ff3434ef0e965ab7532ab10d38a2f402a8e69170a8bb0019",
+          "page": 2,
+          "characters": 2148,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "1e3be1454e301f06a9aea81042f59da774fbfb28370b4e1f3f1f6ca63ff3d5b4",
+          "page": 1,
+          "characters": 5536,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "3fe2a26e879975134b6168db394d4856b2af7846ad0239911ab9a379e1bb6ad9",
+          "page": 1,
+          "characters": 2221,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "4f275dc29ab5e861a996bad2507fe0ec2106f4a3f140cf01335ad7b34b1d5766",
+          "page": 1,
+          "characters": 1783,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "4f275dc29ab5e861a996bad2507fe0ec2106f4a3f140cf01335ad7b34b1d5766",
+          "page": 2,
+          "characters": 685,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "4f275dc29ab5e861a996bad2507fe0ec2106f4a3f140cf01335ad7b34b1d5766",
+          "page": 3,
+          "characters": 2033,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "4f275dc29ab5e861a996bad2507fe0ec2106f4a3f140cf01335ad7b34b1d5766",
+          "page": 4,
+          "characters": 1408,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "5b829d5fbd24bfa22665ce26b958b2873c350f48a6d1306b7fd1f0c85977c3b9",
+          "page": 1,
+          "characters": 7547,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "7f642f604d4a346ec79f84ee3e187d18b5a2a85536bd026a19ed890132b0cd2f",
+          "page": 1,
+          "characters": 4825,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "88a35e867c8a93a5b390b499769a6e303c2528ed46fe9099361e82270dcf73f1",
+          "page": 1,
+          "characters": 822,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "88a35e867c8a93a5b390b499769a6e303c2528ed46fe9099361e82270dcf73f1",
+          "page": 2,
+          "characters": 1751,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "8df3721aeb313087e2a44f36ecc48d00e04ac163189cdb74be5c665c23ad7210",
+          "page": 1,
+          "characters": 1297,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "8df3721aeb313087e2a44f36ecc48d00e04ac163189cdb74be5c665c23ad7210",
+          "page": 2,
+          "characters": 863,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "8df3721aeb313087e2a44f36ecc48d00e04ac163189cdb74be5c665c23ad7210",
+          "page": 3,
+          "characters": 1129,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "8df3721aeb313087e2a44f36ecc48d00e04ac163189cdb74be5c665c23ad7210",
+          "page": 4,
+          "characters": 1361,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "957a0a1a1d69020dafe062b0d6d1a2252d0a0796def92a269abe6281c7e44df3",
+          "page": 1,
+          "characters": 3717,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "997702f7ef0f4d4d92616c8eb9343d7404dcbcc950dda171751c1d1b1f0f3b45",
+          "page": 1,
+          "characters": 445,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "997702f7ef0f4d4d92616c8eb9343d7404dcbcc950dda171751c1d1b1f0f3b45",
+          "page": 2,
+          "characters": 2507,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "dfa446d581c8523c06be99fd4567f666a551cbd9ccdfe69c37b4353497e944df",
+          "page": 1,
+          "characters": 5106,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "e25c8bdcde7879cb400bbad7a2daaba72020e5beb2341d51d0cda5e9b35ce3bb",
+          "page": 1,
+          "characters": 2071,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "e25c8bdcde7879cb400bbad7a2daaba72020e5beb2341d51d0cda5e9b35ce3bb",
+          "page": 2,
+          "characters": 1974,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 1,
+          "characters": 737,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 2,
+          "characters": 1613,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 3,
+          "characters": 385,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 4,
+          "characters": 629,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 5,
+          "characters": 1002,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 6,
+          "characters": 1176,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 7,
+          "characters": 657,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        },
+        {
+          "source_id": "fb2987b5479244c5549f5df352a0167f80dd14c56e97b5000213dd74be5e4a77",
+          "page": 8,
+          "characters": 756,
+          "empty": false,
+          "replacement_characters": 0,
+          "suspicious_controls": 0,
+          "spaced_letters": false
+        }
+      ]
+    },
+    "dur": {
+      "database_sha256": "f05da78fc0a78c5a3a524a6f8bfdc1860554c0b3510e3e7c3aa69db124d165ff",
+      "bytes": 29351936,
+      "records": 857362,
+      "clinical_review_completed": false,
+      "sources": [
+        {
+          "id": "dur/getCpctyAtentInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getDurPrdlstInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getEfcyDplctInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getMdctnPdAtentInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getOdsnAtentInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getPwnmTabooInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getSeobangjeongPartitnAtentInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getSpcifyAgrdeTabooInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        },
+        {
+          "id": "dur/getUsjntTabooInfoList03",
+          "title": "식품의약품안전처_의약품안전사용서비스(DUR)품목정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15059486/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:41:09Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        }
+      ],
+      "pages": []
+    },
+    "permits": {
+      "database_sha256": "5d8993ce792ee8a56a240fea7809ac09ac44e63cdcb917a8b84877dcd31bc468",
+      "bytes": 5222400,
+      "records": 42992,
+      "clinical_review_completed": false,
+      "sources": [
+        {
+          "id": "permits/getDrugPrdtPrmsnInq07",
+          "title": "식품의약품안전처_의약품 제품 허가정보",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15095677/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-18T05:33:56Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        }
+      ],
+      "pages": []
+    },
+    "easy-drug": {
+      "database_sha256": "6acfc1764ccd770afc75a8c299fc66a9cda9d4a4537a88caf4f1960fe8cf4579",
+      "bytes": 2195456,
+      "records": 4775,
+      "clinical_review_completed": false,
+      "sources": [
+        {
+          "id": "easy-drug",
+          "title": "식품의약품안전처_의약품개요정보(e약은요)",
+          "publisher": "식품의약품안전처",
+          "url": "https://www.data.go.kr/data/15075057/openapi.do",
+          "original_matches": null,
+          "published": null,
+          "collected": "2026-09-01T06:14:37Z",
+          "clinical_reviewed_at": null,
+          "license_review_status": "pending",
+          "extraction_review_status": "pending",
+          "intended_population_review": "pending",
+          "current_remote_version_verified": false
+        }
+      ],
+      "pages": []
+    }
+  },
+  "media": {
+    "execution": "rescored archived 2026-09-11 native outputs; not a new device run",
+    "report_sha256": "0a249455ae517e99adf50e745205a455d3569174b084919847861fa4fe02ea1d",
+    "quality_gate_passed": false,
+    "groups": {
+      "ocr": {
+        "cases": 20,
+        "exact": 19,
+        "characters": 403,
+        "edits": 4,
+        "numbers_units_mismatches": 0,
+        "cases_detail": [
+          {
+            "id": "ocr-ko",
+            "exact": true,
+            "edits": 0,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-en",
+            "exact": true,
+            "edits": 0,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-ja",
+            "exact": true,
+            "edits": 0,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-zh-Hans",
+            "exact": true,
+            "edits": 0,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-zh-Hant",
+            "exact": true,
+            "edits": 0,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-ko-16-clean",
+            "exact": false,
+            "edits": 4,
+            "characters": 12,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-ko-19-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 10,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-en-16-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 14,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-en-19-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 17,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-ja-16-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 13,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-ja-19-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 10,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-zh-Hans-16-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 9,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-zh-Hans-19-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 10,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-zh-Hant-16-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 9,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-text-FV-OCR-zh-Hant-19-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 10,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-page-FV-PAGE-ko-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 45,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-page-FV-PAGE-en-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 54,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-page-FV-PAGE-ja-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 46,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-page-FV-PAGE-zh-Hans-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 42,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "ocr-page-FV-PAGE-zh-Hant-clean",
+            "exact": true,
+            "edits": 0,
+            "characters": 42,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          }
+        ]
+      },
+      "speech": {
+        "cases": 4,
+        "exact": 1,
+        "characters": 139,
+        "edits": 15,
+        "numbers_units_mismatches": 1,
+        "cases_detail": [
+          {
+            "id": "speech-ko",
+            "exact": false,
+            "edits": 10,
+            "characters": 34,
+            "numbers_units_preserved": false,
+            "nonempty_output": true
+          },
+          {
+            "id": "speech-en",
+            "exact": true,
+            "edits": 0,
+            "characters": 60,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "speech-ja",
+            "exact": false,
+            "edits": 2,
+            "characters": 25,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          },
+          {
+            "id": "speech-zh",
+            "exact": false,
+            "edits": 3,
+            "characters": 20,
+            "numbers_units_preserved": true,
+            "nonempty_output": true
+          }
+        ]
+      },
+      "silence": {
+        "cases": 1,
+        "exact": 1,
+        "characters": 0,
+        "edits": 0,
+        "numbers_units_mismatches": 0,
+        "cases_detail": [
+          {
+            "id": "silence",
+            "exact": true,
+            "edits": 0,
+            "characters": 0,
+            "numbers_units_preserved": true,
+            "nonempty_output": false
+          }
+        ]
+      }
+    }
+  },
+  "android_main_permissions": [
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.RECORD_AUDIO",
+    "android.permission.USE_BIOMETRIC"
+  ],
+  "blockers": [
+    "clinical source/target-population/exception review incomplete",
+    "publication or revision metadata incomplete; collection date is not a publication date",
+    "source-specific redistribution/image rights and required notices not approved",
+    "NHS offline refresh/attribution policy requires a release decision",
+    "independent clinical retrieval and answer evaluation not performed",
+    "real camera, medication-label, caregiver speech and critical-token quality evaluation pending",
+    "release signing and store declarations require owner credentials/details",
+    "Android/iOS device, long-duration, memory/battery and update testing deferred to pre-release",
+    "iOS native AI runtime and privacy manifests need Mac/Xcode verification"
+  ],
+  "source_policy_references": {
+    "NHS": "https://www.nhs.uk/our-policies/terms-and-conditions/",
+    "CDC": "https://www.cdc.gov/other/agencymaterials.html",
+    "AHRQ": "https://www.ahrq.gov/policy/electronic/disclaimers/index.html",
+    "DUR": "https://www.data.go.kr/data/15059486/openapi.do",
+    "permits": "https://www.data.go.kr/data/15095677/openapi.do"
+  }
+}

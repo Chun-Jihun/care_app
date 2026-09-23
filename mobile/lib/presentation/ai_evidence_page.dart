@@ -5,6 +5,7 @@ import '../domain/ai.dart';
 import '../l10n/app_strings.dart';
 import 'ai_record_source.dart';
 import 'common.dart';
+import 'medical_citation_card.dart';
 
 /// Resolves source IDs against the selected notebook, never against model prose.
 class AiEvidencePage extends StatelessWidget {
@@ -37,11 +38,14 @@ class AiEvidencePage extends StatelessWidget {
                   detailed: true,
                 ),
               Section(context.tr('의료 근거 문서')),
-              Text(
-                context.tr(
-                  '검수된 의료 문서가 아직 연결되지 않았습니다. 의료 문서를 인용한 답변은 제공하지 않습니다.',
+              if (reply.citations.isEmpty)
+                Text(
+                  context.tr(
+                    '검수된 의료 문서가 아직 연결되지 않았습니다. 의료 문서를 인용한 답변은 제공하지 않습니다.',
+                  ),
                 ),
-              ),
+              for (final citation in reply.citations)
+                MedicalCitationCard(c, pid, citation),
             ],
           ),
         ),

@@ -11,7 +11,9 @@ class TaskOverview extends StatelessWidget {
   final CareController c;
   @override
   Widget build(BuildContext context) {
-    final pending = c.tasks.where((t) => !t.done).toList();
+    final pid = c.selectedId!;
+    final pending = c.taskBook.tasks(pid, done: false, limit: 5);
+    final pendingCount = c.taskBook.count(pid, done: false);
     return Column(
       children: [
         if (pending.isEmpty)
@@ -20,8 +22,8 @@ class TaskOverview extends StatelessWidget {
             context.tr('진료 일정, 준비물, 생활 속 할 일을 관리할 수 있어요.'),
             icon: Icons.check_circle_outline,
           ),
-        ...pending.take(5).map((task) => TaskCard(c, c.selectedId!, task)),
-        if (c.tasks.isNotEmpty)
+        ...pending.map((task) => TaskCard(c, pid, task)),
+        if (c.taskBook.count(pid) > 0)
           OutlinedButton.icon(
             onPressed: () => pushPage(
               context,
@@ -30,7 +32,7 @@ class TaskOverview extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.checklist),
-            label: Text(context.tr('모든 할 일 · 미완료 {0}개', [pending.length])),
+            label: Text(context.tr('모든 할 일 · 미완료 {0}개', [pendingCount])),
           ),
       ],
     );
@@ -56,7 +58,11 @@ class _TaskListPageState extends State<TaskListPage> {
       if (!c.unlocked || c.selectedId != widget.pid) {
         return const SizedBox.shrink();
       }
-      final tasks = c.tasks.where((t) => completed || !t.done).toList();
+      final tasks = c.taskBook.tasks(
+        widget.pid,
+        done: completed ? null : false,
+        limit: limit + 1,
+      );
       final shown = tasks.take(limit).toList();
       return Scaffold(
         appBar: AppBar(
@@ -135,7 +141,7 @@ class TaskCard extends StatelessWidget {
       ),
       subtitle: Text(
         '${!task.done && task.dueAt.isBefore(DateTime.now()) ? '${context.tr('예정 시각 지남')} · ' : ''}'
-        '${dateText(context, task.dueAt)} ${timeText(context, task.dueAt)}${task.reminder ? context.tr(' · 알림') : ''}${task.note.isEmpty ? '' : '\n${task.note}'}',
+        '${dateText(context, task.dueAt)} ${timeText(context, task.dueAt)}${task.reminder ? '\n${reminderState(context, c, pid, task)}' : ''}${task.note.isEmpty ? '' : '\n${task.note}'}',
       ),
       onTap: () => editTask(context, c, task: task),
       trailing: IconButton(
@@ -150,4 +156,19 @@ class TaskCard extends StatelessWidget {
       ),
     ),
   );
+}
+
+String reminderState(
+  BuildContext context,
+  CareController c,
+  String pid,
+  CareTask task,
+) {
+  if (task.done) return context.tr('완료한 할 일 · 알림 종료');
+  if (!task.dueAt.isAfter(DateTime.now())) {
+    return context.tr('지난 시각 · 알림 예약 안 함');
+  }
+  if (!c.notificationsEnabled) return context.tr('알림 꺼짐 · 설정에서 켜 주세요.');
+  if (!c.importedRemindersEnabled(pid)) return context.tr('복원한 수첩 · 알림 허용 필요');
+  return context.tr('알림 요청됨 · 기기 설정과 예약 한도에 따라 달라져요.');
 }

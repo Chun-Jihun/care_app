@@ -8,11 +8,21 @@ final class TaskService {
   final SessionAccess _scope;
   final _cache = QueryCache();
   void invalidate() => _cache.clear();
-  List<CareTask> tasks(String pid) {
+  List<CareTask> tasks(String pid, {bool? done, int? limit}) {
     _scope.requirePatient(pid);
     return _cache.get(
-      jsonEncode(['tasks', pid.toString()]),
-      () => List<CareTask>.unmodifiable(_scope.repository.tasks(pid)),
+      jsonEncode(['tasks', pid, done, limit]),
+      () => List<CareTask>.unmodifiable(
+        _scope.repository.tasks(pid, done: done, limit: limit),
+      ),
+    );
+  }
+
+  int count(String pid, {bool? done}) {
+    _scope.requirePatient(pid);
+    return _cache.get(
+      jsonEncode(['taskCount', pid, done]),
+      () => _scope.repository.taskCount(pid, done: done),
     );
   }
 

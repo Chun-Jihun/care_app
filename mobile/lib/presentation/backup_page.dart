@@ -6,6 +6,7 @@ import '../application/care_controller.dart';
 import '../domain/backup.dart';
 import '../domain/records.dart';
 import 'common.dart';
+import 'password_field.dart';
 
 String backupCounts(BuildContext context, Map<BackupCategory, int> counts) => [
   for (final e in {
@@ -123,8 +124,8 @@ Future<void> backupFlow(BuildContext context, CareController c) async {
             Text(
               context.tr('기기 잠금 번호와 다른 12자 이상의 비밀번호를 정해 주세요. 잊으면 복원할 수 없습니다.'),
             ),
-            textField(a, context.tr('백업 비밀번호 (12자 이상)'), secret: true),
-            textField(b, context.tr('백업 비밀번호 확인'), secret: true),
+            PasswordField(controller: a, label: context.tr('백업 비밀번호 (12자 이상)')),
+            PasswordField(controller: b, label: context.tr('백업 비밀번호 확인')),
           ],
           save: () async {
             if (a.text.length < 12) {
@@ -189,7 +190,7 @@ Future<void> restoreFlow(BuildContext context, CareController c) async {
                   '백업을 저장할 때 정한 비밀번호를 입력해 주세요. 다음 화면에서 복원할 내용을 확인할 수 있어요.',
                 ),
               ),
-              textField(password, context.tr('백업 비밀번호'), secret: true),
+              PasswordField(controller: password, label: context.tr('백업 비밀번호')),
             ],
             save: () async {
               preview = await c.inspectBackup(data, password.text);

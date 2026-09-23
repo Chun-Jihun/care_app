@@ -1,3 +1,4 @@
+import '../domain/drug_safety.dart';
 import 'backup_document.dart';
 
 import 'dart:io';
@@ -150,6 +151,8 @@ class CareDatabase implements NotebookRepository {
     EntryKind? kind,
     String query = '',
     DateTime? day,
+    DateTime? from,
+    DateTime? until,
     RecordLookup? lookup,
     int? limit,
     String Function(CareEntry)? displayText,
@@ -158,6 +161,8 @@ class CareDatabase implements NotebookRepository {
     kind: kind,
     query: query,
     day: day,
+    from: from,
+    until: until,
     lookup: lookup,
     limit: limit,
     displayText: displayText,
@@ -221,8 +226,18 @@ class CareDatabase implements NotebookRepository {
     times: times,
   );
   @override
+  List<CareEntry> medicationIntakes(String pid, String medId, DateTime day) =>
+      _medications.medicationIntakes(pid, medId, day);
+  @override
   List<MedicationPlan> medicationPlans(String pid, String id) =>
       _medications.medicationPlans(pid, id);
+  @override
+  void confirmMedicationProduct(
+    String pid,
+    String id,
+    int version,
+    MedicationProduct? product,
+  ) => _medications.confirmProduct(pid, id, version, product);
   @override
   void archiveMedication(String pid, String id, bool archive) =>
       _medications.archiveMedication(pid, id, archive);
@@ -245,7 +260,10 @@ class CareDatabase implements NotebookRepository {
     scheduledAt: scheduledAt,
   );
   @override
-  List<CareTask> tasks(String pid) => _tasks.tasks(pid);
+  List<CareTask> tasks(String pid, {bool? done, int? limit}) =>
+      _tasks.tasks(pid, done: done, limit: limit);
+  @override
+  int taskCount(String pid, {bool? done}) => _tasks.taskCount(pid, done: done);
   @override
   CareTask saveTask(
     String pid, {
@@ -335,7 +353,8 @@ class CareDatabase implements NotebookRepository {
     note: note,
   );
   @override
-  List<CaregiverCheckin> checkins() => _profiles.checkins();
+  List<CaregiverCheckin> checkins({int? limit}) =>
+      _profiles.checkins(limit: limit);
   @override
   void deleteCheckin(String id) => _profiles.deleteCheckin(id);
   @override
@@ -397,7 +416,22 @@ class CareDatabase implements NotebookRepository {
   String? draftBase(DraftType type, String? pid, String? targetId) =>
       _drafts.draftBase(type, pid, targetId);
   @override
-  void completeDraft(String? pid, String id) => _drafts.completeDraft(pid, id);
+  void completeDraft(String? pid, String id) {
+    _drafts.completeDraft(pid, id);
+  }
+
+  /// Text, medication changes, source record, attachment and draft removal commit together.
+  void completeDraftWithPhoto(
+    String pid,
+    String draftId,
+    String photoId,
+    String wrappedKey,
+    int bytes,
+  ) => _store.transaction(() {
+    final entryId = _drafts.completeDraft(pid, draftId, photo: true);
+    if (entryId == null) throw CareError(CareErrorCode.draftSourceMismatch);
+    addAttachment(pid, entryId, photoId, wrappedKey, bytes);
+  });
   bool hasImportedBackup(String id) => _backup.hasImportedBackup(id);
   Map<String, String> importBackupRows(
     BackupRows rows,

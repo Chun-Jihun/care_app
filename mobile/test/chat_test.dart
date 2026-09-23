@@ -110,7 +110,7 @@ void main() {
     final old = sqlite3.open('$path/care.db');
     old.execute('PRAGMA key="x\'${hex(key)}\'"');
     old.execute(
-      'DROP TABLE chat_message; DROP TABLE chat_policy; DROP TABLE record_draft; DROP TABLE imported_backup; PRAGMA user_version=1;',
+      'DROP TRIGGER invalidate_medication_product; DROP TABLE medication_product; DROP TABLE chat_message; DROP TABLE chat_policy; DROP TABLE record_draft; DROP TABLE imported_backup; PRAGMA user_version=1;',
     );
     old.close();
     final oldId = sqlite3.open('$path/identity.db');

@@ -180,15 +180,25 @@ final class SqliteDrafts {
     return jsonEncode(rows);
   }
 
-  void completeDraft(String? pid, String id) => _store.transaction(() {
+  String? completeDraft(
+    String? pid,
+    String id, {
+    bool photo = false,
+  }) => _store.transaction(() {
     final draft = drafts(pid).where((d) => d.id == id).firstOrNull;
     if (draft == null) throw CareError(CareErrorCode.draftExpired);
     if (draft.base != draftBase(draft.type, pid, draft.targetId)) {
       throw CareError(CareErrorCode.draftConflict);
     }
+    if (photo &&
+        draft.type != DraftType.entry &&
+        draft.type != DraftType.medication) {
+      throw CareError(CareErrorCode.draftSourceMismatch);
+    }
+    String? photoEntry;
     switch (draft.payload) {
       case EntryDraftPayload value:
-        _repository.saveEntry(
+        final entry = _repository.saveEntry(
           pid!,
           id: draft.targetId,
           expectedVersion: draft.targetId == null
@@ -199,6 +209,7 @@ final class SqliteDrafts {
           note: value.note,
           fields: value.fields,
         );
+        photoEntry = entry.id;
       case MedicationDraftPayload value:
         _repository.saveMedication(
           pid!,
@@ -217,6 +228,19 @@ final class SqliteDrafts {
               .where((s) => s.isNotEmpty)
               .toList(),
         );
+        if (photo) {
+          photoEntry = _repository
+              .saveEntry(
+                pid,
+                kind: EntryKind.medicalContact,
+                occurredAt: draft.updatedAt,
+                note: value.name,
+                // The reviewed instruction is already in medication history.
+                // Keep a source photo record without imposing a second,
+                // shorter field limit or duplicating editable directions.
+              )
+              .id;
+        }
       case IntakeDraftPayload value:
         _repository.recordIntake(
           pid!,
@@ -262,5 +286,6 @@ final class SqliteDrafts {
         throw CareError(CareErrorCode.draftSourceMismatch);
     }
     deleteDraft(pid, id);
+    return photoEntry;
   });
 }

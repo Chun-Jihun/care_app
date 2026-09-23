@@ -1,0 +1,54 @@
+{
+  "schema": "care-knowledge-delivery-v1",
+  "version": "caregiver-essentials-v2-20260918",
+  "preview": true,
+  "checked_at": "2026-09-18T07:18:06.443854+00:00",
+  "recheck_after": "2026-12-17T07:18:06.443854+00:00",
+  "files": [
+    {
+      "path": "manifest.json",
+      "bytes": 2871,
+      "sha256": "26c472a2dc0eb3a0e4f4ede4c1698e84709ce1c5df1cb6cf15c22394d540aa25"
+    },
+    {
+      "path": "documents/manifest.json",
+      "bytes": 1379,
+      "sha256": "90ec458af5e056b096c9df6dec5f58fc214b6fcf4ff66b58995fa87cba56b199"
+    },
+    {
+      "path": "documents/knowledge.sqlite3",
+      "bytes": 8081408,
+      "sha256": "6d678794d7d4d54b3fa8d4afbcfcdf48569e39050afeb115f729ec8b356fbdf0"
+    },
+    {
+      "path": "dur/manifest.json",
+      "bytes": 1507,
+      "sha256": "bff5c5dc064f714d7c0c24d04efd09d498b52e4f18cf2c5213d7ae4d7be9df8d"
+    },
+    {
+      "path": "dur/knowledge.sqlite3",
+      "bytes": 29351936,
+      "sha256": "f05da78fc0a78c5a3a524a6f8bfdc1860554c0b3510e3e7c3aa69db124d165ff"
+    },
+    {
+      "path": "easy-drug/manifest.json",
+      "bytes": 1429,
+      "sha256": "4cc804533a9899707afcbff2d97de368a78d9be04de52ade754b7f5ef225621b"
+    },
+    {
+      "path": "easy-drug/knowledge.sqlite3",
+      "bytes": 2195456,
+      "sha256": "6acfc1764ccd770afc75a8c299fc66a9cda9d4a4537a88caf4f1960fe8cf4579"
+    },
+    {
+      "path": "permits/manifest.json",
+      "bytes": 1753,
+      "sha256": "92e15bcf2ea604c22b9a0397028776bdc3f8a5af5e2ce279748f10e03d428e9e"
+    },
+    {
+      "path": "permits/knowledge.sqlite3",
+      "bytes": 5222400,
+      "sha256": "5d8993ce792ee8a56a240fea7809ac09ac44e63cdcb917a8b84877dcd31bc468"
+    }
+  ]
+}

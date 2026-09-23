@@ -59,6 +59,7 @@ void main() {
       await root.delete(recursive: true);
     });
     await tester.pumpWidget(MaterialApp(home: AiDraftPage(c, c.selectedId!)));
+    await tester.pumpAndSettle(); // Wait for the model readiness check.
   }
 
   testWidgets(

@@ -66,6 +66,25 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
       ],
       theme: ThemeData(
         useMaterial3: true,
+        visualDensity: VisualDensity.standard,
+        materialTapTargetSize: MaterialTapTargetSize.padded,
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(fontSize: 16, height: 1.5),
+          bodySmall: TextStyle(fontSize: 14, height: 1.5),
+          labelSmall: TextStyle(fontSize: 14),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: forest,
           primary: forest,
@@ -169,6 +188,7 @@ class LockScreen extends StatefulWidget {
 
 class _LockScreenState extends State<LockScreen> {
   final pin = TextEditingController();
+  late final deviceEnabled = widget.c.deviceAuthEnabled;
   bool working = false;
   Object? error;
   @override
@@ -207,29 +227,16 @@ class _LockScreenState extends State<LockScreen> {
               shrinkWrap: true,
               padding: const EdgeInsets.all(28),
               children: [
-                LanguagePicker(c),
-                const SizedBox(height: 12),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Color(0xFFDDEADB),
-                    child: Icon(Icons.spa_outlined, size: 32, color: forest),
-                  ),
-                ),
-                const SizedBox(height: 28),
                 Text(
-                  context.tr('매일의 돌봄을,\n한 권에.'),
-                  style: Theme.of(context).textTheme.headlineLarge
-                      ?.copyWith(fontWeight: FontWeight.w700, height: 1.3),
+                  context.tr('간병수첩'),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   c.hasPin
                       ? context.tr('잠금 번호를 입력해 수첩을 열어 주세요.')
-                      : context.tr(
-                          '간병수첩에 오신 것을 환영해요.\n바로 기록을 시작할 수 있어요.\n앱 잠금은 설정에서 켤 수 있습니다.',
-                        ),
+                      : context.tr('식사·복약·상태를 한곳에 기록해요. 앱 잠금은 설정에서 켤 수 있습니다.'),
                   style: const TextStyle(height: 1.7),
                 ),
                 const SizedBox(height: 28),
@@ -282,10 +289,17 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                 ),
                 if (c.hasPin)
-                  TextButton.icon(
-                    onPressed: working ? null : () => run(c.unlockDevice),
-                    icon: const Icon(Icons.fingerprint),
-                    label: Text(context.tr('기기 인증으로 열기')),
+                  FutureBuilder<bool>(
+                    future: deviceEnabled,
+                    builder: (context, snapshot) => snapshot.data == true
+                        ? TextButton.icon(
+                            onPressed: working
+                                ? null
+                                : () => run(c.unlockDevice),
+                            icon: const Icon(Icons.fingerprint),
+                            label: Text(context.tr('기기 인증으로 열기')),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 const SizedBox(height: 24),
                 Row(
@@ -295,11 +309,13 @@ class _LockScreenState extends State<LockScreen> {
                     Expanded(
                       child: Text(
                         context.tr('기기에 암호화 저장 · 계정 없이 시작'),
-                        style: TextStyle(color: forest, fontSize: 13),
+                        style: TextStyle(color: forest, fontSize: 14),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                LanguagePicker(c),
                 if (c.hasPin)
                   TextButton(
                     onPressed: working

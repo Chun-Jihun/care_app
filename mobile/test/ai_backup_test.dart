@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/domain/ai.dart';
+import 'package:care_notebook/domain/knowledge.dart';
 import 'package:care_notebook/domain/backup.dart';
 import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/records.dart';
@@ -51,6 +52,33 @@ void main() {
       c.chat.revision,
     );
   }
+
+  test('selective backup preserves immutable medical citations without remapping package IDs', () async {
+    final citation = KnowledgeCitation(
+      packageHash: 'a' * 64,
+      sourceId: 'synthetic',
+      pageNumber: 1,
+      textHash: 'b' * 64,
+      excerpt: 'synthetic quotation',
+      excerptStart: 0,
+    );
+    final message = await c.chat.append(pid, 'synthetic medical question');
+    await c.chat.attachReply(
+      pid,
+      message.id,
+      AiReply(AiReplyKind.evidence, citations: [citation]),
+      c.chat.revision,
+    );
+    final bytes = await testVault(c).backupSelection(
+      password,
+      BackupSelection(patientIds: {pid}, chats: true),
+    );
+    await c.importSelection(bytes, password);
+    final restored = c.patients.singleWhere((p) => p.id != pid).id;
+    final saved = testRepository(c).chatMessages(restored).single.reply!;
+    expect(saved.kind, AiReplyKind.evidence);
+    expect(saved.citations.single.matches(citation), isTrue);
+  });
 
   test('backup remaps reply source IDs into the restored notebook', () async {
     final entry = await source();
@@ -181,7 +209,7 @@ void main() {
     final data = jsonDecode(
       utf8.decode(await VaultCrypto.passwordOpen(bytes, password)),
     ) as Map;
-    expect(data['document_version'], 4);
+    expect(data['document_version'], 5);
     data['document_version'] = 2;
     for (final row in (data['rows'] as Map)['chat_message'] as List) {
       final value = jsonDecode(row['reply'] as String) as Map;

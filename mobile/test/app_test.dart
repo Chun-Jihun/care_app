@@ -93,7 +93,7 @@ void main() {
     'navigation and failed validation remain usable on a small screen',
     (tester) async {
       await start(tester);
-      for (final label in ['일기', '약', '진료 준비', '설정', '오늘']) {
+      for (final label in ['일기', '약', '진료', '설정', '오늘']) {
         await tester.tap(find.text(label).last);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
@@ -166,7 +166,7 @@ void main() {
     await tester.pump();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('작성 중인 내용을 어떻게 할까요?'), findsOneWidget);
+    expect(find.text('작성 중인 초안'), findsOneWidget);
     await tester.tap(find.text('계속 작성'));
     await tester.pumpAndSettle();
     expect(find.text('잃으면 안 되는 합성 초안'), findsOneWidget);
@@ -216,7 +216,7 @@ void main() {
       expect(c.visits, isEmpty);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.text('작성 중인 내용을 어떻게 할까요?'), findsOneWidget);
+      expect(find.text('작성 중인 초안'), findsOneWidget);
       await tester.tap(find.text('초안 보관 후 나가기'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, '간병 도우미'), findsOneWidget);

@@ -71,7 +71,7 @@ void main() {
       ).backupSelection(password, BackupSelection(patientIds: {restored.id}));
       final document = await decode(bytes);
       expect(document['format'], 3);
-      expect(document['document_version'], 4);
+      expect(document['document_version'], 5);
       expect(document.containsKey('schema'), false);
       expect(jsonEncode(document), isNot(contains('internal_marker')));
       document['document_version'] = 999;
@@ -603,7 +603,7 @@ void main() {
       final raw = sqlite3.open('$dir/care.db');
       raw.execute('PRAGMA key="x\'${hex(key)}\'"');
       raw.execute(
-        'DROP TABLE record_draft; DROP TABLE imported_backup; ALTER TABLE chat_message DROP COLUMN reply; PRAGMA user_version=2;',
+        'DROP TRIGGER invalidate_medication_product; DROP TABLE medication_product; DROP TABLE record_draft; DROP TABLE imported_backup; ALTER TABLE chat_message DROP COLUMN reply; PRAGMA user_version=2;',
       );
       raw.close();
       final rawId = sqlite3.open('$dir/identity.db');

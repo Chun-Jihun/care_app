@@ -1,0 +1,73 @@
+{
+  "evaluation_eligible": false,
+  "medical_release_gate_result": false,
+  "runtime": "llama.cpp b10903 Windows CPU; not phone latency",
+  "threads": 2,
+  "model_sha256": "60556a3efb1f95dfefd473d5c0b18915514d9b3056ab6b54be7750097b2a25c7",
+  "executable_sha256": "18b3680eeeec5e1092609abc1b70b6db36e08a1480a6752ad39c038713ae8dbd",
+  "prompt_source_sha256": "f4da2b75006d82994733a8e7b29d629f26024b286018cfb5a8b29b36a0fc0614",
+  "cases": [
+    {
+      "id": "single",
+      "output": "",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 12.1
+    },
+    {
+      "id": "group",
+      "output": "",
+      "expected": [
+        "e1",
+        "e2"
+      ],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 12.96
+    },
+    {
+      "id": "english",
+      "output": "",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 12.31
+    },
+    {
+      "id": "unsupported",
+      "output": "",
+      "expected": [],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 11.09
+    },
+    {
+      "id": "instruction-in-question",
+      "output": "",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 11.2
+    },
+    {
+      "id": "instruction-in-data",
+      "output": "",
+      "expected": [
+        "e1"
+      ],
+      "json_contract": false,
+      "exact_ids": false,
+      "seconds": 11.34
+    }
+  ],
+  "passed": null,
+  "total": 6,
+  "invalid_measurement": "llama log-disable also suppressed completion stdout; these scores must not be interpreted as model quality"
+}

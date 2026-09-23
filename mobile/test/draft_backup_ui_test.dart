@@ -17,6 +17,8 @@ import 'package:care_notebook/presentation/draft_page.dart';
 
 import 'support.dart';
 
+import 'package:care_notebook/presentation/password_field.dart';
+
 class BackupPlatform extends FakePlatform {
   Uint8List? bytes;
   @override
@@ -201,8 +203,16 @@ void main() {
     unawaited(editVisit(tester.element(find.text('오늘의 돌봄')), c));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, '초안의 진료 제목');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('기록 선택 · 0개 선택됨'));
+    await tester.tap(find.text('기록 선택 · 0개 선택됨'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('선택한 기록 1개 적용'));
+    await tester.pumpAndSettle();
     c.lock();
     await tester.pumpAndSettle();
     await tester.runAsync(() => c.unlockPin('123456'));
@@ -247,24 +257,24 @@ void main() {
             .value,
         false,
       );
-      final passwordField = find.widgetWithText(
-        TextFormField,
-        '백업 비밀번호 (12자 이상)',
+      final passwordField = find.descendant(
+        of: find.widgetWithText(PasswordField, '백업 비밀번호 (12자 이상)'),
+        matching: find.byType(TextFormField),
       );
-      final confirmationField = find.widgetWithText(
-        TextFormField,
-        '백업 비밀번호 확인',
+      final confirmationField = find.descendant(
+        of: find.widgetWithText(PasswordField, '백업 비밀번호 확인'),
+        matching: find.byType(TextFormField),
       );
       await tester.scrollUntilVisible(
         passwordField,
         250,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.enterText(passwordField, 'ui-backup-password');
       await tester.scrollUntilVisible(
         confirmationField,
         200,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.enterText(confirmationField, 'ui-backup-password');
       await tester.ensureVisible(find.text('백업 범위 확인'));

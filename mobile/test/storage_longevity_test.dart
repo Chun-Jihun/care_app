@@ -39,6 +39,28 @@ void main() {
     await root.delete(recursive: true);
   });
 
+  test('DUR v5 to v6 migration keeps medicines and does not invent product confirmation', () {
+    final pid = db.createPatient().id;
+    final med = db.saveMedication(
+      pid,
+      name: 'Original medicine',
+      instruction: 'Original instruction',
+      times: ['08:00'],
+    );
+    db.close();
+    final sql = raw();
+    sql.execute(
+      'DROP TRIGGER invalidate_medication_product; DROP TABLE medication_product; PRAGMA user_version=5; PRAGMA identity.user_version=5;',
+    );
+    sql.close();
+    reopen();
+    final restored = db.medications(pid).single;
+    expect(restored.id, med.id);
+    expect(restored.instruction, med.instruction);
+    expect(restored.product, isNull);
+    expect(db.medicationPlans(pid, med.id), hasLength(1));
+  });
+
   test('DATA-06 deployed v4 upgrades preserve histories, tasks, chats and identities', () {
     final pid = db.createPatient(alias: 'kept alias').id;
     final entry = db.saveEntry(
@@ -62,6 +84,7 @@ void main() {
     db.close();
     final sql = raw();
     sql.execute('''
+      DROP TRIGGER invalidate_medication_product; DROP TABLE medication_product;
       DROP INDEX entry_timeline; DROP INDEX entry_kind;
       DROP INDEX chat_expiration; DROP INDEX draft_expiration; DROP INDEX task_schedule;
       CREATE INDEX entry_timeline ON care_entry(patient_id,occurred_at DESC);
@@ -79,10 +102,13 @@ void main() {
     expect(root.listSync().where((f) => f.path.endsWith('.bak')), isEmpty);
     final check = raw();
     try {
-      expect(check.select('PRAGMA user_version').single.values.single, 5);
+      expect(
+        check.select('PRAGMA user_version').single.values.single,
+        SchemaMigrations.version,
+      );
       expect(
         check.select('PRAGMA identity.user_version').single.values.single,
-        5,
+        SchemaMigrations.version,
       );
     } finally {
       check.close();
@@ -183,7 +209,7 @@ void main() {
     final sql = raw();
     try {
       sql.execute(
-        'ALTER TABLE chat_message DROP COLUMN reply; PRAGMA user_version=3; PRAGMA identity.user_version=3;',
+        'DROP TRIGGER invalidate_medication_product; DROP TABLE medication_product; ALTER TABLE chat_message DROP COLUMN reply; PRAGMA user_version=3; PRAGMA identity.user_version=3;',
       );
       expect(
         () => SchemaMigrations(
