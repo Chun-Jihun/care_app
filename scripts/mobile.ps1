@@ -39,7 +39,7 @@ try {
     switch ($Action) {
         'Dependencies' { & $flutterCommand pub get }
         'Analyze' { & $flutterCommand analyze }
-        'Test' { & $flutterCommand test --concurrency=2 }
+        'Test' { & $flutterCommand test --concurrency=1 }
         'Validate' {
             # Uses installed dependencies and never starts a device or installs models.
             $dartCommand = Join-Path $toolRoot 'flutter\bin\cache\dart-sdk\bin\dart.exe'
@@ -47,7 +47,7 @@ try {
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $flutterCommand analyze --no-pub
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            & $flutterCommand test --no-pub --concurrency=2
+            & $flutterCommand test --no-pub --concurrency=1
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $dartCommand run tool/storage_crash_probe.dart
         }

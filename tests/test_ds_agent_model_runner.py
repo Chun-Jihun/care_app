@@ -16,6 +16,7 @@ from scripts.ds_agent_model_runner import (
 )
 from scripts.ds_agent_tool_host import InMemoryPilotRepository, verify_trace_chain
 from scripts.run_ds_agent_model import run_model_bundle
+from tests.agent_fixtures import compiled_bundle
 
 
 def _dump(value: Mapping[str, Any]) -> str:
@@ -222,7 +223,9 @@ class ScriptedBackend:
 class DsAgentModelRunnerTests(unittest.TestCase):
     def test_compiled_bundle_runs_and_writes_hash_only_model_call_artifacts(self) -> None:
         root = Path.cwd().resolve()
-        bundle = root / "data/agent-eval/scenario-candidates/ds-agent-pilot-v1"
+        fixture = tempfile.TemporaryDirectory(dir=root)
+        self.addCleanup(fixture.cleanup)
+        bundle = compiled_bundle(root, Path(fixture.name))
         episodes = [
             json.loads(line)
             for line in (bundle / "development/episodes.jsonl").read_text(
@@ -456,7 +459,9 @@ class DsAgentModelRunnerTests(unittest.TestCase):
 
     def test_checkpoint_resume_reuses_verified_episode_without_model_call(self) -> None:
         root = Path.cwd().resolve()
-        bundle = root / "data/agent-eval/scenario-candidates/ds-agent-pilot-v1"
+        fixture = tempfile.TemporaryDirectory(dir=root)
+        self.addCleanup(fixture.cleanup)
+        bundle = compiled_bundle(root, Path(fixture.name))
         episodes = [
             json.loads(line)
             for line in (bundle / "development/episodes.jsonl").read_text(

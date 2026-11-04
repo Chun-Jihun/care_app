@@ -21,11 +21,13 @@ List<Widget> medicationContent(
   return [
     Section(context.tr('약과 복약 기록')),
     OutlinedButton.icon(
-      onPressed: () => Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => MedicationSafetyPage(c, c.selectedId!),
-        ),
-      ),
+      onPressed: c.busy
+          ? null
+          : () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => MedicationSafetyPage(c, c.selectedId!),
+              ),
+            ),
       icon: const Icon(Icons.fact_check_outlined),
       label: Text(context.tr('약물 주의자료 확인')),
     ),
@@ -90,7 +92,9 @@ List<Widget> medicationContent(
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    onPressed: () => recordIntake(context, c, m),
+                    onPressed: c.busy
+                        ? null
+                        : () => recordIntake(context, c, m),
                     icon: const Icon(Icons.add_task, size: 18),
                     label: Text(context.tr('실제 복약 기록')),
                   ),

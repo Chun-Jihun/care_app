@@ -1,3 +1,4 @@
+import '../contact_action.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -44,6 +45,8 @@ Future<void> editTask(
       context,
       MaterialPageRoute<void>(
         builder: (context) => EditorPage(
+          actions: [ContactAction(c)],
+          onSaved: c.showSavedNotice,
           title: task == null ? context.tr('할 일 추가') : context.tr('할 일 수정'),
           draft: draft,
           content: (update) => [

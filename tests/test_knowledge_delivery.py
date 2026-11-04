@@ -4,6 +4,7 @@ from pathlib import Path
 import struct
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts.build_knowledge_delivery import build
 
@@ -65,6 +66,21 @@ class KnowledgeDeliveryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.build()
         self.assertFalse(self.output.exists())
+
+    def test_descriptor_write_failure_leaves_no_release_and_can_retry(self):
+        write = Path.write_bytes
+
+        def fail_descriptor(path, data):
+            if path.name.startswith('v1.json'):
+                raise OSError('synthetic disk failure')
+            return write(path, data)
+
+        with patch.object(Path, 'write_bytes', fail_descriptor):
+            with self.assertRaises(OSError):
+                self.build()
+        self.assertFalse(self.output.exists())
+        self.assertFalse(self.descriptor.exists())
+        self.build()
 
     def test_changed_content_and_foreign_directories_are_rejected(self):
         (self.source / 'dur' / 'knowledge.sqlite3').write_bytes(b'changed')

@@ -9,11 +9,11 @@ import 'common.dart';
 import 'password_field.dart';
 
 String backupCounts(BuildContext context, Map<BackupCategory, int> counts) => [
-  for (final e in {
+  for (final e in <BackupCategory, String>{
     BackupCategory.notebooks: context.tr('수첩'),
     BackupCategory.records: context.tr('간병일기'),
     BackupCategory.medications: context.tr('약 목록'),
-    'medication_plan': context.tr('처방 이력'),
+    BackupCategory.medicationPlans: context.tr('처방 이력'),
     BackupCategory.tasks: context.tr('할 일'),
     BackupCategory.visits: context.tr('진료 준비'),
     BackupCategory.photos: context.tr('사진'),

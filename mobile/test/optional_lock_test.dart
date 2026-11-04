@@ -187,6 +187,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  test('LOCK-08 enabling PIN across background completes locked and preserves records', () async {
+    await c.startWithoutLock();
+    final pid = c.selectedId!;
+    await c.records.saveEntry(
+      pid,
+      kind: EntryKind.generalNote,
+      occurredAt: DateTime(2026, 11, 3),
+      note: 'keep across activation',
+    );
+    final activation = c.setPin('123456');
+    c.handleBackground();
+    await activation;
+    expect(c.hasPin, isTrue);
+    expect(c.unlocked, isFalse);
+    await restart();
+    expect(c.hasPin, isTrue);
+    expect(c.unlocked, isFalse);
+    await c.unlockPin('123456');
+    expect(c.entries.single.note, 'keep across activation');
+  });
+
   Future<void> tapWithIO(WidgetTester tester, Finder finder) async {
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();

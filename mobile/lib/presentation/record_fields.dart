@@ -2,13 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../domain/records.dart';
 import '../l10n/app_strings.dart';
+import '../domain/ui_preferences.dart';
+import 'ui_preferences_scope.dart';
 
 /// Visual grouping only. Every controller remains owned by the draft editor,
 /// including fields that are currently collapsed.
 class RecordFields extends StatefulWidget {
-  const RecordFields({super.key, required this.kind, required this.values});
+  const RecordFields({
+    super.key,
+    required this.kind,
+    required this.values,
+    this.suggestions = const {},
+    this.onSuggested,
+  });
   final EntryKind kind;
   final Map<String, TextEditingController> values;
+  final Map<String, List<String>> suggestions;
+  final VoidCallback? onSuggested;
   @override
   State<RecordFields> createState() => RecordFieldsState();
 }
@@ -80,53 +90,84 @@ class RecordFieldsState extends State<RecordFields>
     }
 
     final decoration = InputDecoration(
-      labelText: '${context.tr(f.label)}${f.required ? ' *' : ''}',
+      labelText:
+          '${context.tr(f.label)}${f.required ? ' · ${context.tr('필수')}' : ''}',
+      helperText: f.numeric
+          ? context.tr('숫자로 입력해 주세요. 단위는 항목 이름을 확인해 주세요.')
+          : null,
+      helperMaxLines: 3,
       errorText: invalid == f.key ? context.tr('입력 내용을 확인해 주세요.') : null,
       errorMaxLines: 3,
     );
     return Padding(
       key: anchors[f.key],
       padding: const EdgeInsets.only(bottom: 16),
-      child: f.choices.isEmpty
-          ? TextFormField(
-              key: ValueKey('entry-field-${f.key}'),
-              controller: controller,
-              focusNode: focus[f.key],
-              decoration: decoration,
-              minLines: f.key == 'instruction' ? 3 : 1,
-              maxLines: f.key == 'instruction' ? 6 : 1,
-              keyboardType: f.numeric
-                  ? const TextInputType.numberWithOptions(decimal: true)
-                  : f.key == 'instruction'
-                  ? TextInputType.multiline
-                  : TextInputType.text,
-              autocorrect: false,
-              enableIMEPersonalizedLearning: false,
-              enableSuggestions: false,
-              onChanged: changed,
-            )
-          : DropdownButtonFormField<String>(
-              key: ValueKey('entry-field-${f.key}-${controller.text}'),
-              focusNode: focus[f.key],
-              isExpanded: true,
-              itemHeight: null,
-              initialValue: controller.text.isEmpty ? null : controller.text,
-              decoration: decoration,
-              items: [
-                if (!f.required)
-                  DropdownMenuItem(
-                    value: '',
-                    child: Text(context.tr('선택하지 않음')),
-                  ),
-                ...f.choices.entries.map(
-                  (e) => DropdownMenuItem(
-                    value: e.key,
-                    child: Text(context.tr(e.value)),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          f.choices.isEmpty
+              ? TextFormField(
+                  key: ValueKey('entry-field-${f.key}'),
+                  controller: controller,
+                  focusNode: focus[f.key],
+                  decoration: decoration,
+                  minLines: f.key == 'instruction' ? 3 : 1,
+                  maxLines: f.key == 'instruction' ? 6 : 1,
+                  keyboardType: f.numeric
+                      ? const TextInputType.numberWithOptions(decimal: true)
+                      : f.key == 'instruction'
+                      ? TextInputType.multiline
+                      : TextInputType.text,
+                  autocorrect: false,
+                  enableIMEPersonalizedLearning: false,
+                  enableSuggestions: false,
+                  onChanged: changed,
+                )
+              : DropdownButtonFormField<String>(
+                  key: ValueKey('entry-field-${f.key}-${controller.text}'),
+                  focusNode: focus[f.key],
+                  isExpanded: true,
+                  itemHeight: null,
+                  initialValue: controller.text.isEmpty
+                      ? null
+                      : controller.text,
+                  decoration: decoration,
+                  items: [
+                    if (!f.required)
+                      DropdownMenuItem(
+                        value: '',
+                        child: Text(context.tr('선택하지 않음')),
+                      ),
+                    ...f.choices.entries.map(
+                      (e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(context.tr(e.value)),
+                      ),
+                    ),
+                  ],
+                  onChanged: changed,
                 ),
-              ],
-              onChanged: changed,
+          if (UiPreferencesScope.of(context)
+                  .enabled(UiOption.inputSuggestions) &&
+              controller.text.isEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: (widget.suggestions[f.key] ?? const <String>[])
+                  .map(
+                    (value) => ActionChip(
+                      label: Text(value),
+                      onPressed: () {
+                        controller.text = value;
+                        widget.onSuggested?.call();
+                        setState(() => invalid = null);
+                      },
+                    ),
+                  )
+                  .toList(),
             ),
+        ],
+      ),
     );
   }
 

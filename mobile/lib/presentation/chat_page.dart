@@ -176,12 +176,17 @@ class _ChatBodyState extends State<ChatBody> {
         setState(() => responseReady = true);
         input.clear();
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (scroll.hasClients) {
-            scroll.animateTo(
-              scroll.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-            );
+          if (mounted && scroll.hasClients) {
+            if (widget.c.uiPreferences.reduceMotion ||
+                MediaQuery.disableAnimationsOf(context)) {
+              scroll.jumpTo(scroll.position.maxScrollExtent);
+            } else {
+              scroll.animateTo(
+                scroll.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+              );
+            }
           }
         });
       }

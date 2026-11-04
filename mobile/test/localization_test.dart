@@ -235,6 +235,7 @@ void main() {
         await tester.ensureVisible(
           find.byKey(const ValueKey('languagePicker')),
         );
+        await tester.pumpAndSettle();
         final tile = tester.widget<ListTile>(
           find.byKey(const ValueKey('languagePicker')),
         );
@@ -256,7 +257,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(NavigationDestination).last);
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('languagePicker')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(const ValueKey('languagePicker')));
+      await tester.pumpAndSettle();
       final tile = tester.widget<ListTile>(
         find.byKey(const ValueKey('languagePicker')),
       );

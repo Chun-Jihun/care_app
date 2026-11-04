@@ -52,7 +52,9 @@ List<Widget> visitContent(BuildContext context, CareController c) => [
       title: Text(context.tr('의료진의 설명과 다음 할 일')),
       subtitle: Text(context.tr('들은 내용을 직접 기록해 두세요.')),
       trailing: const Icon(Icons.add),
-      onTap: () => editEntry(context, c, EntryKind.medicalContact),
+      onTap: c.busy
+          ? null
+          : () => editEntry(context, c, EntryKind.medicalContact),
     ),
   ),
 ];

@@ -162,25 +162,54 @@ class EntryTile extends StatelessWidget {
   final CareEntry entry;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
-        backgroundColor: const Color(0xFFE8EFE8),
-        foregroundColor: forest,
-        child: Icon(kindIcon(entry.kind)),
+  Widget build(BuildContext context) {
+    final key = switch (entry.kind) {
+      EntryKind.meal => 'food',
+      EntryKind.medicationIntake => 'medicine',
+      EntryKind.symptom => 'symptom',
+      EntryKind.activity => 'activity',
+      EntryKind.measurement => 'measurement',
+      EntryKind.dailyLiving => 'category',
+      EntryKind.incident => 'event',
+      EntryKind.medicalContact => 'institution',
+      EntryKind.handoff => 'pending',
+      EntryKind.generalNote => '',
+    };
+    final field = entry.kind.fields.where((f) => f.key == key).firstOrNull;
+    final value = entry.fields[key] ?? '';
+    final primary = field == null || value.isEmpty
+        ? ''
+        : context.strings.fieldValue(field, value);
+    final summary = context.strings.summary(entry);
+    return Card(
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xFFE8EFE8),
+          foregroundColor: forest,
+          child: Icon(kindIcon(entry.kind)),
+        ),
+        title: Text(context.tr(entry.kind.label)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (primary.isNotEmpty)
+              Text(primary, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              '${dateText(context, entry.occurredAt)} ${timeText(context, entry.occurredAt)}',
+            ),
+            if (entry.kind == EntryKind.medicationIntake)
+              Text(context.tr(intakeLabels[entry.fields['status']] ?? '확인 못함')),
+            if (summary.isNotEmpty)
+              Text(summary, maxLines: 3, overflow: TextOverflow.ellipsis),
+            Text(context.tr('기록 상세 보기'), style: const TextStyle(color: forest)),
+          ],
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
       ),
-      title: Text(context.tr(entry.kind.label)),
-      subtitle: Text(
-        '${dateText(context, entry.occurredAt)} ${timeText(context, entry.occurredAt)}\n${context.strings.summary(entry)}',
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
-      ),
-      isThreeLine: true,
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap,
-    ),
-  );
+    );
+  }
 }
 
 /// A reviewed multistep action was cancelled; leave its form open quietly.
@@ -199,8 +228,12 @@ class EditorPage extends StatefulWidget {
     this.revealError,
     this.initiallyDirty = false,
     this.draftExitNotice,
+    this.actions = const [],
+    this.onSaved,
   });
   final String title;
+  final List<Widget> actions;
+  final VoidCallback? onSaved;
   final bool initiallyDirty;
   final String? Function()? draftExitNotice;
   final String? saveLabel;
@@ -293,7 +326,7 @@ class _EditorPageState extends State<EditorPage> {
       if (context.mounted) Navigator.pop(context);
     },
     child: Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(title: Text(widget.title), actions: widget.actions),
       body: Column(
         children: [
           Expanded(
@@ -327,10 +360,27 @@ class _EditorPageState extends State<EditorPage> {
                           }),
                         )
                         .expand((w) => [w, const SizedBox(height: 16)]),
-                    if (error != null)
-                      Padding(
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (error != null)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * .22,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Padding(
                         key: errorAnchor,
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: Semantics(
                           liveRegion: true,
                           child: Text(
@@ -341,69 +391,82 @@ class _EditorPageState extends State<EditorPage> {
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            top: false,
-            minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () async {
-                  if (saving) {
-                    return;
-                  }
-                  setState(() {
-                    saving = true;
-                    error = null;
-                  });
-                  try {
-                    await widget.save();
-                    if (context.mounted) {
-                      setState(() {
-                        saving = false;
-                        leaving = true;
-                      });
-                      Navigator.pop(context);
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      setState(() {
-                        saving = false;
-                        error = e is EditorCancelled ? null : e;
-                      });
-                      if (e is! EditorCancelled) {
-                        FocusScope.of(this.context).unfocus();
-                        WidgetsBinding.instance.addPostFrameCallback((_) async {
-                          if (!mounted) return;
-                          final handled =
-                              await widget.revealError?.call(e) ?? false;
-                          if (!handled &&
-                              mounted &&
-                              errorAnchor.currentContext != null) {
-                            await Scrollable.ensureVisible(
-                              errorAnchor.currentContext!,
-                            );
-                          }
-                        });
+                    ),
+                  ),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () async {
+                      if (saving) {
+                        return;
                       }
-                    }
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(widget.saveLabel ?? context.tr('저장')),
+                      setState(() {
+                        saving = true;
+                        error = null;
+                      });
+                      try {
+                        await widget.save();
+                        if (context.mounted) {
+                          widget.onSaved?.call();
+                          setState(() {
+                            saving = false;
+                            leaving = true;
+                          });
+                          final route = ModalRoute.of(context);
+                          final navigator = Navigator.of(context);
+                          // The user may be reading a different route while this
+                          // form finishes. Close only the form that was saved.
+                          if (route == null || route.isCurrent) {
+                            navigator.pop();
+                          } else {
+                            navigator.removeRoute(route);
+                          }
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          setState(() {
+                            saving = false;
+                            error = e is EditorCancelled ? null : e;
+                          });
+                          if (e is! EditorCancelled) {
+                            FocusScope.of(this.context).unfocus();
+                            WidgetsBinding.instance.addPostFrameCallback((
+                              _,
+                            ) async {
+                              if (!mounted) return;
+                              final handled =
+                                  await widget.revealError?.call(e) ?? false;
+                              if (!handled &&
+                                  mounted &&
+                                  errorAnchor.currentContext != null) {
+                                await Scrollable.ensureVisible(
+                                  errorAnchor.currentContext!,
+                                );
+                              }
+                            });
+                          }
+                        }
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: saving
+                          ? Semantics(
+                              liveRegion: true,
+                              label: context.tr('기기에서 처리 중…'),
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : Text(widget.saveLabel ?? context.tr('저장')),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],

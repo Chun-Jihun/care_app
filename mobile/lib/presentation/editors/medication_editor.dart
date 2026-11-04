@@ -1,3 +1,5 @@
+import '../contact_action.dart';
+
 import 'dart:typed_data';
 
 import '../../domain/reviewed_input.dart';
@@ -51,6 +53,8 @@ Future<void> editMedication(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
+          actions: [ContactAction(c)],
+          onSaved: c.showSavedNotice,
           title: medication == null
               ? context.tr('약 추가')
               : context.tr('처방 지시 기록'),

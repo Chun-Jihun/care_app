@@ -111,6 +111,7 @@ final class BackupDocument {
       BackupCategory.notebooks: 'patient_context',
       BackupCategory.records: 'care_entry',
       BackupCategory.medications: 'medication',
+      BackupCategory.medicationPlans: 'medication_plan',
       BackupCategory.tasks: 'care_task',
       BackupCategory.visits: 'visit_preparation',
       BackupCategory.photos: 'attachment',

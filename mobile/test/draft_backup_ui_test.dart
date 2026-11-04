@@ -180,7 +180,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('사용자가 적은 거부 이유'), findsOneWidget);
       expect(find.text('복용 거부'), findsOneWidget);
-      await tapIO(tester, find.text('저장'));
+      await tapIO(tester, find.text('복약 기록 저장'));
       expect(c.entries.single.fields['status'], 'refused');
       expect(c.entries.single.occurredAt.millisecondsSinceEpoch, savedAt);
       expect(c.entries.single.fields['plan_id'], med.planId);

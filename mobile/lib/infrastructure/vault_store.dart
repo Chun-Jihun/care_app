@@ -9,16 +9,20 @@ import 'vault_state.dart';
 import 'vault_photos.dart';
 import 'vault_backups.dart';
 import 'local_credentials.dart';
+import 'local_preferences.dart';
 export '../application/ports.dart' show SecretStore;
 
 /// Implements the application vault port without exposing its keys or database.
 final class VaultStore implements NotebookVault {
   VaultStore(Directory root, SecretStore secrets)
     : _state = VaultState(root, secrets),
-      credentials = LocalCredentials(secrets);
+      credentials = LocalCredentials(secrets),
+      preferences = LocalPreferences(secrets);
   final VaultState _state;
   @override
   final Credentials credentials;
+  @override
+  final DevicePreferences preferences;
   late final _photos = VaultPhotos(_state);
   late final _backups = VaultBackups(_state);
   @override

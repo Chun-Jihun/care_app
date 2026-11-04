@@ -11,6 +11,11 @@ import json
 from pathlib import Path
 import struct
 
+try:
+    from scripts.artifact_publication import staged_release
+except ModuleNotFoundError:  # Direct script execution.
+    from artifact_publication import staged_release
+
 
 def build(source: Path, output: Path, descriptor: Path, version: str) -> dict:
     if output.exists() or descriptor.exists():
@@ -52,14 +57,8 @@ def build(source: Path, output: Path, descriptor: Path, version: str) -> dict:
              # Technical recheck interval, NOT a clinical review date.
              'recheck_after': (now + dt.timedelta(days=90)).isoformat(), 'files': files}
     raw = json.dumps(value, ensure_ascii=False, indent=2).encode('utf-8')
-    if output.exists():
-        raise FileExistsError(output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    stage = output.with_suffix(output.suffix + '.partial')
-    if stage.exists():
-        raise FileExistsError(stage)
-    try:
-        with stage.open('xb') as target:
+    with staged_release([output, descriptor]) as staged:
+        with staged[output].open('wb') as target:
             target.write(b'CAREKB01' + struct.pack('<I', len(raw)) + raw)
             for name, expected in zip(names, files):
                 copied = 0
@@ -71,11 +70,7 @@ def build(source: Path, output: Path, descriptor: Path, version: str) -> dict:
                         copied += len(block)
                 if copied != expected['bytes'] or digest.hexdigest() != expected['sha256']:
                     raise ValueError('source changed during packaging')
-        stage.rename(output)
-    finally:
-        stage.unlink(missing_ok=True)
-    descriptor.parent.mkdir(parents=True, exist_ok=True)
-    descriptor.write_bytes(raw)
+        staged[descriptor].write_bytes(raw)
     return {'bytes': output.stat().st_size, 'version': version,
             'id': hashlib.sha256(raw).hexdigest(), 'preview': True}
 

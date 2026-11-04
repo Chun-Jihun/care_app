@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
+import '../domain/ui_preferences.dart';
+import 'ui_preferences_scope.dart';
 
 /// The same zoom controls serve photos, OCR originals and document pages.
 /// In scrollable content provide a viewport height; a full-screen viewer fills
@@ -71,6 +73,10 @@ class _AccessibleImageState extends State<AccessibleImage> {
               semanticLabel: widget.semanticLabel,
               fit: BoxFit.contain,
               gaplessPlayback: false,
+              filterQuality:
+                  UiPreferencesScope.of(context).enabled(UiOption.lowGraphics)
+                  ? FilterQuality.low
+                  : FilterQuality.medium,
               errorBuilder: (_, _, _) => Text(context.tr('사진을 열 수 없습니다.')),
             ),
           ),

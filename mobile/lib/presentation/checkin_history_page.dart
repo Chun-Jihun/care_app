@@ -32,7 +32,9 @@ class _CheckinHistoryPageState extends State<CheckinHistoryPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   FilledButton.icon(
-                    onPressed: () => addCheckin(context, widget.c),
+                    onPressed: widget.c.busy
+                        ? null
+                        : () => addCheckin(context, widget.c),
                     icon: const Icon(Icons.add),
                     label: Text(context.tr('상태 기록')),
                   ),
@@ -64,19 +66,21 @@ class _CheckinHistoryPageState extends State<CheckinHistoryPage> {
                 trailing: IconButton(
                   tooltip: context.tr('내 상태 기록 삭제'),
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () async {
-                    if (await confirm(
-                          context,
-                          context.tr('내 상태 기록을 삭제할까요?'),
-                          context.tr('선택한 기록을 삭제합니다.'),
-                        ) &&
-                        context.mounted) {
-                      await attempt(
-                        context,
-                        () => widget.c.checkins.deleteCheckin(r.id),
-                      );
-                    }
-                  },
+                  onPressed: widget.c.busy
+                      ? null
+                      : () async {
+                          if (await confirm(
+                                context,
+                                context.tr('내 상태 기록을 삭제할까요?'),
+                                context.tr('선택한 기록을 삭제합니다.'),
+                              ) &&
+                              context.mounted) {
+                            await attempt(
+                              context,
+                              () => widget.c.checkins.deleteCheckin(r.id),
+                            );
+                          }
+                        },
                 ),
               ),
             );

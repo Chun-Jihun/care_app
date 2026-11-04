@@ -269,6 +269,10 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
               '인식 결과는 틀릴 수 있어요. 이름·숫자·단위를 확인하고 수정해 주세요. 반영 후에도 기록 저장은 직접 눌러야 합니다.',
             ),
           ),
+          Text(
+            context.tr('진행 순서: 인식 내용 확인 → 입력란에 반영 → 기록 저장'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           if (widget.photo != null)
             AccessibleImage(
               bytes: widget.photo!,
@@ -279,7 +283,10 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
           if (recording)
             Text(
               context.tr('녹음 중 · {0}/30초', [seconds]),
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           if (working) ...[
             const LinearProgressIndicator(),

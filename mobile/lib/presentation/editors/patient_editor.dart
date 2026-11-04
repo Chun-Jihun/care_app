@@ -1,3 +1,4 @@
+import '../contact_action.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ Future<void> editPatient(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
+          actions: [ContactAction(c)],
+          onSaved: c.showSavedNotice,
           title: patient == null ? context.tr('수첩 추가') : context.tr('돌봄 대상 수정'),
           content: (update) => [
             Text(

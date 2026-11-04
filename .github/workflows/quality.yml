@@ -1,0 +1,58 @@
+name: Quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline-contracts-and-android-debug:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      CI: 'true'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Flutter SDK and development dependencies
+        run: |
+          git init .tools/flutter
+          git -C .tools/flutter remote add origin https://github.com/flutter/flutter.git
+          git -C .tools/flutter fetch --depth=1 origin d3b14c876900e553bc736ca19295fc09e3853e8e
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C .tools/flutter checkout --detach FETCH_HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Flutter derives its SDK version from the release tag.
+          git -C .tools/flutter fetch --depth=1 origin refs/tags/3.47.2:refs/tags/3.47.2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $releaseCommit = git -C .tools/flutter rev-parse '3.47.2^{commit}'
+          if ($releaseCommit -ne 'd3b14c876900e553bc736ca19295fc09e3853e8e') { throw 'Flutter release revision changed.' }
+          python -m pip install -r scripts/requirements-quality.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location mobile
+          try {
+            ../.tools/flutter/bin/flutter.bat pub get
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally { Pop-Location }
+      - name: Install Android compile platform
+        run: |
+          & "$env:ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager.bat" 'platforms;android-37' 'build-tools;36.0.0'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify contracts, translations, static analysis, storage and debug build
+        run: ./scripts/quality.ps1 -BuildAndroidDebug

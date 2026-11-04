@@ -39,6 +39,7 @@ enum BackupCategory {
   photos,
   chats,
   checkins,
+  medicationPlans,
 }
 
 /// Preview contains counts only. Decrypted records are not retained by the UI.

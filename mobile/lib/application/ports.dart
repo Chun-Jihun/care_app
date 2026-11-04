@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../domain/backup.dart';
+import '../domain/ui_preferences.dart';
 import '../l10n/app_strings.dart';
 import 'notebook_repository.dart';
 
@@ -28,6 +29,7 @@ abstract interface class Credentials {
 abstract interface class NotebookVault {
   NotebookRepository get repository;
   Credentials get credentials;
+  DevicePreferences get preferences;
   bool get maintenancePending;
   Future<void> open();
   void close();
@@ -61,6 +63,11 @@ abstract interface class NotebookVault {
     String password, {
     void Function()? beforeCommit,
   });
+}
+
+abstract interface class DevicePreferences {
+  Future<UiPreferences> load();
+  Future<void> save(UiPreferences value);
 }
 
 abstract class PlatformServices {

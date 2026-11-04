@@ -51,3 +51,17 @@
 - 모델 평가와 검색기 평가를 분리한다.
 - 모델, 임베딩, 검색 인덱스 또는 프롬프트가 변경되면 의료 회귀시험을 실행한다.
 - 요구사항에 명시된 민감한 간병기록의 로컬 암호화 저장은 초기 MVP 범위로 본다. 외부 전송·가족 공유·클라우드 동기화 또는 불필요한 고위험 식별정보 수집은 명시적인 승인 없이 구현하지 않는다.
+
+## Agent skills
+
+### Issue tracker
+
+개발 이슈와 명세는 GitHub `Chun-Jihun/care_app`에서 관리한다. 이슈 조회·작성·상태 변경 전에 `docs/agents/issue-tracker.md`를 읽는다.
+
+### Triage labels
+
+이슈 분류에는 기본 라벨 5개를 사용한다. 분류·라벨 변경 전에 `docs/agents/triage-labels.md`를 읽는다.
+
+### Domain docs
+
+단일 도메인 문맥을 사용한다. 코드 탐색·설계·도메인 용어 변경 전에 `docs/agents/domain.md`를 읽는다.

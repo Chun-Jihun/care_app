@@ -26,26 +26,37 @@ class _PhotoThumbnailState extends State<PhotoThumbnail> {
   }
 
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: 56,
-      height: 56,
-      child: FutureBuilder<Uint8List>(
-        future: photo,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Icon(Icons.photo_outlined);
-          provider ??= ResizeImage(MemoryImage(snapshot.data!), width: 144);
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image(
-              image: provider!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
-                  const Icon(Icons.broken_image_outlined),
+  Widget build(BuildContext context) => !widget.c.uiPreferences.photoPreviews
+      ? const ExcludeSemantics(
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Icon(Icons.photo_outlined),
+          ),
+        )
+      : ExcludeSemantics(
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: FutureBuilder<Uint8List>(
+              future: photo,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Icon(Icons.photo_outlined);
+                provider ??= ResizeImage(
+                  MemoryImage(snapshot.data!),
+                  width: 144,
+                );
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image(
+                    image: provider!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) =>
+                        const Icon(Icons.broken_image_outlined),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
-    ),
-  );
+          ),
+        );
 }

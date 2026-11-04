@@ -70,7 +70,7 @@ class _TaskListPageState extends State<TaskListPage> {
           actions: [
             IconButton(
               tooltip: context.tr('할 일 추가'),
-              onPressed: () => editTask(context, c),
+              onPressed: c.busy ? null : () => editTask(context, c),
               icon: const Icon(Icons.add),
             ),
           ],
@@ -143,16 +143,25 @@ class TaskCard extends StatelessWidget {
         '${!task.done && task.dueAt.isBefore(DateTime.now()) ? '${context.tr('예정 시각 지남')} · ' : ''}'
         '${dateText(context, task.dueAt)} ${timeText(context, task.dueAt)}${task.reminder ? '\n${reminderState(context, c, pid, task)}' : ''}${task.note.isEmpty ? '' : '\n${task.note}'}',
       ),
-      onTap: () => editTask(context, c, task: task),
+      onTap: c.busy ? null : () => editTask(context, c, task: task),
       trailing: IconButton(
         tooltip: context.tr('할 일 삭제'),
-        icon: const Icon(Icons.close, size: 19),
-        onPressed: () async {
-          if (await confirm(context, context.tr('할 일을 삭제할까요?'), task.title) &&
-              context.mounted) {
-            await attempt(context, () => c.taskBook.deleteTask(pid, task.id));
-          }
-        },
+        icon: const Icon(Icons.delete_outline, size: 22),
+        onPressed: c.busy
+            ? null
+            : () async {
+                if (await confirm(
+                      context,
+                      context.tr('할 일을 삭제할까요?'),
+                      task.title,
+                    ) &&
+                    context.mounted) {
+                  await attempt(
+                    context,
+                    () => c.taskBook.deleteTask(pid, task.id),
+                  );
+                }
+              },
       ),
     ),
   );

@@ -1,3 +1,5 @@
+import '../contact_action.dart';
+
 import 'dart:typed_data';
 
 import '../pending_photo_field.dart';
@@ -45,6 +47,20 @@ Future<void> editEntry(
       ),
   };
   var at = data?.at ?? entry?.occurredAt ?? DateTime.now();
+  final suggestedFields = <String, List<String>>{};
+  for (final key in switch (kind) {
+    EntryKind.meal => ['food'],
+    EntryKind.activity => ['activity'],
+    _ => <String>[],
+  }) {
+    suggestedFields[key] = c.records
+        .entries(pid, kind: kind, limit: 30)
+        .map((e) => e.fields[key]?.trim() ?? '')
+        .where((v) => v.isNotEmpty)
+        .toSet()
+        .take(3)
+        .toList();
+  }
   final fieldsKey = GlobalKey<RecordFieldsState>();
   final draft = DraftSession(
     c,
@@ -64,6 +80,8 @@ Future<void> editEntry(
       context,
       MaterialPageRoute<void>(
         builder: (context) => EditorPage(
+          actions: [ContactAction(c)],
+          onSaved: c.showSavedNotice,
           title:
               '${context.tr(kind.label)} ${entry == null ? context.tr('기록') : context.tr('수정')}',
           draft: draft,
@@ -145,7 +163,13 @@ Future<void> editEntry(
               Text(context.tr('다음에 돌볼 사람에게 전할 내용과 확인할 일을 적어요.')),
             dateButton(context, at, update, (v) => at = v),
             if (kind.fields.isNotEmpty)
-              RecordFields(key: fieldsKey, kind: kind, values: values),
+              RecordFields(
+                key: fieldsKey,
+                kind: kind,
+                values: values,
+                suggestions: suggestedFields,
+                onSuggested: () => update(() {}),
+              ),
             textField(
               note,
               kind == EntryKind.generalNote

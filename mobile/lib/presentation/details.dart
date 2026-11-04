@@ -38,7 +38,9 @@ class EntryDetails extends StatelessWidget {
           actions: [
             IconButton(
               tooltip: context.tr('기록 수정'),
-              onPressed: () => editEntry(context, c, e.kind, entry: e),
+              onPressed: c.busy
+                  ? null
+                  : () => editEntry(context, c, e.kind, entry: e),
               icon: const Icon(Icons.edit_outlined),
             ),
           ],
@@ -93,13 +95,19 @@ class EntryDetails extends StatelessWidget {
               spacing: 8,
               children: [
                 OutlinedButton.icon(
-                  onPressed: () => attempt(context, () => c.addPhoto(pid, id)),
+                  onPressed: c.busy
+                      ? null
+                      : () => attempt(context, () => c.addPhoto(pid, id)),
                   icon: const Icon(Icons.photo_library_outlined),
                   label: Text(context.tr('사진 선택')),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () =>
-                      attempt(context, () => c.addPhoto(pid, id, camera: true)),
+                  onPressed: c.busy
+                      ? null
+                      : () => attempt(
+                          context,
+                          () => c.addPhoto(pid, id, camera: true),
+                        ),
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: Text(context.tr('촬영')),
                 ),
@@ -169,60 +177,74 @@ class EntryDetails extends StatelessWidget {
                           TextButton.icon(
                             label: Text(context.tr('사진에서 글자 읽기')),
                             icon: const Icon(Icons.document_scanner_outlined),
-                            onPressed: () async {
-                              await attempt(context, () async {
-                                final epoch = c.captureSession();
-                                final image = await c.photo(pid, id, a.id);
-                                if (!context.mounted) return;
-                                final reviewed = await reviewRecordInput(
-                                  context,
-                                  c,
-                                  pid,
-                                  photo: image,
-                                  kind: e.kind,
-                                  currentFields: e.fields,
-                                );
-                                if (!context.mounted || reviewed == null) {
-                                  return;
-                                }
-                                c.requireSession(epoch);
-                                final current = c.records.entry(pid, id);
-                                if (current == null) return;
-                                await editEntry(
-                                  context,
-                                  c,
-                                  current.kind,
-                                  entry: current,
-                                  initialNote: appendReviewedInput(
-                                    current.note,
-                                    reviewed.text,
-                                  ),
-                                  initialFields: {
-                                    for (final field in reviewed.fields.entries)
-                                      if ((current.fields[field.key] ?? '')
-                                          .trim()
-                                          .isEmpty)
-                                        field.key: field.value,
+                            onPressed: c.busy
+                                ? null
+                                : () async {
+                                    await attempt(context, () async {
+                                      final epoch = c.captureSession();
+                                      final image = await c.photo(
+                                        pid,
+                                        id,
+                                        a.id,
+                                      );
+                                      if (!context.mounted) return;
+                                      final reviewed = await reviewRecordInput(
+                                        context,
+                                        c,
+                                        pid,
+                                        photo: image,
+                                        kind: e.kind,
+                                        currentFields: e.fields,
+                                      );
+                                      if (!context.mounted ||
+                                          reviewed == null) {
+                                        return;
+                                      }
+                                      c.requireSession(epoch);
+                                      final current = c.records.entry(pid, id);
+                                      if (current == null) return;
+                                      await editEntry(
+                                        context,
+                                        c,
+                                        current.kind,
+                                        entry: current,
+                                        initialNote: appendReviewedInput(
+                                          current.note,
+                                          reviewed.text,
+                                        ),
+                                        initialFields: {
+                                          for (final field
+                                              in reviewed.fields.entries)
+                                            if ((current.fields[field.key] ??
+                                                    '')
+                                                .trim()
+                                                .isEmpty)
+                                              field.key: field.value,
+                                        },
+                                      );
+                                    });
                                   },
-                                );
-                              });
-                            },
                           ),
                           IconButton(
                             tooltip: context.tr('사진 삭제'),
                             icon: const Icon(Icons.delete_outline),
-                            onPressed: () async {
-                              if (await confirm(
-                                    context,
-                                    context.tr('사진을 삭제할까요?'),
-                                    context.tr('이 기록에 저장된 사진을 삭제합니다.'),
-                                  ) &&
-                                  context.mounted) {
-                                await attempt(context, () async {
-                                  await c.records.deleteAttachment(pid, a.id);
-                                });
-                              }
-                            },
+                            onPressed: c.busy
+                                ? null
+                                : () async {
+                                    if (await confirm(
+                                          context,
+                                          context.tr('사진을 삭제할까요?'),
+                                          context.tr('이 기록에 저장된 사진을 삭제합니다.'),
+                                        ) &&
+                                        context.mounted) {
+                                      await attempt(context, () async {
+                                        await c.records.deleteAttachment(
+                                          pid,
+                                          a.id,
+                                        );
+                                      });
+                                    }
+                                  },
                           ),
                         ],
                       ),
@@ -254,23 +276,25 @@ class EntryDetails extends StatelessWidget {
               ),
             const SizedBox(height: 24),
             TextButton.icon(
-              onPressed: () async {
-                if (await confirm(
-                      context,
-                      context.tr('기록을 삭제할까요?'),
-                      context.tr(
-                        '이 기록의 수정 이력과 첨부 사진도 삭제됩니다. 진료 준비 목록에서도 빠집니다.',
-                      ),
-                    ) &&
-                    context.mounted) {
-                  await attempt(context, () async {
-                    await c.records.deleteEntry(pid, id);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  });
-                }
-              },
+              onPressed: c.busy
+                  ? null
+                  : () async {
+                      if (await confirm(
+                            context,
+                            context.tr('기록을 삭제할까요?'),
+                            context.tr(
+                              '이 기록의 수정 이력과 첨부 사진도 삭제됩니다. 진료 준비 목록에서도 빠집니다.',
+                            ),
+                          ) &&
+                          context.mounted) {
+                        await attempt(context, () async {
+                          await c.records.deleteEntry(pid, id);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        });
+                      }
+                    },
               icon: const Icon(Icons.delete_outline),
               label: Text(context.tr('기록 삭제')),
             ),
@@ -337,12 +361,14 @@ class MedicationDetails extends StatelessWidget {
             Text(med.times.join(' · ')),
             const SizedBox(height: 20),
             FilledButton.icon(
-              onPressed: () => recordIntake(context, c, med),
+              onPressed: c.busy ? null : () => recordIntake(context, c, med),
               icon: const Icon(Icons.add_task),
               label: Text(context.tr('실제 복약 기록')),
             ),
             OutlinedButton(
-              onPressed: () => editMedication(context, c, medication: med),
+              onPressed: c.busy
+                  ? null
+                  : () => editMedication(context, c, medication: med),
               child: Text(context.tr('처방 지시 수정 기록')),
             ),
             Section(context.tr('처방 지시 이력')),
@@ -360,29 +386,33 @@ class MedicationDetails extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextButton(
-              onPressed: () async {
-                if (await confirm(
-                      context,
-                      med.active
-                          ? context.tr('목록에서 보관할까요?')
-                          : context.tr('다시 목록에 표시할까요?'),
-                      med.active
-                          ? context.tr(
-                              '기존 복약 이력은 유지하고 이 약의 앱 알림을 끕니다. 약을 중단하라는 의미가 아닙니다.',
-                            )
-                          : context.tr('저장된 시각에 따라 앱 알림을 다시 예약합니다.'),
-                      action: med.active ? context.tr('보관') : context.tr('표시'),
-                    ) &&
-                    context.mounted) {
-                  await attempt(context, () async {
-                    await c.medicationBook.archiveMedication(
-                      pid,
-                      id,
-                      med.active,
-                    );
-                  });
-                }
-              },
+              onPressed: c.busy
+                  ? null
+                  : () async {
+                      if (await confirm(
+                            context,
+                            med.active
+                                ? context.tr('목록에서 보관할까요?')
+                                : context.tr('다시 목록에 표시할까요?'),
+                            med.active
+                                ? context.tr(
+                                    '기존 복약 이력은 유지하고 이 약의 앱 알림을 끕니다. 약을 중단하라는 의미가 아닙니다.',
+                                  )
+                                : context.tr('저장된 시각에 따라 앱 알림을 다시 예약합니다.'),
+                            action: med.active
+                                ? context.tr('보관')
+                                : context.tr('표시'),
+                          ) &&
+                          context.mounted) {
+                        await attempt(context, () async {
+                          await c.medicationBook.archiveMedication(
+                            pid,
+                            id,
+                            med.active,
+                          );
+                        });
+                      }
+                    },
               child: Text(
                 med.active ? context.tr('목록에서 보관') : context.tr('목록에 다시 표시'),
               ),
@@ -418,7 +448,7 @@ class VisitDetails extends StatelessWidget {
           actions: [
             IconButton(
               tooltip: context.tr('진료 준비 검토'),
-              onPressed: () => editVisit(context, c, visit: v),
+              onPressed: c.busy ? null : () => editVisit(context, c, visit: v),
               icon: const Icon(Icons.edit_outlined),
             ),
           ],
@@ -459,21 +489,23 @@ class VisitDetails extends StatelessWidget {
                 ),
             const SizedBox(height: 24),
             TextButton.icon(
-              onPressed: () async {
-                if (await confirm(
-                      context,
-                      context.tr('진료 준비를 삭제할까요?'),
-                      context.tr('원본 일기 기록은 그대로 남습니다.'),
-                    ) &&
-                    context.mounted) {
-                  await attempt(context, () async {
-                    await c.visitBook.deleteVisit(pid, id);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  });
-                }
-              },
+              onPressed: c.busy
+                  ? null
+                  : () async {
+                      if (await confirm(
+                            context,
+                            context.tr('진료 준비를 삭제할까요?'),
+                            context.tr('원본 일기 기록은 그대로 남습니다.'),
+                          ) &&
+                          context.mounted) {
+                        await attempt(context, () async {
+                          await c.visitBook.deleteVisit(pid, id);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        });
+                      }
+                    },
               icon: const Icon(Icons.delete_outline),
               label: Text(context.tr('진료 준비 삭제')),
             ),

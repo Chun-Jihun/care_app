@@ -1,4 +1,7 @@
 import 'language_picker.dart';
+
+import 'dart:async';
+
 import '../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -8,6 +11,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../application/care_controller.dart';
 import 'common.dart';
 import 'shell.dart';
+import 'backup_activity_bar.dart';
+import 'care_theme.dart';
+import 'ui_preferences_scope.dart';
+import 'display_settings_page.dart';
+import '../domain/ui_preferences.dart';
 
 class CareApp extends StatefulWidget {
   const CareApp({super.key, required this.controller});
@@ -17,26 +25,60 @@ class CareApp extends StatefulWidget {
 }
 
 class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
-  final privateNavigator = GlobalKey<NavigatorState>();
+  var privateNavigator = GlobalKey<NavigatorState>();
+  Route<void>? backupReadingRoute;
+  bool wasCommitting = false;
   bool obscured = false;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    widget.controller.addListener(clearLockedImages);
+    widget.controller.addListener(syncPrivateNavigation);
   }
 
-  void clearLockedImages() {
-    if (!widget.controller.unlocked) {
+  void syncPrivateNavigation() {
+    final committing = widget.controller.backupCommitting;
+    if (committing && !wasCommitting) {
+      privateNavigator = GlobalKey<NavigatorState>();
+      backupReadingRoute = null;
+    }
+    wasCommitting = committing;
+    if (!widget.controller.backingUp) backupReadingRoute = null;
+    if (!widget.controller.unlocked || committing) {
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
     }
   }
 
+  void browseBackup() {
+    if (!widget.controller.backingUp || widget.controller.backupCommitting) {
+      return;
+    }
+    final navigator = privateNavigator.currentState;
+    if (navigator == null) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (backupReadingRoute case final route?) {
+      navigator.popUntil((current) => current == route);
+      navigator.pop();
+      return;
+    }
+    final route = MaterialPageRoute<void>(
+      builder: (_) => CareShell(widget.controller),
+    );
+    setState(() => backupReadingRoute = route);
+    unawaited(
+      navigator.push(route).whenComplete(() {
+        if (mounted && backupReadingRoute == route) {
+          setState(() => backupReadingRoute = null);
+        }
+      }),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.controller.removeListener(clearLockedImages);
+    widget.controller.removeListener(syncPrivateNavigation);
     super.dispose();
   }
 
@@ -64,66 +106,20 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
         AppStrings.delegate,
         ...GlobalMaterialLocalizations.delegates,
       ],
-      theme: ThemeData(
-        useMaterial3: true,
-        visualDensity: VisualDensity.standard,
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(fontSize: 16, height: 1.5),
-          bodySmall: TextStyle(fontSize: 14, height: 1.5),
-          labelSmall: TextStyle(fontSize: 14),
-        ),
-        iconButtonTheme: IconButtonThemeData(
-          style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: forest,
-          primary: forest,
-          surface: const Color(0xFFF7F8F3),
-          onSurface: ink,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF7F8F3),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF7F8F3),
-          foregroundColor: ink,
-          centerTitle: false,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 0,
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFE6EBE4)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFCCD7CE)),
-          ),
-        ),
-        navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Colors.white,
-          indicatorColor: Color(0xFFDDEADB),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: forest,
-          foregroundColor: Colors.white,
-          elevation: 2,
-        ),
+      theme: careTheme(
+        widget.controller.uiPreferences,
+        reduceMotion: MediaQuery.maybeOf(context)?.disableAnimations ?? false,
       ),
+      highContrastTheme: careTheme(
+        widget.controller.uiPreferences,
+        highContrast: true,
+        reduceMotion: MediaQuery.maybeOf(context)?.disableAnimations ?? false,
+      ),
+      themeAnimationDuration:
+          (widget.controller.uiPreferences.reduceMotion ||
+              (MediaQuery.maybeOf(context)?.disableAnimations ?? false))
+          ? Duration.zero
+          : const Duration(milliseconds: 200),
       home: AnimatedBuilder(
         animation: widget.controller,
         builder: (context, _) => !widget.controller.ready
@@ -133,18 +129,39 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
               // Authenticated routes are destroyed together, including open photo dialogs.
               Stack(
                 children: [
-                  AbsorbPointer(
-                    absorbing: widget.controller.busy,
-                    child: NavigatorPopHandler<Object?>(
-                      onPopWithResult: (_) =>
-                          privateNavigator.currentState?.maybePop(),
-                      child: Navigator(
-                        key: privateNavigator,
-                        onGenerateRoute: (_) => MaterialPageRoute<void>(
-                          builder: (_) => CareShell(widget.controller),
+                  Column(
+                    children: [
+                      if (widget.controller.backingUp)
+                        BackupActivityBar(
+                          widget.controller,
+                          key: const ValueKey('backup-contacts'),
+                          onBrowse: widget.controller.backupCommitting
+                              ? null
+                              : browseBackup,
+                          browsing: backupReadingRoute != null,
                         ),
+                      Expanded(
+                        child: widget.controller.backupCommitting
+                            ? const Center(child: CircularProgressIndicator())
+                            : AbsorbPointer(
+                                absorbing:
+                                    widget.controller.busy &&
+                                    !widget.controller.backingUp,
+                                child: NavigatorPopHandler<Object?>(
+                                  onPopWithResult: (_) =>
+                                      privateNavigator.currentState?.maybePop(),
+                                  child: Navigator(
+                                    key: privateNavigator,
+                                    onGenerateRoute: (_) =>
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              CareShell(widget.controller),
+                                        ),
+                                  ),
+                                ),
+                              ),
                       ),
-                    ),
+                    ],
                   ),
                   if (widget.controller.busy)
                     const Positioned(
@@ -157,24 +174,44 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
               )
             : LockScreen(widget.controller),
       ),
-      builder: (context, child) => Stack(
-        children: [
-          child!,
-          if (obscured)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Color(0xFFF7F8F3),
-                child: Center(
-                  child: Icon(
-                    Icons.lock_outline_rounded,
-                    color: forest,
-                    size: 48,
-                  ),
-                ),
-              ),
+      builder: (context, child) {
+        final data = MediaQuery.of(context);
+        final preferences = widget.controller.uiPreferences;
+        return UiPreferencesScope(
+          value: preferences,
+          child: MediaQuery(
+            data: data.copyWith(
+              textScaler: preferences.enabled(UiOption.largeText)
+                  ? MinimumTextScaler(data.textScaler, 1.2)
+                  : data.textScaler,
+              boldText: data.boldText || preferences.enabled(UiOption.boldText),
+              highContrast:
+                  data.highContrast ||
+                  preferences.enabled(UiOption.highContrast),
+              disableAnimations:
+                  data.disableAnimations || preferences.reduceMotion,
             ),
-        ],
-      ),
+            child: Stack(
+              children: [
+                child!,
+                if (obscured)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0xFFF7F8F3),
+                      child: Center(
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          color: forest,
+                          size: 48,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     ),
   );
 }
@@ -315,6 +352,18 @@ class _LockScreenState extends State<LockScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.accessibility_new),
+                  title: Text(context.tr('화면·접근성 설정')),
+                  onTap: working
+                      ? null
+                      : () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => DisplaySettingsPage(c),
+                          ),
+                        ),
+                ),
                 LanguagePicker(c),
                 if (c.hasPin)
                   TextButton(

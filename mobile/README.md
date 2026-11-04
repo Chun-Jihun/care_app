@@ -1,5 +1,7 @@
 # 간병수첩 모바일 기본 앱
 
+현재 사용·지원 범위·백업 버전·공통 검증 명령은 [모바일 현재 안내](../docs/mobile_current_guide.md)를 따른다. 아래 날짜별 절의 시험 결과는 당시 이력이다.
+
 Android·iOS 공통 Flutter 앱. 모델, API 키, 회원가입 없이 직접 작성하는 간병 기록을 관리한다. 전체 제품 요구사항은 [`../docs/caregiving_notebook_requirements.md`](../docs/caregiving_notebook_requirements.md), 구현 전 실패 시나리오는 [`../docs/non_ai_foundation_safety_plan.md`](../docs/non_ai_foundation_safety_plan.md)에 있다.
 
 2026-09-11: Android arm64에 선택 설치형 로컬 AI(기록 조회·OCR·음성 입력)를 연결했다. [설치 방법·지원 범위·실제 실행 결과](../docs/mobile_ai_integration.md)를 먼저 확인한다. iOS AI는 OCR 실행 라이브러리 연결과 Mac 검증이 필요하여 현재 비활성화돼 있다. 직접 입력하는 기본 기능은 AI 설치 없이 동작한다.
@@ -24,7 +26,7 @@ Android·iOS 공통 Flutter 앱. 모델, API 키, 회원가입 없이 직접 작
 ```sh
 flutter pub get
 flutter analyze
-flutter test
+flutter test --concurrency=1
 flutter run
 flutter build apk --release --target-platform=android-arm64
 ```
@@ -110,7 +112,7 @@ Android는 화면 캡처 보호와 OS 자동 백업·기기 전송 제외를 구
 
 전체 코드 검토 당시 Flutter 시험 **34개**, Python 시험 **96개**가 통과했다. 수정 근거와 당시 Android 결과는 [전체 코드 검토 보고서](../docs/code_review_2026-09-07.md)를 따른다.
 
-초안 복구·선택 백업 추가 후 최신 Flutter 시험은 **47개 통과**, 정적 분석 문제 없음이다. Android 15 가상기기에 업데이트한 뒤 기존 수첩과 114KB 사진 연결 유지, 입력 중 강제 종료 후 초안의 원문·시각 복구, 명시적 저장 후 초안 제거와 단일 기록 생성을 확인했다. 선택 백업의 제외 범위·비밀번호·변조·참조 검증·기존 데이터 보존·추가 복원·중복 차단은 실제 SQLCipher 및 UI 시험으로 검증했다. 이 작업에서 Python 코드는 변경하지 않았다. iOS 실행 검증, 실물 저사양 기기의 메모리·저장 공간 부족 시험, 배포 서명은 남아 있다.
+초안 복구·선택 백업 추가 당시 Flutter 시험은 **47개 통과**, 정적 분석 문제 없음이다. Android 15 가상기기에 업데이트한 뒤 기존 수첩과 114KB 사진 연결 유지, 입력 중 강제 종료 후 초안의 원문·시각 복구, 명시적 저장 후 초안 제거와 단일 기록 생성을 확인했다. 선택 백업의 제외 범위·비밀번호·변조·참조 검증·기존 데이터 보존·추가 복원·중복 차단은 실제 SQLCipher 및 UI 시험으로 검증했다. 이 작업에서 Python 코드는 변경하지 않았다. iOS 실행 검증, 실물 저사양 기기의 메모리·저장 공간 부족 시험, 배포 서명은 남아 있다.
 
 ## Android 실기기 검증 (2026-09-10, 다국어 추가 전)
 

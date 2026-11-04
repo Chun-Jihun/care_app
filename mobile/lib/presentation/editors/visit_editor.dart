@@ -1,3 +1,4 @@
+import '../contact_action.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -54,6 +55,8 @@ Future<void> editVisit(
       context,
       MaterialPageRoute<void>(
         builder: (_) => EditorPage(
+          actions: [ContactAction(c)],
+          onSaved: c.showSavedNotice,
           title: visit == null ? context.tr('진료 준비') : context.tr('진료 준비 검토'),
           draft: draft,
           content: (update) => [

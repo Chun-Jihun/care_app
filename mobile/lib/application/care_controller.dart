@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/records.dart';
 import '../domain/chat.dart';
 import '../domain/backup.dart';
+import '../domain/ui_preferences.dart';
 import '../l10n/app_strings.dart';
 import 'notebook_repository.dart';
 import 'context_tasks.dart';
@@ -51,15 +52,24 @@ class CareController extends ChangeNotifier {
   final NotebookVault _vault;
   final PlatformServices _platform;
   bool _ready = false, _unlocked = false, _hasPin = false, _busy = false;
-  bool _externalOperation = false, _vaultOpen = false;
+  bool _vaultOpen = false, _backupOperation = false;
+  bool _backupCommitting = false;
+  int _externalOperations = 0;
+  String _backupContact = '';
   int _epoch = 0;
+  int _backgroundRevision = 0;
   String? _selectedId, _notice;
   AppLanguage _language = AppLanguage.korean;
+  UiPreferences _uiPreferences = UiPreferences.defaults;
+  UiPreferences get uiPreferences => _uiPreferences;
   bool get ready => _ready;
   bool get unlocked => _unlocked;
   bool get hasPin => _hasPin;
   bool get busy => _busy;
-  bool get externalOperation => _externalOperation;
+  bool get externalOperation => _externalOperations > 0;
+  bool get backingUp => _unlocked && _busy && _backupOperation;
+  bool get backupCommitting => backingUp && _backupCommitting;
+  String get backupContact => backingUp ? _backupContact : '';
   String? get selectedId => _selectedId;
   String? get notice => _notice;
   AppLanguage get language => _language;
@@ -129,6 +139,8 @@ class CareController extends ChangeNotifier {
     _scope,
     _vault,
     _platform,
+    run: _backupExclusive,
+    beforeCommit: _beginBackupCommit,
     onReplace: () {
       _advanceEpoch();
       chat.clearSession();
@@ -154,28 +166,61 @@ class CareController extends ChangeNotifier {
   Future<T> _exclusive<T>(
     Future<T> Function(int epoch) action, {
     bool requireUnlock = true,
+    bool backup = false,
   }) async {
     if (_busy) throw CareError(CareErrorCode.busy);
     final epoch = _epoch;
     _check(epoch, requireUnlock: requireUnlock);
     if (requireUnlock) drafts.flushAll();
+    // Keep only the already selected contact available across replacement;
+    // the repository/selected patient may change during a restore commit.
+    _backupContact = backup && _selectedId != null ? patient.contact : '';
+    _backupOperation = backup;
+    _backupCommitting = false;
     _busy = true;
     notifyListeners();
     try {
       return await action(epoch);
     } finally {
       _busy = false;
+      _backupOperation = false;
+      _backupCommitting = false;
+      _backupContact = '';
       if (!_unlocked) _closeVault();
       notifyListeners();
     }
   }
 
+  Future<T> _backupExclusive<T>(Future<T> Function(int epoch) action) =>
+      _exclusive((epoch) async {
+        try {
+          final result = await action(epoch);
+          if (_backupCommitting) {
+            _notice ??= '백업 복원이 끝났어요. 수첩과 기록을 확인해 주세요.';
+          }
+          return result;
+        } catch (_) {
+          if (_backupCommitting) {
+            _notice = '백업 복원을 완료하지 못했어요. 현재 수첩을 확인해 주세요.';
+          }
+          rethrow;
+        }
+      }, backup: true);
+
+  void _beginBackupCommit(int epoch) {
+    _check(epoch);
+    _backupCommitting = true;
+    // Reading is allowed during preparation; discard old routes before the
+    // active database generation changes, even if no frame occurs meanwhile.
+    notifyListeners();
+  }
+
   Future<T> _external<T>(Future<T> Function() action) async {
-    _externalOperation = true;
+    _externalOperations++;
     try {
       return await action();
     } finally {
-      _externalOperation = false;
+      _externalOperations--;
     }
   }
 
@@ -190,6 +235,12 @@ class CareController extends ChangeNotifier {
 
   void dismissNotice() {
     _notice = null;
+    notifyListeners();
+  }
+
+  void showSavedNotice() {
+    if (!_unlocked) return;
+    _notice ??= '저장했어요.';
     notifyListeners();
   }
 
@@ -211,6 +262,7 @@ class CareController extends ChangeNotifier {
       _unlocked && _repository.setting('reminders_enabled') == 'true';
 
   Future<void> initialize() async {
+    _uiPreferences = await _vault.preferences.load();
     _language = AppLanguage.fromCode(await _vault.credentials.language());
     _platform.strings = strings;
     _hasPin = await _vault.credentials.hasPin();
@@ -234,6 +286,16 @@ class CareController extends ChangeNotifier {
     records.invalidate();
     notifyListeners();
     if (_unlocked) await _syncReminders();
+  }, requireUnlock: false);
+
+  Future<void> setUiPreferences(UiPreferences value) => _exclusive((_) async {
+    try {
+      await _vault.preferences.save(value);
+    } catch (_) {
+      throw CareError(CareErrorCode.preferencesSaveFailed);
+    }
+    _uiPreferences = value;
+    notifyListeners();
   }, requireUnlock: false);
   Future<void> _open(int epoch) async {
     if (epoch != _epoch) return;
@@ -271,11 +333,18 @@ class CareController extends ChangeNotifier {
     if (_hasPin && !_unlocked) {
       throw CareError(CareErrorCode.existingPinRequired);
     }
+    final backgroundRevision = _backgroundRevision;
     await _vault.credentials.setPin(
       pin,
       beforeCommit: () => _check(epoch, requireUnlock: _hasPin),
     );
     _hasPin = true;
+    // Activation may finish after a pause handled while PIN was still off.
+    // Keep no-PIN editor sessions intact, but require the newly enabled PIN.
+    if (backgroundRevision != _backgroundRevision) {
+      lock();
+      return;
+    }
     await _open(epoch);
   }, requireUnlock: _hasPin);
   Future<void> unlockPin(String pin) => _exclusive((epoch) async {
@@ -304,6 +373,7 @@ class CareController extends ChangeNotifier {
   });
 
   void handleBackground() {
+    _backgroundRevision++;
     if (_hasPin) {
       lock();
       return;
@@ -322,6 +392,7 @@ class CareController extends ChangeNotifier {
     chat.clearSession();
     _advanceEpoch();
     _unlocked = false;
+    _backupContact = '';
     _invalidate(ChangeImpact.all);
     if (!_busy) _closeVault();
     notifyListeners();

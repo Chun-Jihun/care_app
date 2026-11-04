@@ -16,6 +16,7 @@ import 'editors.dart';
 import 'settings.dart';
 import 'chat_page.dart';
 import 'draft_page.dart';
+import 'contact_action.dart';
 
 class CareShell extends StatefulWidget {
   const CareShell(this.c, {super.key});
@@ -104,16 +105,19 @@ class _CareShellState extends State<CareShell> {
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -1),
           ),
           actions: [
+            ContactAction(c),
             IconButton(
               tooltip: context.tr('간병 도우미 대화'),
-              onPressed: () {
-                // A quick second tap must not stack two entry notices.
-                if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(builder: (_) => ChatPage(c)),
-                );
-              },
+              onPressed: c.busy
+                  ? null
+                  : () {
+                      // A quick second tap must not stack two entry notices.
+                      if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(builder: (_) => ChatPage(c)),
+                      );
+                    },
               icon: const Icon(Icons.chat_bubble_outline, size: 21),
             ),
             if (c.hasPin)
@@ -130,7 +134,7 @@ class _CareShellState extends State<CareShell> {
           child: Padding(
             // Keep the primary action in its own area so it cannot cover a
             // task checkbox, delete button or the final row while scrolling.
-            padding: EdgeInsets.only(bottom: tab == 4 ? 0 : 80),
+            padding: EdgeInsets.only(bottom: tab == 4 || c.busy ? 0 : 80),
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
@@ -140,6 +144,7 @@ class _CareShellState extends State<CareShell> {
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
                     PopupMenuButton<String>(
+                      enabled: !c.busy,
                       tooltip: context.tr('수첩 전환'),
                       onSelected: (id) => attempt(context, () async {
                         await c.selectPatient(id);
@@ -188,19 +193,26 @@ class _CareShellState extends State<CareShell> {
                           title: Text(context.tr('작성 중인 초안이 있어요')),
                           subtitle: Text(context.tr('확인하고 이어서 작성하기')),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => DraftPage(c),
-                            ),
-                          ),
+                          onTap: c.busy
+                              ? null
+                              : () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => DraftPage(c),
+                                  ),
+                                ),
                         ),
                       ),
                     if (c.notice != null)
                       Card(
-                        color: const Color(0xFFFFF1DB),
+                        color: c.notice == '저장했어요.'
+                            ? const Color(0xFFE8EFE8)
+                            : const Color(0xFFFFF1DB),
                         child: ListTile(
-                          title: Text(context.tr(c.notice!)),
+                          title: Semantics(
+                            liveRegion: true,
+                            child: Text(context.tr(c.notice!)),
+                          ),
                           trailing: IconButton(
                             tooltip: context.tr('안내 닫기'),
                             icon: const Icon(Icons.close),
@@ -209,7 +221,12 @@ class _CareShellState extends State<CareShell> {
                         ),
                       ),
                     ...switch (tab) {
-                      0 => todayContent(context, c, openEntry),
+                      0 => todayContent(
+                        context,
+                        c,
+                        openEntry,
+                        onShowMedications: () => setState(() => tab = 2),
+                      ),
                       1 => journal(),
                       2 => medicationContent(
                         context,
@@ -227,7 +244,7 @@ class _CareShellState extends State<CareShell> {
             ),
           ),
         ),
-        floatingActionButton: tab == 4
+        floatingActionButton: tab == 4 || c.busy
             ? null
             : FloatingActionButton.extended(
                 onPressed: () => switch (tab) {
@@ -298,6 +315,7 @@ class _CareShellState extends State<CareShell> {
         enableIMEPersonalizedLearning: false,
         enableSuggestions: false,
         decoration: InputDecoration(
+          labelText: context.tr('기록 검색'),
           hintText: context.tr('이 수첩의 기록 검색'),
           prefixIcon: Icon(Icons.search),
           suffixIcon: search.text.isEmpty
@@ -328,31 +346,47 @@ class _CareShellState extends State<CareShell> {
         },
       ),
       const SizedBox(height: 12),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          spacing: 8,
-          children: [
-            ChoiceChip(
-              label: Text(context.tr('전체')),
-              selected: filter == null,
-              onSelected: (_) => setState(() {
-                filter = null;
-                journalLimit = 50;
-              }),
-            ),
-            ...EntryKind.values.map(
-              (k) => ChoiceChip(
-                label: Text(context.tr(k.label)),
-                selected: filter == k,
-                onSelected: (_) => setState(() {
-                  filter = k;
-                  journalLimit = 50;
-                }),
+      OutlinedButton.icon(
+        icon: Icon(filter == null ? Icons.filter_list : kindIcon(filter!)),
+        label: Text(
+          context.tr('기록 유형: {0}', [
+            filter == null ? context.tr('전체') : context.tr(filter!.label),
+          ]),
+        ),
+        onPressed: () async {
+          final selected = await showModalBottomSheet<String>(
+            context: context,
+            isScrollControlled: true,
+            builder: (ctx) => SafeArea(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  ListTile(
+                    title: Text(context.tr('전체')),
+                    selected: filter == null,
+                    onTap: () => Navigator.pop(ctx, 'all'),
+                  ),
+                  for (final kind in EntryKind.values)
+                    ListTile(
+                      leading: Icon(kindIcon(kind)),
+                      title: Text(context.tr(kind.label)),
+                      selected: filter == kind,
+                      trailing: filter == kind ? const Icon(Icons.check) : null,
+                      onTap: () => Navigator.pop(ctx, kind.name),
+                    ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+          if (selected != null && mounted) {
+            setState(() {
+              filter = selected == 'all'
+                  ? null
+                  : EntryKind.values.byName(selected);
+              journalLimit = 50;
+            });
+          }
+        },
       ),
       Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,

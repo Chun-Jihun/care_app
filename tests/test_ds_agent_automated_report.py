@@ -5,16 +5,17 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.report_ds_agent_automated_eval import generate_report
+from scripts.report_ds_agent_automated_eval import generate_report, AutomatedEvalReportError
+from tests.agent_fixtures import synthetic_report
 
 
 class DsAgentAutomatedReportTests(unittest.TestCase):
     def test_partial_smoke_is_verified_but_never_promoted(self) -> None:
         root = Path.cwd().resolve()
-        run_dir = root / "data/agent-eval/model-runs/qwen35-nf4-smoke-v6"
         with tempfile.TemporaryDirectory(dir=root) as temp_name:
-            output = Path(temp_name) / "report"
-            generate_report(root, [run_dir], output, require_complete=False)
+            output = synthetic_report(root, Path(temp_name))
+            with self.assertRaises(AutomatedEvalReportError):
+                generate_report(root, [Path(temp_name) / "run"], Path(temp_name) / "complete")
             report = json.loads(
                 (output / "automated_evaluation_report.json").read_text(
                     encoding="utf-8"

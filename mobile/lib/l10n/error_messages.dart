@@ -7,6 +7,7 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.locked: '수첩 잠금을 해제한 뒤 다시 시도해 주세요.',
   CareErrorCode.busy: '진행 중인 작업이 끝난 뒤 다시 시도해 주세요.',
   CareErrorCode.languageSaveFailed: '언어 설정을 저장하지 못했습니다. 다시 시도해 주세요.',
+  CareErrorCode.preferencesSaveFailed: '화면 설정을 저장하지 못했어요. 이전 설정을 유지합니다.',
   CareErrorCode.existingPinRequired: '기존 잠금 번호로 수첩을 먼저 열어 주세요.',
   CareErrorCode.deviceAuthDisabled: '설정에서 기기 인증을 먼저 켜 주세요.',
   CareErrorCode.deviceAuthFallback: '기기 인증을 완료하지 못했습니다. 잠금 번호로 열어 주세요.',

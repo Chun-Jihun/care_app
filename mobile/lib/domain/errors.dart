@@ -6,6 +6,7 @@ enum CareErrorCode {
   locked,
   busy,
   languageSaveFailed,
+  preferencesSaveFailed,
   existingPinRequired,
   deviceAuthDisabled,
   deviceAuthFallback,
