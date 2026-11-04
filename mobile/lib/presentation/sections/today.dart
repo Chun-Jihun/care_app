@@ -21,8 +21,9 @@ List<Widget> todayContent(
   CareController c,
   void Function(CareEntry) openEntry, {
   VoidCallback? onShowMedications,
+  DateTime? at,
 }) {
-  final now = DateTime.now();
+  final now = at ?? DateTime.now();
   final preferences = c.uiPreferences;
   final medications = [...c.medications]
     ..sort((a, b) {
@@ -97,6 +98,19 @@ List<Widget> todayContent(
       TaskOverview(c),
     ],
     HomeSection.medications: () => [
+      if (medications.isEmpty) ...[
+        Section(context.tr('오늘의 복약')),
+        EmptyCard(
+          context.tr('약 목록을 만들어 보세요'),
+          context.tr('약 이름과 전달받은 지시, 확인할 시각을 직접 적을 수 있어요.'),
+          icon: Icons.medication_outlined,
+        ),
+        OutlinedButton.icon(
+          onPressed: c.busy ? null : () => editMedication(context, c),
+          icon: const Icon(Icons.add),
+          label: Text(context.tr('약 추가')),
+        ),
+      ],
       if (c.medications.isNotEmpty) ...[
         Section(
           context.tr('오늘의 복약'),
@@ -118,7 +132,7 @@ List<Widget> todayContent(
                             '${dateText(context, next)} ${timeText(context, next)}',
                           ]),
                         ),
-                      MedicationTodayStatus(c, med),
+                      MedicationTodayStatus(c, med, at: now),
                     ],
                   ),
                   trailing: const Icon(Icons.chevron_right),

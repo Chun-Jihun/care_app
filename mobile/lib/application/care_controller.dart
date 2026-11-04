@@ -599,8 +599,8 @@ class CareController extends ChangeNotifier {
       _external(() => _platform.dial(number));
 
   // Small navigation facade. All operations delegate to feature services.
-  List<ChatMessage> chatMessages(String pid) =>
-      _unlocked ? chat.messages(pid) : const [];
+  List<ChatMessage> chatMessages(String pid, {int limit = 50}) =>
+      _unlocked ? chat.messages(pid, limit: limit) : const [];
   Future<void> setChatRetention(String pid, ChatRetention value) =>
       chat.setRetention(pid, value);
   Future<void> addChatMessage(String pid, String text) => chat.add(pid, text);

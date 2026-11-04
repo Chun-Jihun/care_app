@@ -63,4 +63,17 @@ void main() {
       }
     },
   );
+  test('model filters fit the persisted lookup boundary', () {
+    for (final length in [200, 201]) {
+      final item = 'a' * length;
+      final raw = jsonEncode({
+        'kind': 'lookup',
+        'day': '2026-09-11',
+        'time': '09:30',
+        'item': item,
+      });
+      final filter = AiQueryPolicy.parse(raw, '2026-09-11 09:30 $item');
+      expect(filter != null, length == 200);
+    }
+  });
 }

@@ -3,7 +3,7 @@ import 'records.dart';
 /// A bounded, read-only filter. Dates are local calendar dates; end is exclusive.
 /// It never interprets an absent entry as a missed dose or a clinical change.
 final class RecordLookup {
-  const RecordLookup({
+  RecordLookup({
     required this.start,
     required this.end,
     this.fromMinute = 0,
@@ -12,12 +12,15 @@ final class RecordLookup {
     this.item = '',
     this.requiredField = '',
     this.intakeStatus = '',
-  });
+    Iterable<EntryKind> labelKinds = const [],
+  }) : labelKinds = Set.unmodifiable(labelKinds);
 
   final DateTime start, end;
   final int fromMinute, untilMinute;
   final EntryKind? kind;
   final String item, requiredField, intakeStatus;
+  // Categories whose displayed labels matched the model's verbatim item.
+  final Set<EntryKind> labelKinds;
 
   bool matches(CareEntry entry) {
     final at = entry.occurredAt;
@@ -33,6 +36,7 @@ final class RecordLookup {
       return false;
     }
     if (item.isEmpty) return true;
+    if (labelKinds.contains(entry.kind)) return true;
     return const [
       'food',
       'medicine',
@@ -52,11 +56,13 @@ final class RecordLookup {
     'item': item,
     'requiredField': requiredField,
     if (intakeStatus.isNotEmpty) 'intakeStatus': intakeStatus,
+    if (labelKinds.isNotEmpty)
+      'labelKinds': labelKinds.map((k) => k.name).toList(),
   };
 
   static RecordLookup fromJson(Object? raw) {
     if (raw is! Map ||
-        (raw.length != 7 && raw.length != 8) ||
+        (raw.length < 7 || raw.length > 9) ||
         raw.keys.any(
           (key) => !const [
             'start',
@@ -67,6 +73,7 @@ final class RecordLookup {
             'item',
             'requiredField',
             'intakeStatus',
+            'labelKinds',
           ].contains(key),
         ) ||
         !raw.keys.toSet().containsAll([
@@ -108,6 +115,14 @@ final class RecordLookup {
                 kind != EntryKind.medicationIntake))) {
       throw const FormatException('invalid intake filter');
     }
+    final labels = raw.containsKey('labelKinds') ? raw['labelKinds'] : const [];
+    if (labels is! List ||
+        labels.length > EntryKind.values.length ||
+        labels.toSet().length != labels.length ||
+        labels.any((name) => !EntryKind.values.any((k) => k.name == name)) ||
+        (labels.isNotEmpty && (raw['item'] as String).isEmpty)) {
+      throw const FormatException('invalid lookup labels');
+    }
     return RecordLookup(
       start: start,
       end: end,
@@ -117,6 +132,7 @@ final class RecordLookup {
       item: raw['item'] as String,
       requiredField: raw['requiredField'] as String,
       intakeStatus: status,
+      labelKinds: labels.map((name) => EntryKind.values.byName(name as String)),
     );
   }
 

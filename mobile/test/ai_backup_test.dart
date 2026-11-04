@@ -53,7 +53,7 @@ void main() {
     );
   }
 
-  test('selective backup preserves immutable medical citations without remapping package IDs', () async {
+  test('version 5 backup preserves medical citations without remapping package IDs', () async {
     final citation = KnowledgeCitation(
       packageHash: 'a' * 64,
       sourceId: 'synthetic',
@@ -73,7 +73,15 @@ void main() {
       password,
       BackupSelection(patientIds: {pid}, chats: true),
     );
-    await c.importSelection(bytes, password);
+    final data = jsonDecode(
+      utf8.decode(await VaultCrypto.passwordOpen(bytes, password)),
+    ) as Map;
+    data['document_version'] = 5;
+    final legacy = await VaultCrypto.passwordSeal(
+      Uint8List.fromList(utf8.encode(jsonEncode(data))),
+      password,
+    );
+    await c.importSelection(legacy, password);
     final restored = c.patients.singleWhere((p) => p.id != pid).id;
     final saved = testRepository(c).chatMessages(restored).single.reply!;
     expect(saved.kind, AiReplyKind.evidence);
@@ -96,6 +104,59 @@ void main() {
     expect(message.reply!.sources.single.version, record.version);
     expect(message.reply!.lookup!.start, DateTime(2020));
   });
+  test(
+    'version 6 retains model label filters and all restored matches',
+    () async {
+      final matches = <CareEntry>[];
+      for (var i = 0; i < 9; i++) {
+        matches.add(
+          await c.records.saveEntry(
+            pid,
+            kind: EntryKind.medicationIntake,
+            occurredAt: DateTime(2020, 1, 1, 9),
+            fields: {'medicine': 'synthetic $i', 'status': 'taken'},
+          ),
+        );
+      }
+      final message = await c.chat.append(pid, 'synthetic model lookup');
+      await c.chat.attachReply(
+        pid,
+        message.id,
+        AiReply(
+          AiReplyKind.records,
+          sources: matches
+              .take(8)
+              .map((e) => AiReference(e.id, e.version))
+              .toList(),
+          lookup: RecordLookup(
+            start: DateTime(2020),
+            end: DateTime(2020, 1, 2),
+            fromMinute: 540,
+            untilMinute: 541,
+            item: '복약',
+            labelKinds: [EntryKind.medicationIntake],
+          ),
+          hasMore: true,
+        ),
+        c.chat.revision,
+      );
+      final bytes = await testVault(c).backupSelection(
+        password,
+        BackupSelection(patientIds: {pid}, chats: true),
+      );
+      await c.importSelection(bytes, password);
+      final restored = c.patients.singleWhere((p) => p.id != pid).id;
+      final answer = testRepository(c).chatMessages(restored).single.reply!;
+      expect(answer.hasMore, isTrue);
+      expect(answer.lookup!.labelKinds, {EntryKind.medicationIntake});
+      final records = testRepository(c)
+          .entries(restored, lookup: answer.lookup);
+      expect(records, hasLength(9));
+      final ids = records.map((e) => e.id).toSet();
+      expect(answer.sources.every((e) => ids.contains(e.id)), isTrue);
+      expect(ids.intersection(matches.map((e) => e.id).toSet()), isEmpty);
+    },
+  );
   test(
     'selective backup without source retains no dangling record answer',
     () async {
@@ -209,7 +270,7 @@ void main() {
     final data = jsonDecode(
       utf8.decode(await VaultCrypto.passwordOpen(bytes, password)),
     ) as Map;
-    expect(data['document_version'], 5);
+    expect(data['document_version'], 6);
     data['document_version'] = 2;
     for (final row in (data['rows'] as Map)['chat_message'] as List) {
       final value = jsonDecode(row['reply'] as String) as Map;

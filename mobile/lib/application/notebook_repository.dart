@@ -11,7 +11,7 @@ abstract interface class NotebookRepository {
   ChatRetention? chatRetention(String pid);
   void setChatRetention(String pid, ChatRetention policy, {DateTime? now});
   void pruneChats({DateTime? now});
-  List<ChatMessage> chatMessages(String pid, {DateTime? now});
+  List<ChatMessage> chatMessages(String pid, {DateTime? now, int? limit});
   ChatMessage addChatMessage(String pid, String text, {DateTime? now});
   void setChatReply(String pid, String id, AiReply reply);
   void deleteChatMessage(String pid, String id);

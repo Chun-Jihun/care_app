@@ -73,7 +73,7 @@ final class AiService {
           prior?.epoch == epoch &&
               prior?.revision == revision &&
               prior?.pid == pid &&
-              _chat.messages(pid).lastOrNull?.id == prior?.messageId
+              _chat.messages(pid, limit: 1).lastOrNull?.id == prior?.messageId
           ? prior!.lookup
           : null;
       _previous = null;
@@ -130,20 +130,7 @@ final class AiService {
       } else if (guard != null) {
         reply = AiReply(guard);
       } else if (lookup != null) {
-        final matches = _scope.repository.entries(
-          pid,
-          lookup: lookup,
-          limit: 9,
-        );
-        reply = AiReply(
-          matches.isEmpty ? AiReplyKind.noRecords : AiReplyKind.records,
-          sources: matches
-              .take(8)
-              .map((e) => AiReference(e.id, e.version))
-              .toList(),
-          lookup: lookup,
-          hasMore: matches.length > 8,
-        );
+        reply = _lookupReply(pid, lookup);
       } else if (RecordLookupParser.hasPeriodExpression(question)) {
         reply = AiReply(AiReplyKind.clarify);
       } else if (preflight != null) {
@@ -168,45 +155,9 @@ final class AiService {
             _scope.check(epoch);
             final filter = AiQueryPolicy.parse(raw, masked);
             if (filter == null) return AiReply(AiReplyKind.clarify);
-            final strings = AppStrings(language);
-            final entries = _scope.repository.entries(pid, day: filter.at);
-            final matches = entries
-                .where((e) {
-                  final at = e.occurredAt;
-                  if (at.hour != filter.at.hour ||
-                      at.minute != filter.at.minute) {
-                    return false;
-                  }
-                  // Exact labels/names only. A substring must not select a different dosage/item.
-                  final labels = <String>{
-                    strings.text(e.kind.label),
-                    e.kind.label,
-                  };
-                  for (final field in e.kind.fields) {
-                    labels.add(strings.text(field.label));
-                    labels.add(field.label);
-                  }
-                  for (final key in [
-                    'food',
-                    'medicine',
-                    'symptom',
-                    'activity',
-                    'measurement',
-                    'event',
-                  ]) {
-                    if (e.fields[key]?.isNotEmpty ?? false) {
-                      labels.add(e.fields[key]!);
-                    }
-                  }
-                  return labels.contains(filter.item);
-                })
-                .take(8)
-                .toList();
-            return AiReply(
-              matches.isEmpty ? AiReplyKind.noRecords : AiReplyKind.records,
-              sources: matches
-                  .map((e) => AiReference(e.id, e.version))
-                  .toList(),
+            return _lookupReply(
+              pid,
+              filter.lookup(AppStrings(language)),
               model: 'qwen35-2b-sft-v1',
             );
           });
@@ -229,6 +180,20 @@ final class AiService {
     } finally {
       _asking = false;
     }
+  }
+
+  AiReply _lookupReply(String pid, RecordLookup lookup, {String model = ''}) {
+    final matches = _scope.repository.entries(pid, lookup: lookup, limit: 9);
+    return AiReply(
+      matches.isEmpty ? AiReplyKind.noRecords : AiReplyKind.records,
+      sources: matches
+          .take(8)
+          .map((e) => AiReference(e.id, e.version))
+          .toList(),
+      lookup: lookup,
+      hasMore: matches.length > 8,
+      model: model,
+    );
   }
 
   Future<OcrDraft> recognize(

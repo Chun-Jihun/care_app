@@ -86,6 +86,12 @@ final class KnowledgeStore {
     );
   }
 
+  /// Activation identity only; readers still authenticate files before parsing.
+  Future<KnowledgeRelease?> activeRelease() async {
+    final history = await _history();
+    return history.isEmpty ? null : _allowed(history.first);
+  }
+
   Future<void> verify(KnowledgeRelease release, {Directory? directory}) async {
     _allowed(release.id);
     final dir = directory ?? _version(release.id);

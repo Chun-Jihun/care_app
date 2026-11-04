@@ -6,15 +6,16 @@ import '../l10n/app_strings.dart';
 import 'common.dart';
 
 class MedicationTodayStatus extends StatelessWidget {
-  const MedicationTodayStatus(this.c, this.medication, {super.key});
+  const MedicationTodayStatus(this.c, this.medication, {super.key, this.at});
   final CareController c;
   final Medication medication;
+  final DateTime? at;
   @override
   Widget build(BuildContext context) {
     final records = c.medicationBook.intakes(
       c.selectedId!,
       medication.id,
-      DateTime.now(),
+      at ?? DateTime.now(),
     );
     return Text(
       records.isEmpty

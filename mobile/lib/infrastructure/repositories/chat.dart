@@ -51,13 +51,19 @@ final class SqliteChat {
     [(now ?? DateTime.now()).millisecondsSinceEpoch],
   );
 
-  List<ChatMessage> chatMessages(String pid, {DateTime? now}) {
+  List<ChatMessage> chatMessages(String pid, {DateTime? now, int? limit}) {
     _store.patient(pid);
+    if (limit != null && limit <= 0) return [];
     return _store.connection
         .select(
-          'SELECT * FROM chat_message WHERE patient_id=? AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at,id',
-          [pid, (now ?? DateTime.now()).millisecondsSinceEpoch],
+          'SELECT * FROM chat_message WHERE patient_id=? AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at DESC,id DESC${limit == null ? '' : ' LIMIT ?'}',
+          [
+            pid,
+            (now ?? DateTime.now()).millisecondsSinceEpoch,
+            ?limit,
+          ],
         )
+        .reversed
         .map(
           (r) => ChatMessage(
             id: r['id'] as String,

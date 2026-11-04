@@ -21,12 +21,16 @@ final class ChatService {
     return _scope.repository.chatRetention(pid);
   }
 
-  List<ChatMessage> messages(String pid) {
+  List<ChatMessage> messages(String pid, {int limit = 50}) {
     _scope.requirePatient(pid);
-    return List.unmodifiable([
-      ..._scope.repository.chatMessages(pid),
-      ...?_sessionMessages[pid],
-    ]);
+    if (limit <= 0) return const [];
+    final local = _sessionMessages[pid];
+    if (local != null) {
+      return List.unmodifiable(
+        local.skip((local.length - limit).clamp(0, local.length)),
+      );
+    }
+    return List.unmodifiable(_scope.repository.chatMessages(pid, limit: limit));
   }
 
   Future<void> setRetention(String pid, ChatRetention value) =>
@@ -68,7 +72,7 @@ final class ChatService {
     AiReply reply,
     int revision,
   ) => _scope.write(pid, ChangeImpact.chat, (repository) {
-    if (_revision != revision || !messages(pid).any((m) => m.id == id)) return;
+    if (_revision != revision) return;
     final local = _sessionMessages[pid];
     final index = local?.indexWhere((m) => m.id == id) ?? -1;
     if (index >= 0) {

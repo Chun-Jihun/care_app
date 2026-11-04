@@ -1,6 +1,7 @@
 import '../application/drug_safety_rules.dart';
 import '../domain/drug_safety.dart';
 import '../domain/knowledge.dart';
+import '../domain/knowledge_installation.dart';
 import 'knowledge_store.dart';
 
 /// Only the current app-pinned package may be used. No live API or model calls.
@@ -10,8 +11,11 @@ final class LocalDrugCatalog implements DrugCatalog {
   @override
   Future<DrugCatalogInfo> status() async {
     final installed = await store.status();
-    final release = installed.active;
     if (installed.damaged) throw const FormatException('Damaged drug catalog');
+    return _info(installed.active);
+  }
+
+  DrugCatalogInfo _info(KnowledgeRelease? release) {
     if (release == null) return const DrugCatalogInfo(DrugDataState.missing);
     return DrugCatalogInfo(
       (release.stale(DateTime.now()) ||
@@ -25,19 +29,28 @@ final class LocalDrugCatalog implements DrugCatalog {
   }
 
   Future<void> _unchanged(String id) async {
-    if ((await status()).releaseId != id) {
+    final info = _info(await store.activeRelease());
+    if (info.releaseId != id || info.state == DrugDataState.stale) {
       throw const FormatException('Drug catalog changed');
     }
   }
 
   @override
   Future<DrugProducts> search(String query) async {
-    final info = await status();
+    final release = await store.activeRelease();
+    final info = _info(release);
     if (info.state == DrugDataState.missing ||
         info.state == DrugDataState.stale) {
       return DrugProducts(info, []);
     }
-    final permits = await store.reader(kind: 'permits');
+    final file = release!.files
+        .where((file) => file.name == 'permits/knowledge.sqlite3')
+        .firstOrNull;
+    if (file == null) throw const FormatException('Product catalog missing');
+    final permits = await store.reader(
+      kind: 'permits',
+      packageHash: file.sha256,
+    );
     if (permits == null) throw const FormatException('Product catalog missing');
     final matches = await permits.findDrugName(query);
     final products = <DrugProduct>[];

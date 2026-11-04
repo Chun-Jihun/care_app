@@ -116,3 +116,49 @@
 최종 로그는 Git 제외 경로 `mobile/build/home-widget-test-final.log`, `home-widget-analyze-final.log`, `home-widget-translations.log`, `home-widget-crash-probe.log`, `home-widget-android-final.log`다. 초기 회귀 실행은 `home-widget-full-test.log`로 보존한다. Python·모델 코드는 변경하지 않아 해당 전체 시험은 반복하지 않았다.
 
 실기기 설치·런처 추가/삭제·실제 큰 글씨·화면 읽기·잠금·재부팅·날짜 전환·전력 영향은 사용자가 정한 배포 준비 시점에 검증한다. Mac/Xcode가 없어 **iOS Swift 컴파일·서명·WidgetKit 실행·기존 설치 업데이트는 미검증**이며, 프로젝트 문법 검사를 iOS 빌드 성공으로 해석하지 않는다. 앞의 품질 계획 P3는 이 기능 추가와 별도로 남아 있다.
+
+## 2026-11-05: Ponytail 감사의 must fix·should fix 보완
+
+사용자가 승인한 감사 지적 6건을 수정했다. 기존 기능 서비스와 조회 경로를 재사용하며 새 패키지나 의료 기능을 추가하지 않았다. 수정 전 합성 시험으로 자동 취소·조회 누락·대화 전체 읽기·빈 홈을 재현했다.
+
+| 지적 | 수정과 관련 파일 | 회귀 검증 |
+|---|---|---|
+| 대화 만료 갱신이 진행 중인 AI를 취소 | `chat_page.dart`의 분 단위 처리는 만료를 제외한 대화만 다시 읽는다. 수첩 전체 `refresh()`를 호출하지 않아 기록 맥락을 무효화하지 않는다. 잠금·수첩 전환·앱 이탈의 취소 정책은 유지한다. | `audit_fixes_test.dart`: 1분 경과 후에도 대기 중인 음성 전사가 정상 완료 |
+| 모델 조회가 8건 이후를 누락 | `ai_service.dart`의 공통 조회가 두 경로 모두 9건을 확인해 8건과 `hasMore`·`lookup`을 제공한다. `ai_query_policy.dart`가 원래의 종류·필드 표시 이름 또는 실제 항목 이름의 정확 일치를 `RecordLookup.labelKinds`로 보존한다. 같은 필터로 전체 기록을 열고 날짜만 바꾼 후속 질문에도 유지한다. | `audit_fixes_test.dart`, `record_lookup_test.dart`: 9번째 결과·겹치는 필드 이름·정확 이름·후속 질문·잘못된 필터 거부 |
+| 켜 둔 홈의 날짜·합계·다음 확인 시각 정체 | `shell.dart`에서 활성 상태의 분 경계와 앱 복귀에 화면만 갱신하고 `today.dart`와 `medication_today.dart`가 같은 기준 날짜를 사용한다. 백그라운드에서는 타이머를 중지한다. | `home_clock_test.dart`: 자정 이후 당일 합계 변경·다음 약 시각 변경·기존 기록 보존·맥락 작업 유지 |
+| 약 이름 검색이 자료 전체 해시를 반복 계산 | `knowledge_store.dart`에서 활성 허용 목록 ID 확인과 파일 인증을 구분한다. `local_drug_catalog.dart`는 선택된 제품 DB 해시를 고정하여 reader를 열고, 파일 인증 후 읽으며 마지막에 활성 ID·유효기간을 다시 확인한다. 영구적인 검증 캐시는 두지 않는다. | `drug_catalog_verification_test.dart`: 설치·자료 교체·되돌리기 반영, 성공 뒤 DB 손상 거부, 미등록 활성 ID 거부 |
+| 대화 이력이 길수록 전량 조회·역직렬화 | 저장소 조회에 `limit`을 전달하고 최근 50개부터 표시한다. **이전 질문 더 보기**를 누르면 50개씩 늘린다. 답변 연결과 직전 질문 확인에서 전체 이력을 읽지 않는다. 저장·만료·삭제·백업 범위는 보관 정책을 계속 따른다. | `audit_fixes_test.dart`, `chat_test.dart`: DB와 세션의 50개 제한·이전 질문 접근·원본 80개 보존·같은 시각 정렬·수첩 분리·만료 제외 |
+| 복약만 표시한 빈 홈에 시작 동작 부재 | `today.dart`의 빈 복약 영역에 기존 안내 카드와 **약 추가** 버튼을 재사용한다. | `audit_fixes_test.dart`: 복약만 보이는 홈에서 안내와 추가 버튼 접근 |
+
+백업 문서 v6는 새 조회 필터의 `labelKinds`를 보관한다. [백업 계약 ADR](adr/0001-frozen-backup-contract.md)에 따라 DB schema 6과 별도로 버전을 올렸으며 문서 v1~v5·예전 format 2/schema 3을 계속 읽는다. `ai_backup_test.dart`는 v5 의료 인용 복원과 v6의 새 수첩 ID 재연결·9건 전체 조회를 검증한다. `ai_policy_test.dart`는 모델 항목을 저장 가능한 200자 이내로 제한한다. 사용자 사진·실제 환자 기록·비밀번호·API 키 없이 합성 데이터만 사용했다.
+
+현재 개발용 자료 구성 기준 해시 입력량은 검색당 약 **139.8MB → 50.1MB**로 줄어든다(전체 파일 합계 44,860,139바이트, 제품 DB 5,222,400바이트). 이는 코드 경로의 해시 바이트 계산이며 검색 전체 속도·메모리나 실기기 측정값은 아니다. 패키지 reader의 전체 파일·DB 해시 검증, 읽기 시 변경 감지·블록 해시와 임상 승인 경계는 유지한다.
+
+집중 시험은 신규 시나리오 11개와 기존 경계·백업 시험을 포함한 22개가 통과했다. 첫 공통 검사에서 새 선택적 SQL 인자의 null 처리에 관한 lint 1건이 발견돼 수정한 뒤 전체 공통 검사를 다시 실행했다.
+
+| 최종 검사 | 결과 |
+|---|---|
+| 공통 `quality.ps1 -BuildAndroidDebug` | **성공**, 첫 실패에 중단하는 동일 스크립트로 모든 단계 완료 |
+| Flutter 전체 순차 시험 | **248개 모두 통과**, 8분 24초. 이번 회귀 시나리오 16개 추가 |
+| Python 기본 시험 | **181개 중 179 통과·2 skip**, 기존 선택적 통합 의존성 부족 |
+| 정적 분석 | **Ruff·Flutter·care_ort 이상 없음** |
+| 번역 계약 | **852문구·5언어 통과** |
+| 저장소 crash probe | **두 암호화 journal 복구·확정 데이터 보존 통과** |
+| Android arm64 debug APK | **빌드 성공**, `mobile/build/app/outputs/flutter-apk/app-debug.apk`, 165,671,978바이트 |
+
+최종 로그는 Git 제외 경로 `mobile/build/audit-fixes-quality-complete.log`이며 초기 실패·집중 시험 로그도 `audit-fixes-*.log`로 구분해 보관한다. 실기기 설치·성능·업데이트·알림·위젯 실행 검증은 배포 준비 시점에 수행한다. Mac/Xcode가 없어 iOS 컴파일·서명·실행은 미검증이다. 원격 CI와 과거 실제 모델/의료 데이터의 통합 평가는 이번 검사 범위에 포함하지 않았다. 의료 모델·프롬프트·검색 인덱스·임상 허용 목록을 바꾸지 않았으며 앞의 P3 측정·정책 결정 사항도 별도로 남아 있다.
+
+## 2026-11-05: 미검증 항목 추가 확인
+
+사용자가 미검증 항목의 실행을 요청하여 환경과 원격 실행을 확인했다. 기존 소스 변경과 사용자 데이터를 보존했다.
+
+| 항목 | 실행 결과와 근거 | 남은 조건 |
+|---|---|---|
+| 선택 의존성 때문에 제외됐던 Python 시험 2개 | 기존 `.tools/ai-baseline-venv`의 OpenCC·lm-format-enforcer 환경에서 전체 시험을 실행해 **181개 모두 통과**, skip 없음. 문법 제약의 EOS 처리와 간체/번체 변환 시 부정·수치·단위 보존 시험도 실제 실행했다. | 실제 의료 성능·임상 승인 시험을 뜻하지 않음 |
+| 원격 GitHub CI | 커밋 `f69dd0ea2838a0af47cb9ed03a2c16b01e9e8149`의 [push 실행](https://github.com/Chun-Jihun/care_app/actions/runs/41867259758)이 SDK 설치에서 실패했고 검사 단계는 건너뛴 사실을 확인. `Failed to find package 'platforms;android-37'`를 로컬 최소 명령으로 재현했다. 공식 SDK 목록의 제공 이름과 로컬 설치는 `android-37.0`이었다. | 수정된 파일은 로컬 작업 트리에 있으며 원격 성공 판정에는 반영 후 새 실행 필요 |
+| CI 설치 실패 수정 검증 | `.github/workflows/quality.yml`과 `scripts/mobile.ps1`의 API 37 패키지명을 수정했다. `mobile.ps1 -Action SetupAndroid` 성공, PowerShell AST·워크플로 YAML 문법 검사 통과. 로그와 패키지 목록으로 원인이 특정된 설정 오류라 추가 추측성 계측·코드 리팩터링은 하지 않았다. | 앱 compile SDK·target SDK·서명·제품 코드는 이 추가 작업에서 변경하지 않음 |
+| 과거 실험 통합시험 | `python -m unittest discover -s integration_tests -v`를 일반·확장 실행 권한으로 각각 시도. **4개 모두 입력 읽기 권한 오류**로 완료하지 못했다. 시나리오의 `episodes.jsonl`, smoke 실행의 `manifest.json`, 통합 보고서 입력 `manifest.json`을 읽을 수 없었다. 접근 권한·원본·고정 결과를 바꾸거나 합성 입력으로 대체하지 않았다. | 기존 자료에 대한 파일 읽기 권한 복구 필요. 코드 assertion 실패나 의료 성능 실패로 해석하지 않음 |
+| Android 실기기·메모리·전력·업데이트·위젯 | ADB 서버를 정상 기동했으나 연결 목록이 비어 있었고 사용자가 현재 연결할 수 없다고 응답. 설치·실행·재부팅·실제 권한/생체 인증·네이티브 AI 자원 반환 측정은 진행하지 못했다. 구성된 Android AVD도 없었다. | Android 기기 연결 필요 |
+| iOS 컴파일·서명·실행 | Windows이며 Xcode를 사용할 수 없고 기존에 Mac이 없다고 확인한 상태다. 기존 프로젝트 구조 검사와 iOS 실행 검증을 구분한다. | Mac/Xcode 또는 승인된 macOS CI 환경 필요. 실제 Keychain·WidgetKit·업데이트 검증에는 기기와 서명도 필요 |
+
+추가 로그는 Git 제외 경로 `mobile/build/not-checked-python-full.log`, `not-checked-integration*.log`, `not-checked-sdk-{list,red,green}.log`에 있다. 시험 통과를 위해 제외 조건을 지우거나 기존 평가 기준·허용 목록을 완화하지 않았다. 이전 Flutter 248개·저장소 복구·APK 빌드 통과는 앞의 실행 결과이며, 이번에는 SDK 설치 설정과 관련 문서만 추가 수정해 동일한 전체 앱 시험을 반복하지 않았다.

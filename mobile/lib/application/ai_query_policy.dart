@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import '../domain/ai.dart';
+import '../domain/record_lookup.dart';
+import '../domain/records.dart';
+import '../l10n/app_strings.dart';
 
 /// The model extracts filters only. No model-generated answer is displayed.
 final class AiQueryPolicy {
@@ -54,6 +57,7 @@ final class AiQueryPolicy {
         data[key] = (data[key] as String).trim();
         if (!question.contains(data[key] as String)) return null;
       }
+      if ((data['item'] as String).length > 200) return null;
       final day = data['day'] as String, time = data['time'] as String;
       if (!_dates.hasMatch(day) ||
           day.length != 10 ||
@@ -80,4 +84,21 @@ final class QueryFilter {
   const QueryFilter(this.at, this.item);
   final DateTime at;
   final String item;
+  RecordLookup lookup(AppStrings strings) => RecordLookup(
+    start: DateTime(at.year, at.month, at.day),
+    end: DateTime(at.year, at.month, at.day + 1),
+    fromMinute: at.hour * 60 + at.minute,
+    untilMinute: at.hour * 60 + at.minute + 1,
+    item: item,
+    labelKinds: EntryKind.values.where(
+      (kind) => {
+        kind.label,
+        strings.text(kind.label),
+        for (final field in kind.fields) ...[
+          field.label,
+          strings.text(field.label),
+        ],
+      }.contains(item),
+    ),
+  );
 }

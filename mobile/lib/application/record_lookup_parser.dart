@@ -146,6 +146,7 @@ final class RecordLookupParser {
         item: previous.item,
         requiredField: previous.requiredField,
         intakeStatus: previous.intakeStatus,
+        labelKinds: previous.labelKinds,
       );
     }
     if (RegExp('^(?:기록|내역)\\s*$_ending\$').hasMatch(rest)) return make();

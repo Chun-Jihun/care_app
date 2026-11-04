@@ -92,6 +92,45 @@ void main() {
       testRepository(c).verifyIntegrity();
     },
   );
+  test('bounded history filters expiry and scopes before limiting tied rows', () async {
+    final repository = testRepository(c), pid = c.selectedId!;
+    final other = repository.createPatient().id;
+    final now = DateTime.now();
+    repository.setChatRetention(pid, ChatRetention.week, now: now);
+    repository.setChatRetention(other, ChatRetention.forever, now: now);
+    for (var i = 0; i < 8; i++) {
+      repository.addChatMessage(pid, 'tied $i', now: now);
+    }
+    repository.addChatMessage(
+      pid,
+      'expired',
+      now: now.subtract(const Duration(days: 8)),
+    );
+    repository.addChatMessage(
+      other,
+      'another notebook',
+      now: now.add(const Duration(days: 1)),
+    );
+    final all = repository.chatMessages(pid, now: now);
+    expect(all, hasLength(8));
+    final latest = repository.chatMessages(pid, now: now, limit: 3);
+    expect(latest.map((e) => e.id), all.skip(5).map((e) => e.id));
+    expect(repository.chatMessages(pid, limit: 0), isEmpty);
+    expect(() => c.chat.messages(other, limit: 0), throwsA(isA<CareError>()));
+    repository.deletePatient(other);
+    expect(
+      () => repository.chatMessages(other, limit: 0),
+      throwsA(isA<CareError>()),
+    );
+    // The bound also applies to in-memory questions without changing retention.
+    await c.chat.setRetention(pid, ChatRetention.session);
+    for (var i = 0; i < 55; i++) {
+      await c.chat.add(pid, 'session $i');
+    }
+    expect(c.chat.messages(pid).first.text, 'session 5');
+    expect(c.chat.messages(pid, limit: 100), hasLength(55));
+    expect(repository.chatMessages(pid), isEmpty);
+  });
   test('CHAT-04 v1 migration preserves original records and removes encrypted migration copies', () async {
     final path = '${root.path}/legacy';
     final key = Uint8List(32)..fillRange(0, 32, 15),

@@ -85,6 +85,69 @@ void main() {
       );
     }
   });
+  test('model label filters are immutable and reject malformed input', () {
+    final labels = [EntryKind.medicationIntake];
+    final lookup = RecordLookup(
+      start: DateTime(2026, 9, 13),
+      end: DateTime(2026, 9, 14),
+      item: '복약',
+      labelKinds: labels,
+    );
+    labels.clear();
+    expect(lookup.matches(entry('약 A', DateTime(2026, 9, 13))), isTrue);
+    expect(() => lookup.labelKinds.clear(), throwsUnsupportedError);
+    expect(RecordLookup.fromJson(lookup.toJson()).toJson(), lookup.toJson());
+    for (final value in [
+      null,
+      'medicationIntake',
+      [null],
+      ['unknown'],
+      ['medicationIntake', 'medicationIntake'],
+      List.filled(11, 'medicationIntake'),
+    ]) {
+      expect(
+        () => RecordLookup.fromJson({...lookup.toJson(), 'labelKinds': value}),
+        throwsFormatException,
+      );
+    }
+    expect(
+      () => RecordLookup.fromJson({...lookup.toJson(), 'item': ''}),
+      throwsFormatException,
+    );
+    // A quoted literal never gains category matching just because it is a label.
+    final literal = parse('어제 "복약" 기록')!;
+    expect(literal.labelKinds, isEmpty);
+    expect(literal.matches(entry('약 A', DateTime(2026, 9, 13))), isFalse);
+  });
+  test(
+    'date-only follow-up preserves model labels; a new subject replaces them',
+    () {
+      final previous = RecordLookup(
+        start: DateTime(2026, 9, 13),
+        end: DateTime(2026, 9, 14),
+        fromMinute: 540,
+        untilMinute: 541,
+        item: '이후 상태',
+        labelKinds: [EntryKind.dailyLiving, EntryKind.incident],
+      );
+      final next = RecordLookupParser.parse(
+        '그럼 오늘은?',
+        now: now,
+        previous: previous,
+      )!;
+      expect(next.start, DateTime(2026, 9, 14));
+      expect(next.labelKinds, previous.labelKinds);
+      expect(next.item, previous.item);
+      final changed = RecordLookupParser.parse(
+        '그럼 복약은?',
+        now: now,
+        previous: previous,
+      )!;
+      expect(changed.kind, EntryKind.medicationIntake);
+      expect(changed.labelKinds, isEmpty);
+      expect(changed.item, isEmpty);
+    },
+  );
 }
 
 CareEntry entry(String medicine, DateTime at) => CareEntry(

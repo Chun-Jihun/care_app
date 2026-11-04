@@ -103,9 +103,13 @@ class _ChatBodyState extends State<ChatBody> {
   Timer? expiry;
   ChatRetention? policy;
   List<ChatMessage> messages = [];
+  int messageLimit = 50;
+  bool hasEarlier = false;
   void loadMessages() {
     policy = widget.c.chat.retention(widget.pid);
-    messages = widget.c.chatMessages(widget.pid);
+    final page = widget.c.chatMessages(widget.pid, limit: messageLimit + 1);
+    hasEarlier = page.length > messageLimit;
+    messages = hasEarlier ? page.sublist(1) : page;
     if (messages.isEmpty) responseReady = false;
   }
 
@@ -120,8 +124,9 @@ class _ChatBodyState extends State<ChatBody> {
     super.initState();
     loadMessages();
     expiry = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted && widget.c.unlocked) {
-        attempt(context, widget.c.refresh);
+      if (mounted && widget.c.unlocked && widget.c.selectedId == widget.pid) {
+        // Reads already filter expired messages; no record context changed.
+        setState(loadMessages);
       }
     });
   }
@@ -136,7 +141,7 @@ class _ChatBodyState extends State<ChatBody> {
 
   Future<void> setPolicy(ChatRetention value) async {
     final c = widget.c, pid = widget.pid;
-    final hasMessages = c.chatMessages(pid).isNotEmpty;
+    final hasMessages = c.chatMessages(pid, limit: 1).isNotEmpty;
     if (hasMessages &&
         !await confirm(
           context,
@@ -314,6 +319,19 @@ class _ChatBodyState extends State<ChatBody> {
                     ],
                   ),
                 ),
+                if (hasEarlier)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: OutlinedButton(
+                        onPressed: () => setState(() {
+                          messageLimit += 50;
+                          loadMessages();
+                        }),
+                        child: Text(context.tr('이전 질문 더 보기')),
+                      ),
+                    ),
+                  ),
                 messages.isEmpty
                     ? SliverToBoxAdapter(
                         child: Padding(

@@ -21,13 +21,14 @@ import 'home_customization_page.dart';
 import 'entrance_transition.dart';
 
 class CareShell extends StatefulWidget {
-  const CareShell(this.c, {super.key});
+  const CareShell(this.c, {super.key, this.clock = DateTime.now});
   final CareController c;
+  final DateTime Function() clock;
   @override
   State<CareShell> createState() => _CareShellState();
 }
 
-class _CareShellState extends State<CareShell> {
+class _CareShellState extends State<CareShell> with WidgetsBindingObserver {
   int tab = 0;
   EntryKind? filter;
   DateTime? day;
@@ -35,10 +36,46 @@ class _CareShellState extends State<CareShell> {
   bool archived = false;
   final search = TextEditingController();
   Timer? searchTimer;
+  Timer? clockTimer;
+  bool active = true;
   int journalLimit = 50;
   CareController get c => widget.c;
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    scheduleClock();
+  }
+
+  void scheduleClock() {
+    clockTimer?.cancel();
+    if (!active) return;
+    final now = widget.clock();
+    final delay =
+        const Duration(minutes: 1, milliseconds: 1) -
+        Duration(
+          seconds: now.second,
+          milliseconds: now.millisecond,
+          microseconds: now.microsecond,
+        );
+    clockTimer = Timer(delay, () {
+      if (!mounted || !active) return;
+      if (tab == 0 || tab == 2) setState(() {});
+      scheduleClock();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    active = state == AppLifecycleState.resumed;
+    if (active) setState(() {});
+    scheduleClock();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    clockTimer?.cancel();
     search.dispose();
     searchTimer?.cancel();
     super.dispose();
@@ -246,6 +283,7 @@ class _CareShellState extends State<CareShell> {
                           context,
                           c,
                           openEntry,
+                          at: widget.clock(),
                           onShowMedications: () => setState(() => tab = 2),
                         ),
                         1 => journal(),

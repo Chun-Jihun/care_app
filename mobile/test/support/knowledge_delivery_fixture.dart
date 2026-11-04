@@ -22,8 +22,9 @@ makeDelivery(
   String version, {
   bool approved = false,
   String body = syntheticText,
+  String packageKind = 'documents',
 }) async {
-  final dir = await Directory('${root.path}/$version/documents')
+  final dir = await Directory('${root.path}/$version/$packageKind')
       .create(recursive: true);
   final fixture = jsonDecode(
     await File('test/fixtures/knowledge_pack_v1.json').readAsString(),
@@ -56,6 +57,7 @@ makeDelivery(
           as String,
     ) as Map<String, dynamic>;
     metadata['synthetic_test_version'] = version;
+    metadata['kind'] = packageKind == 'documents' ? 'documents' : 'drugs';
     if (approved) {
       metadata.addAll({
         'purpose': 'medical_reference',
@@ -91,7 +93,7 @@ makeDelivery(
   for (final name in ['manifest.json', 'knowledge.sqlite3']) {
     final bytes = await File('${dir.path}/$name').readAsBytes();
     files.add({
-      'path': 'documents/$name',
+      'path': '$packageKind/$name',
       'bytes': bytes.length,
       'sha256': sha256.convert(bytes).toString(),
     });

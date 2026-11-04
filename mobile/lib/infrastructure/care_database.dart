@@ -365,8 +365,8 @@ class CareDatabase implements NotebookRepository {
   @override
   void pruneChats({DateTime? now}) => _chat.pruneChats(now: now);
   @override
-  List<ChatMessage> chatMessages(String pid, {DateTime? now}) =>
-      _chat.chatMessages(pid, now: now);
+  List<ChatMessage> chatMessages(String pid, {DateTime? now, int? limit}) =>
+      _chat.chatMessages(pid, now: now, limit: limit);
   @override
   ChatMessage addChatMessage(String pid, String text, {DateTime? now}) =>
       _chat.addChatMessage(pid, text, now: now);

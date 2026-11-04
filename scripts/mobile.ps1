@@ -30,7 +30,9 @@ if ($Action -eq 'SetupAndroid') {
     $appGradle = Get-Content -LiteralPath (Join-Path $projectRoot 'mobile/android/app/build.gradle.kts') -Raw
     if ($appGradle -notmatch '(?m)^\s*compileSdk\s*=\s*(\d+)\s*$') { throw 'Expected an explicit compileSdk in mobile/android/app/build.gradle.kts.' }
     $compileApi = $Matches[1]
-    & $sdkManager "--sdk_root=$env:ANDROID_HOME" 'platform-tools' "platforms;android-$compileApi" 'build-tools;36.0.0'
+    # SDK Manager names the API 37 base platform 37.0, unlike earlier APIs.
+    $platformApi = if ($compileApi -eq '37') { '37.0' } else { $compileApi }
+    & $sdkManager "--sdk_root=$env:ANDROID_HOME" 'platform-tools' "platforms;android-$platformApi" 'build-tools;36.0.0'
     if ($LASTEXITCODE -ne 0) { throw 'Android SDK setup failed.' }
     exit 0
 }
