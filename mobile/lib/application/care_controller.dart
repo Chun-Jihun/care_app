@@ -5,6 +5,8 @@ import '../domain/records.dart';
 import '../domain/chat.dart';
 import '../domain/backup.dart';
 import '../domain/ui_preferences.dart';
+import '../domain/daily_widget.dart';
+import 'services/daily_widget_service.dart';
 import '../l10n/app_strings.dart';
 import 'notebook_repository.dart';
 import 'context_tasks.dart';
@@ -62,6 +64,10 @@ class CareController extends ChangeNotifier {
   AppLanguage _language = AppLanguage.korean;
   UiPreferences _uiPreferences = UiPreferences.defaults;
   UiPreferences get uiPreferences => _uiPreferences;
+  bool _disposed = false, _widgetAvailable = false, _widgetUpdateFailed = false;
+  bool get widgetAvailable => _widgetAvailable;
+  bool get widgetUpdateFailed => _widgetUpdateFailed;
+  late final _dailyWidget = DailyWidgetService(_platform);
   bool get ready => _ready;
   bool get unlocked => _unlocked;
   bool get hasPin => _hasPin;
@@ -188,6 +194,12 @@ class CareController extends ChangeNotifier {
       _backupContact = '';
       if (!_unlocked) _closeVault();
       notifyListeners();
+      if (!_disposed &&
+          _widgetAvailable &&
+          _unlocked &&
+          _uiPreferences.enabled(UiOption.dailyWidget)) {
+        unawaited(refreshDailyWidget());
+      }
     }
   }
 
@@ -263,6 +275,11 @@ class CareController extends ChangeNotifier {
 
   Future<void> initialize() async {
     _uiPreferences = await _vault.preferences.load();
+    try {
+      _widgetAvailable = await _platform.dailyWidgetAvailable();
+    } catch (_) {
+      _widgetAvailable = false;
+    }
     _language = AppLanguage.fromCode(await _vault.credentials.language());
     _platform.strings = strings;
     _hasPin = await _vault.credentials.hasPin();
@@ -271,6 +288,7 @@ class CareController extends ChangeNotifier {
     }
     _ready = true;
     notifyListeners();
+    if (_widgetAvailable) await refreshDailyWidget();
   }
 
   Future<void> setLanguage(AppLanguage value) => _exclusive((_) async {
@@ -288,7 +306,27 @@ class CareController extends ChangeNotifier {
     if (_unlocked) await _syncReminders();
   }, requireUnlock: false);
 
-  Future<void> setUiPreferences(UiPreferences value) => _exclusive((_) async {
+  Future<void> setUiPreferences(UiPreferences value) => _exclusive((
+    epoch,
+  ) async {
+    final widgetChanged =
+        value.enabled(UiOption.dailyWidget) !=
+            _uiPreferences.enabled(UiOption.dailyWidget) ||
+        value.enabled(UiOption.widgetDetails) !=
+            _uiPreferences.enabled(UiOption.widgetDetails);
+    if (widgetChanged) {
+      _check(epoch);
+      if (!_widgetAvailable) throw CareError(CareErrorCode.widgetUnavailable);
+      // Delete old detailed snapshots before committing a more private policy.
+      if (!value.enabled(UiOption.dailyWidget) ||
+          !value.enabled(UiOption.widgetDetails)) {
+        try {
+          await _dailyWidget.update(null);
+        } catch (_) {
+          throw CareError(CareErrorCode.widgetUpdateFailed);
+        }
+      }
+    }
     try {
       await _vault.preferences.save(value);
     } catch (_) {
@@ -297,6 +335,32 @@ class CareController extends ChangeNotifier {
     _uiPreferences = value;
     notifyListeners();
   }, requireUnlock: false);
+
+  Future<void> refreshDailyWidget() async {
+    if (!_widgetAvailable || _disposed) return;
+    if (_uiPreferences.enabled(UiOption.dailyWidget) && !_unlocked) return;
+    try {
+      final now = DateTime.now();
+      final snapshot =
+          _uiPreferences.enabled(UiOption.dailyWidget) && _selectedId != null
+          ? DailyWidgetSnapshot.build(
+              now: now,
+              tasks: tasks,
+              medications: medications,
+              entries: records.entries(_selectedId!, day: now),
+              strings: strings,
+              details: _uiPreferences.enabled(UiOption.widgetDetails),
+            )
+          : null;
+      await _dailyWidget.update(snapshot);
+      _widgetUpdateFailed = false;
+    } catch (_) {
+      _widgetUpdateFailed = true;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<bool> requestDailyWidgetPin() => _platform.requestDailyWidgetPin();
   Future<void> _open(int epoch) async {
     if (epoch != _epoch) return;
     if (!_vaultOpen) {
@@ -401,6 +465,13 @@ class CareController extends ChangeNotifier {
   Future<void> selectPatient(String id) => _exclusive((_) async {
     if (!patients.any((p) => p.id == id)) {
       throw CareError(CareErrorCode.patientNotFound);
+    }
+    if (_widgetAvailable && _uiPreferences.enabled(UiOption.dailyWidget)) {
+      try {
+        await _dailyWidget.update(null);
+      } catch (_) {
+        _widgetUpdateFailed = true;
+      }
     }
     _repository.setSetting('selected_patient', id);
     if (_selectedId != id) _advanceEpoch();
@@ -550,6 +621,25 @@ class CareController extends ChangeNotifier {
   Future<void> restoreBackup(Uint8List data, String password) =>
       backups.restore(data, password);
   Future<void> deleteAll() => _exclusive((_) async {
+    if (_widgetAvailable) {
+      try {
+        await _dailyWidget.update(null);
+      } catch (_) {
+        throw CareError(CareErrorCode.widgetUpdateFailed);
+      }
+    }
+    if (_uiPreferences.enabled(UiOption.dailyWidget) ||
+        _uiPreferences.enabled(UiOption.widgetDetails)) {
+      final privatePreferences = _uiPreferences
+          .withOption(UiOption.dailyWidget, false)
+          .withOption(UiOption.widgetDetails, false);
+      try {
+        await _vault.preferences.save(privatePreferences);
+      } catch (_) {
+        throw CareError(CareErrorCode.preferencesSaveFailed);
+      }
+      _uiPreferences = privatePreferences;
+    }
     lock();
     try {
       await _platform.schedule([]);
@@ -565,6 +655,7 @@ class CareController extends ChangeNotifier {
   }, requireUnlock: false);
   @override
   void dispose() {
+    _disposed = true;
     unawaited(_aiRuntime.dispose());
     contextTasks.cancelAll();
     _vault.close();

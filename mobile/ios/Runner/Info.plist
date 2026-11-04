@@ -26,7 +26,13 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>NSCameraUsageDescription</key><string>음식과 처방자료 사진을 기록에 첨부합니다.</string><key>NSPhotoLibraryUsageDescription</key><string>선택한 사진을 기록에 첨부합니다.</string><key>NSFaceIDUsageDescription</key><string>간병수첩 잠금을 해제합니다.</string><key>LSRequiresIPhoneOS</key>
+	<key>NSCameraUsageDescription</key>
+	<string>음식과 처방자료 사진을 기록에 첨부합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>선택한 사진을 기록에 첨부합니다.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>간병수첩 잠금을 해제합니다.</string>
+	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
@@ -68,6 +74,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CareWidgetAppGroup</key>
+	<string>$(CARE_WIDGET_GROUP)</string>
+	<key>CareWidgetKeychainGroup</key>
+	<string>$(AppIdentifierPrefix)org.carenotebook.careNotebook.widget</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>org.carenotebook.widget</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>carenotebook</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
-

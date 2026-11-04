@@ -52,6 +52,195 @@ List<Widget> todayContent(
             e.fields['status'] == 'taken',
       )
       .length;
+  final sections = <HomeSection, List<Widget> Function()>{
+    HomeSection.quickRecords: () => [
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final largeText = MediaQuery.textScalerOf(context).scale(16) > 24;
+          final width = largeText
+              ? constraints.maxWidth
+              : (constraints.maxWidth - 12) / 2;
+          return Wrap(
+            key: const ValueKey('quick-records'),
+            spacing: 12,
+            runSpacing: 8,
+            children: EntryKind.values
+                .where(preferences.quickKinds.contains)
+                .map(
+                  (kind) => SizedBox(
+                    width: width,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(48, 56),
+                      ),
+                      icon: Icon(kindIcon(kind)),
+                      label: Text(context.tr(kind.label)),
+                      onPressed: c.busy
+                          ? null
+                          : () => kind == EntryKind.medicationIntake
+                                ? chooseIntake(context, c)
+                                : editEntry(context, c, kind),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        },
+      ),
+    ],
+    HomeSection.tasks: () => [
+      Section(
+        context.tr('할 일'),
+        action: context.tr('할 일 추가'),
+        onAction: c.busy ? null : () => editTask(context, c),
+      ),
+      TaskOverview(c),
+    ],
+    HomeSection.medications: () => [
+      if (c.medications.isNotEmpty) ...[
+        Section(
+          context.tr('오늘의 복약'),
+          action: context.tr('복약 기록'),
+          onAction: c.busy ? null : () => chooseIntake(context, c),
+        ),
+        for (final med in medications.take(3))
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(med.name),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (nextMedicationCheck(med, now) case final next?)
+                        Text(
+                          context.tr('다음 확인: {0}', [
+                            '${dateText(context, next)} ${timeText(context, next)}',
+                          ]),
+                        ),
+                      MedicationTodayStatus(c, med),
+                    ],
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          MedicationDetails(c, c.selectedId!, med.id),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: c.busy
+                          ? null
+                          : () => recordIntake(context, c, med),
+                      icon: const Icon(Icons.add_task),
+                      label: Text(context.tr('실제 복약 기록')),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (onShowMedications != null)
+          OutlinedButton.icon(
+            onPressed: onShowMedications,
+            icon: const Icon(Icons.list_alt),
+            label: Text(context.tr('전체 약 보기')),
+          ),
+      ],
+    ],
+    HomeSection.photo: () => [
+      OutlinedButton.icon(
+        icon: const Icon(Icons.add_a_photo_outlined),
+        label: Text(context.tr('사진으로 기록')),
+        onPressed: c.busy ? null : () => startPhotoRecord(context, c),
+      ),
+    ],
+    HomeSection.caregiver: () => [
+      if (preferences.enabled(UiOption.caregiverShortcut) &&
+          c.patient.role != 'self')
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.favorite_outline),
+            title: Text(context.tr('돌보는 나의 상태')),
+            subtitle: Text(context.tr('수면, 피로, 스트레스와 필요한 도움을 따로 기록할 수 있어요.')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => CheckinHistoryPage(c)),
+            ),
+          ),
+        ),
+    ],
+    HomeSection.chat: () => [
+      if (preferences.enabled(UiOption.chatShortcut))
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.chat_bubble_outline, color: forest),
+            title: Text(context.tr('간병 도우미 대화')),
+            subtitle: Text(context.tr('수첩 기록을 찾아보세요. 의료 질문은 검수 준비 중이에요.')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: c.busy
+                ? null
+                : () => Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute<void>(builder: (_) => ChatPage(c))),
+          ),
+        ),
+    ],
+    HomeSection.contacts: () => [
+      Section(context.tr('연락이 필요할 때')),
+      contactCard(context, c),
+    ],
+    HomeSection.recent: () => [
+      if (preferences.enabled(UiOption.recentRecords)) ...[
+        Section(context.tr('최근 기록')),
+        if (recent.isEmpty)
+          EmptyCard(
+            context.tr('첫 기록을 기다리고 있어요'),
+            context.tr('아래 기록하기를 눌러 식사나 오늘의 상태를 남겨 보세요.'),
+          ),
+        ...recent.map((e) => EntryTile(e, onTap: () => openEntry(e))),
+      ],
+    ],
+    HomeSection.totals: () => [
+      if (preferences.enabled(UiOption.dailySummary)) ...[
+        Section(context.tr('차곡차곡, 오늘의 기록')),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${context.tr('수분 기록')}: ${water.toStringAsFixed(water % 1 == 0 ? 0 : 1)} mL',
+                ),
+                Text('${context.tr('복용함 기록')}: ${context.tr('{0}건', [taken])}'),
+                Text(
+                  context.tr('입력된 기록의 합계입니다.'),
+                  style: const TextStyle(color: Color(0xFF52655A)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ],
+  };
+  final visible = preferences.homeOrder
+      .where(
+        (section) =>
+            preferences.enabled(section.option) &&
+            !(section == HomeSection.caregiver && c.patient.role == 'self') &&
+            !(section == HomeSection.quickRecords &&
+                preferences.quickKinds.isEmpty),
+      )
+      .toList();
   return [
     Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -74,169 +263,12 @@ List<Widget> todayContent(
         ],
       ),
     ),
-    LayoutBuilder(
-      builder: (context, constraints) {
-        final largeText = MediaQuery.textScalerOf(context).scale(16) > 24;
-        final width = largeText
-            ? constraints.maxWidth
-            : (constraints.maxWidth - 12) / 2;
-        return Wrap(
-          key: const ValueKey('quick-records'),
-          spacing: 12,
-          runSpacing: 8,
-          children:
-              [
-                    EntryKind.meal,
-                    EntryKind.medicationIntake,
-                    EntryKind.symptom,
-                    EntryKind.activity,
-                  ]
-                  .map(
-                    (kind) => SizedBox(
-                      width: width,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(48, 56),
-                        ),
-                        icon: Icon(kindIcon(kind)),
-                        label: Text(context.tr(kind.label)),
-                        onPressed: c.busy
-                            ? null
-                            : () => kind == EntryKind.medicationIntake
-                                  ? chooseIntake(context, c)
-                                  : editEntry(context, c, kind),
-                      ),
-                    ),
-                  )
-                  .toList(),
-        );
-      },
-    ),
-    Section(
-      context.tr('할 일'),
-      action: context.tr('할 일 추가'),
-      onAction: c.busy ? null : () => editTask(context, c),
-    ),
-    TaskOverview(c),
-    if (c.medications.isNotEmpty) ...[
-      Section(
-        context.tr('오늘의 복약'),
-        action: context.tr('복약 기록'),
-        onAction: c.busy ? null : () => chooseIntake(context, c),
+    if (visible.isEmpty)
+      EmptyCard(
+        context.tr('홈 표시 항목이 없어요'),
+        context.tr('위쪽 홈 편집 버튼에서 표시할 기능을 고를 수 있어요.'),
       ),
-      for (final med in medications.take(3))
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                title: Text(med.name),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (nextMedicationCheck(med, now) case final next?)
-                      Text(
-                        context.tr('다음 확인: {0}', [
-                          '${dateText(context, next)} ${timeText(context, next)}',
-                        ]),
-                      ),
-                    MedicationTodayStatus(c, med),
-                  ],
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => MedicationDetails(c, c.selectedId!, med.id),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: c.busy
-                        ? null
-                        : () => recordIntake(context, c, med),
-                    icon: const Icon(Icons.add_task),
-                    label: Text(context.tr('실제 복약 기록')),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      if (onShowMedications != null)
-        OutlinedButton.icon(
-          onPressed: onShowMedications,
-          icon: const Icon(Icons.list_alt),
-          label: Text(context.tr('전체 약 보기')),
-        ),
-    ],
-    OutlinedButton.icon(
-      icon: const Icon(Icons.add_a_photo_outlined),
-      label: Text(context.tr('사진으로 기록')),
-      onPressed: c.busy ? null : () => startPhotoRecord(context, c),
-    ),
-    if (preferences.enabled(UiOption.caregiverShortcut) &&
-        c.patient.role != 'self')
-      Card(
-        child: ListTile(
-          leading: const Icon(Icons.favorite_outline),
-          title: Text(context.tr('돌보는 나의 상태')),
-          subtitle: Text(context.tr('수면, 피로, 스트레스와 필요한 도움을 따로 기록할 수 있어요.')),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(builder: (_) => CheckinHistoryPage(c)),
-          ),
-        ),
-      ),
-    if (preferences.enabled(UiOption.chatShortcut))
-      Card(
-        child: ListTile(
-          leading: const Icon(Icons.chat_bubble_outline, color: forest),
-          title: Text(context.tr('간병 도우미 대화')),
-          subtitle: Text(context.tr('수첩 기록을 찾아보세요. 의료 질문은 검수 준비 중이에요.')),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: c.busy
-              ? null
-              : () => Navigator.of(context)
-                    .push(MaterialPageRoute<void>(builder: (_) => ChatPage(c))),
-        ),
-      ),
-    Section(context.tr('연락이 필요할 때')),
-    contactCard(context, c),
-    if (preferences.enabled(UiOption.recentRecords)) ...[
-      Section(context.tr('최근 기록')),
-      if (recent.isEmpty)
-        EmptyCard(
-          context.tr('첫 기록을 기다리고 있어요'),
-          context.tr('아래 기록하기를 눌러 식사나 오늘의 상태를 남겨 보세요.'),
-        ),
-      ...recent.map((e) => EntryTile(e, onTap: () => openEntry(e))),
-    ],
-    if (preferences.enabled(UiOption.dailySummary)) ...[
-      Section(context.tr('차곡차곡, 오늘의 기록')),
-      Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${context.tr('수분 기록')}: ${water.toStringAsFixed(water % 1 == 0 ? 0 : 1)} mL',
-              ),
-              Text('${context.tr('복용함 기록')}: ${context.tr('{0}건', [taken])}'),
-              Text(
-                context.tr('입력된 기록의 합계입니다.'),
-                style: const TextStyle(color: Color(0xFF52655A)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
+    for (final section in visible) ...sections[section]!(),
   ];
 }
 

@@ -27,6 +27,14 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(null)
                     }
                     "timeZone" -> result.success(TimeZone.getDefault().id)
+                    "dailyWidgetAvailable" -> result.success(true)
+                    "pinDailyWidget" -> result.success(DailyWidgetProvider.pin(this))
+                    "updateDailyWidget" -> {
+                        val data = call.argument<Map<String, Any?>>("snapshot")
+                        DailyWidgetStorage.write(this, data?.let { org.json.JSONObject(it) })
+                        DailyWidgetProvider.refreshAll(this)
+                        result.success(null)
+                    }
                     "dial" -> {
                         val number = call.argument<String>("number") ?: ""
                         require(number.matches(Regex("[+0-9 ()-]{2,32}")))

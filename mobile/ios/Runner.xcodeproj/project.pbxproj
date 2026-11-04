@@ -7,6 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA11DA1E0000000000000006 = {
+			isa = PBXBuildFile;
+			fileRef = CA11DA1E0000000000000001;
+		};
+		CA11DA1E0000000000000007 = {
+			isa = PBXBuildFile;
+			fileRef = CA11DA1E0000000000000001;
+		};
+		CA11DA1E0000000000000008 = {
+			isa = PBXBuildFile;
+			fileRef = CA11DA1E0000000000000002;
+		};
+		CA11DA1E0000000000000009 = {
+			isa = PBXBuildFile;
+			fileRef = CA11DA1E0000000000000005;
+			settings = {
+				ATTRIBUTES = (
+					RemoveHeadersOnCopy,
+				);
+			};
+		};
 		CA10CA1E0000000000000002 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CA10CA1E0000000000000001 /* InfoPlist.strings */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -20,6 +41,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		CA11DA1E0000000000000014 = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D;
+			proxyType = 1;
+			remoteGlobalIDString = CA11DA1E000000000000000E;
+			remoteInfo = CareDailyWidget;
+		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
@@ -30,6 +58,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		CA11DA1E0000000000000013 = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CA11DA1E0000000000000009,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -43,6 +82,42 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CA11DA1E0000000000000001 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = DailyWidgetStore.swift;
+			sourceTree = "<group>";
+		};
+		CA11DA1E0000000000000002 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = CareDailyWidget.swift;
+			sourceTree = "<group>";
+		};
+		CA11DA1E0000000000000003 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.xml;
+			path = Info.plist;
+			sourceTree = "<group>";
+		};
+		CA11DA1E0000000000000004 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.entitlements;
+			path = CareDailyWidget.entitlements;
+			sourceTree = "<group>";
+		};
+		CA11DA1E0000000000000005 = {
+			isa = PBXFileReference;
+			explicitFileType = "wrapper.app-extension";
+			path = CareDailyWidget.appex;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CA11DA1E0000000000000016 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = Widget.xcconfig;
+			sourceTree = "<group>";
+		};
 		CA10CA1E000000000000000E /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		CA10CA1E000000000000000D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		CA10CA1E000000000000000C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ja"; path = "ja.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -68,6 +143,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		CA11DA1E000000000000000D = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -79,6 +161,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CA11DA1E000000000000000A = {
+			isa = PBXGroup;
+			children = (
+				CA11DA1E0000000000000001,
+				CA11DA1E0000000000000002,
+				CA11DA1E0000000000000003,
+				CA11DA1E0000000000000004,
+				CA11DA1E0000000000000016,
+			);
+			path = CareDailyWidget;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -102,6 +196,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				CA11DA1E000000000000000A /* CareDailyWidget */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
@@ -112,6 +207,7 @@
 		97C146EF1CF9000F007C117D /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				CA11DA1E0000000000000005 /* CareDailyWidget.appex */,
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 			);
@@ -138,6 +234,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		CA11DA1E000000000000000E = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA11DA1E000000000000000F;
+			buildPhases = (
+				CA11DA1E000000000000000B,
+				CA11DA1E000000000000000D,
+				CA11DA1E000000000000000C,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CareDailyWidget;
+			productName = CareDailyWidget;
+			productReference = CA11DA1E0000000000000005;
+			productType = "com.apple.product-type.app-extension";
+		};
 		331C8080294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */;
@@ -164,11 +277,13 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				CA11DA1E0000000000000013 /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CA11DA1E0000000000000015,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -218,6 +333,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				CA11DA1E000000000000000E /* CareDailyWidget */,
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
 			);
@@ -225,6 +341,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CA11DA1E000000000000000C = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807F294A63A400263BE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -281,6 +404,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		CA11DA1E000000000000000B = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA11DA1E0000000000000007,
+				CA11DA1E0000000000000008,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807D294A63A400263BE5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -293,6 +425,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA11DA1E0000000000000006 /* DailyWidgetStore.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
@@ -302,6 +435,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		CA11DA1E0000000000000015 = {
+			isa = PBXTargetDependency;
+			target = CA11DA1E000000000000000E;
+			targetProxy = CA11DA1E0000000000000014;
+		};
 		331C8086294A63A400263BE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
@@ -341,6 +479,73 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		CA11DA1E0000000000000010 = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CA11DA1E0000000000000016;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = CareDailyWidget/CareDailyWidget.entitlements;
+				CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CareDailyWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.carenotebook.careNotebook.DailyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CA11DA1E0000000000000011 = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CA11DA1E0000000000000016;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = CareDailyWidget/CareDailyWidget.entitlements;
+				CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CareDailyWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.carenotebook.careNotebook.DailyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CA11DA1E0000000000000012 = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CA11DA1E0000000000000016;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = CareDailyWidget/CareDailyWidget.entitlements;
+				CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CareDailyWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.carenotebook.careNotebook.DailyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
+
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -404,6 +609,7 @@
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
                 CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+                CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -586,6 +792,7 @@
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
                 CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+                CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -609,6 +816,7 @@
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
                 CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+                CARE_WIDGET_GROUP = group.org.carenotebook.careNotebook.widget;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -624,6 +832,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CA11DA1E000000000000000F = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA11DA1E0000000000000010,
+				CA11DA1E0000000000000011,
+				CA11DA1E0000000000000012,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

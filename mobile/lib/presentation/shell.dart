@@ -17,6 +17,8 @@ import 'settings.dart';
 import 'chat_page.dart';
 import 'draft_page.dart';
 import 'contact_action.dart';
+import 'home_customization_page.dart';
+import 'entrance_transition.dart';
 
 class CareShell extends StatefulWidget {
   const CareShell(this.c, {super.key});
@@ -105,6 +107,19 @@ class _CareShellState extends State<CareShell> {
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -1),
           ),
           actions: [
+            if (tab == 0)
+              IconButton(
+                tooltip: context.tr('홈 화면 편집'),
+                icon: const Icon(Icons.dashboard_customize_outlined),
+                onPressed: c.busy
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => HomeCustomizationPage(c),
+                        ),
+                      ),
+              ),
             ContactAction(c),
             IconButton(
               tooltip: context.tr('간병 도우미 대화'),
@@ -139,106 +154,113 @@ class _CareShellState extends State<CareShell> {
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 760),
-                child: ListView(
-                  key: ValueKey('$tab-${c.selectedId}'),
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  children: [
-                    PopupMenuButton<String>(
-                      enabled: !c.busy,
-                      tooltip: context.tr('수첩 전환'),
-                      onSelected: (id) => attempt(context, () async {
-                        await c.selectPatient(id);
-                        if (!mounted) return;
-                        searchTimer?.cancel();
-                        setState(() {
-                          journalLimit = 50;
-                          search.clear();
-                          query = '';
-                          filter = null;
-                          day = null;
-                        });
-                      }),
-                      itemBuilder: (_) => c.patients
-                          .map(
-                            (p) => PopupMenuItem(
-                              value: p.id,
-                              child: Text(context.strings.patient(p)),
-                            ),
-                          )
-                          .toList(),
-                      child: Container(
-                        key: const ValueKey('notebook-switch'),
-                        constraints: const BoxConstraints(
-                          minHeight: 48,
-                          minWidth: 48,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.person_outline, size: 18),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(context.strings.patient(c.patient)),
-                            ),
-                            const Icon(Icons.expand_more, size: 18),
-                          ],
+                child: EntranceTransition(
+                  revision: tab,
+                  identity: c.selectedId,
+                  enabled:
+                      !c.uiPreferences.reduceMotion &&
+                      !MediaQuery.disableAnimationsOf(context),
+                  child: ListView(
+                    key: ValueKey('$tab-${c.selectedId}'),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    children: [
+                      PopupMenuButton<String>(
+                        enabled: !c.busy,
+                        tooltip: context.tr('수첩 전환'),
+                        onSelected: (id) => attempt(context, () async {
+                          await c.selectPatient(id);
+                          if (!mounted) return;
+                          searchTimer?.cancel();
+                          setState(() {
+                            journalLimit = 50;
+                            search.clear();
+                            query = '';
+                            filter = null;
+                            day = null;
+                          });
+                        }),
+                        itemBuilder: (_) => c.patients
+                            .map(
+                              (p) => PopupMenuItem(
+                                value: p.id,
+                                child: Text(context.strings.patient(p)),
+                              ),
+                            )
+                            .toList(),
+                        child: Container(
+                          key: const ValueKey('notebook-switch'),
+                          constraints: const BoxConstraints(
+                            minHeight: 48,
+                            minWidth: 48,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.person_outline, size: 18),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(context.strings.patient(c.patient)),
+                              ),
+                              const Icon(Icons.expand_more, size: 18),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    if (c.drafts.count(c.selectedId) > 0 ||
-                        c.drafts.count(null) > 0)
-                      Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.edit_note, color: forest),
-                          title: Text(context.tr('작성 중인 초안이 있어요')),
-                          subtitle: Text(context.tr('확인하고 이어서 작성하기')),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: c.busy
-                              ? null
-                              : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => DraftPage(c),
+                      if (c.drafts.count(c.selectedId) > 0 ||
+                          c.drafts.count(null) > 0)
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.edit_note, color: forest),
+                            title: Text(context.tr('작성 중인 초안이 있어요')),
+                            subtitle: Text(context.tr('확인하고 이어서 작성하기')),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: c.busy
+                                ? null
+                                : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => DraftPage(c),
+                                    ),
                                   ),
-                                ),
-                        ),
-                      ),
-                    if (c.notice != null)
-                      Card(
-                        color: c.notice == '저장했어요.'
-                            ? const Color(0xFFE8EFE8)
-                            : const Color(0xFFFFF1DB),
-                        child: ListTile(
-                          title: Semantics(
-                            liveRegion: true,
-                            child: Text(context.tr(c.notice!)),
-                          ),
-                          trailing: IconButton(
-                            tooltip: context.tr('안내 닫기'),
-                            icon: const Icon(Icons.close),
-                            onPressed: c.dismissNotice,
                           ),
                         ),
-                      ),
-                    ...switch (tab) {
-                      0 => todayContent(
-                        context,
-                        c,
-                        openEntry,
-                        onShowMedications: () => setState(() => tab = 2),
-                      ),
-                      1 => journal(),
-                      2 => medicationContent(
-                        context,
-                        c,
-                        archived: archived,
-                        onArchiveChanged: (value) =>
-                            setState(() => archived = value),
-                      ),
-                      3 => visitContent(context, c),
-                      _ => settingsContent(context, c),
-                    },
-                  ],
+                      if (c.notice != null)
+                        Card(
+                          color: c.notice == '저장했어요.'
+                              ? const Color(0xFFE8EFE8)
+                              : const Color(0xFFFFF1DB),
+                          child: ListTile(
+                            title: Semantics(
+                              liveRegion: true,
+                              child: Text(context.tr(c.notice!)),
+                            ),
+                            trailing: IconButton(
+                              tooltip: context.tr('안내 닫기'),
+                              icon: const Icon(Icons.close),
+                              onPressed: c.dismissNotice,
+                            ),
+                          ),
+                        ),
+                      ...switch (tab) {
+                        0 => todayContent(
+                          context,
+                          c,
+                          openEntry,
+                          onShowMedications: () => setState(() => tab = 2),
+                        ),
+                        1 => journal(),
+                        2 => medicationContent(
+                          context,
+                          c,
+                          archived: archived,
+                          onArchiveChanged: (value) =>
+                              setState(() => archived = value),
+                        ),
+                        3 => visitContent(context, c),
+                        _ => settingsContent(context, c),
+                      },
+                    ],
+                  ),
                 ),
               ),
             ),

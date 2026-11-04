@@ -191,7 +191,24 @@ class RecordFieldsState extends State<RecordFields>
               label: Text(context.tr('자세히 기록')),
             ),
           ),
-          if (expanded) ...[const SizedBox(height: 16), ...details.map(input)],
+          AnimatedSize(
+            duration:
+                UiPreferencesScope.of(context).reduceMotion ||
+                    MediaQuery.disableAnimationsOf(context) ||
+                    invalid != null
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            alignment: Alignment.topCenter,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (expanded) ...[
+                  const SizedBox(height: 16),
+                  ...details.map(input),
+                ],
+              ],
+            ),
+          ),
         ],
       ],
     );

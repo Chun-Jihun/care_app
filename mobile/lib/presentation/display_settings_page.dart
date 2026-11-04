@@ -4,6 +4,7 @@ import '../application/care_controller.dart';
 import '../domain/ui_preferences.dart';
 import '../l10n/app_strings.dart';
 import 'common.dart';
+import 'home_customization_page.dart';
 
 class DisplaySettingsPage extends StatelessWidget {
   const DisplaySettingsPage(this.c, {super.key});
@@ -56,6 +57,11 @@ class DisplaySettingsPage extends StatelessWidget {
                 '주요 버튼의 최소 터치 영역을 더 크게 해요.',
               ),
               Section(context.tr('동작과 성능')),
+              option(
+                UiOption.animations,
+                '부드러운 화면 애니메이션',
+                '탭 전환과 상세 항목 펼치기를 부드럽게 보여줘요. 동작 줄이기·저사양·기기 접근성 설정이 우선합니다.',
+              ),
               option(UiOption.reduceMotion, '동작 효과 줄이기', '화면 전환과 터치 효과를 줄여요.'),
               option(
                 UiOption.lowGraphics,
@@ -68,6 +74,19 @@ class DisplaySettingsPage extends StatelessWidget {
                 '첨부 목록에 작은 사진을 표시해요. 저사양 모드에서는 생략하며 원본은 눌러서 볼 수 있어요.',
               ),
               Section(context.tr('홈 표시')),
+              ListTile(
+                title: Text(context.tr('홈 화면 편집')),
+                subtitle: Text(context.tr('표시 항목·순서·빠른 기록 버튼 선택')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: c.busy
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => HomeCustomizationPage(c),
+                        ),
+                      ),
+              ),
               option(
                 UiOption.recentRecords,
                 '최근 기록 표시',
@@ -99,7 +118,8 @@ class DisplaySettingsPage extends StatelessWidget {
                     ? null
                     : () => attempt(
                         context,
-                        () => c.setUiPreferences(UiPreferences.defaults),
+                        () =>
+                            c.setUiPreferences(c.uiPreferences.resetDisplay()),
                       ),
                 child: Text(context.tr('화면 설정 기본값으로')),
               ),

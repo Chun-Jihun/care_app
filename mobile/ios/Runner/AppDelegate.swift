@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import UserNotifications
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -35,6 +36,14 @@ import UserNotifications
           result(nil)
         } catch { result(FlutterError(code: "protection", message: "보안 저장소를 준비할 수 없습니다.", details: nil)) }
       case "timeZone": result(TimeZone.current.identifier)
+      case "dailyWidgetAvailable": result(DailyWidgetStore.available)
+      case "pinDailyWidget": result(false)
+      case "updateDailyWidget":
+        do {
+          try DailyWidgetStore.write(arguments["snapshot"] as? [String: Any])
+          WidgetCenter.shared.reloadTimelines(ofKind: "CareDailyWidget")
+          result(nil)
+        } catch { result(FlutterError(code: "widget", message: "위젯 요약을 갱신할 수 없습니다.", details: nil)) }
       case "dial":
         guard let number = arguments["number"] as? String,
               number.range(of: "^[+0-9 ()-]{2,32}$", options: .regularExpression) != nil,
@@ -47,5 +56,10 @@ import UserNotifications
       default: result(FlutterMethodNotImplemented)
       }
     }
+  }
+
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+    if url.scheme == "carenotebook" { return true }
+    return super.application(app, open: url, options: options)
   }
 }

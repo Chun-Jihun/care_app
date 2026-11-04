@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../domain/backup.dart';
 import '../domain/ui_preferences.dart';
+import '../domain/daily_widget.dart';
 import '../l10n/app_strings.dart';
 import 'notebook_repository.dart';
 
@@ -80,6 +81,9 @@ abstract class PlatformServices {
   Future<void> saveBackup(Uint8List data);
   Future<Uint8List?> pickBackup();
   Future<void> dial(String number);
+  Future<bool> dailyWidgetAvailable() async => false;
+  Future<bool> requestDailyWidgetPin() async => false;
+  Future<void> updateDailyWidget(DailyWidgetSnapshot? snapshot) async {}
 }
 
 class Reminder {

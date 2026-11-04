@@ -7,6 +7,8 @@ enum CareErrorCode {
   busy,
   languageSaveFailed,
   preferencesSaveFailed,
+  widgetUnavailable,
+  widgetUpdateFailed,
   existingPinRequired,
   deviceAuthDisabled,
   deviceAuthFallback,

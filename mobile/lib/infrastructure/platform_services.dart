@@ -17,6 +17,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/records.dart';
+import '../domain/daily_widget.dart';
 import '../application/ports.dart';
 import 'vault_store.dart';
 export '../application/ports.dart' show PlatformServices, Reminder;
@@ -39,6 +40,17 @@ class DeviceSecretStore implements SecretStore {
 
 class DevicePlatformServices extends PlatformServices {
   static const privacy = MethodChannel('org.carenotebook/privacy');
+  @override
+  Future<bool> dailyWidgetAvailable() async =>
+      await privacy.invokeMethod<bool>('dailyWidgetAvailable') ?? false;
+  @override
+  Future<bool> requestDailyWidgetPin() async =>
+      await privacy.invokeMethod<bool>('pinDailyWidget') ?? false;
+  @override
+  Future<void> updateDailyWidget(DailyWidgetSnapshot? snapshot) =>
+      privacy.invokeMethod<void>('updateDailyWidget', {
+        'snapshot': snapshot?.toJson(),
+      });
   final _notifications = FlutterLocalNotificationsPlugin();
   bool _notificationsReady = false;
   AppLanguage? _channelLanguage;

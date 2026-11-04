@@ -5,6 +5,7 @@ import 'checkin_history_page.dart';
 import 'ai_settings.dart';
 import 'app_lock_settings.dart';
 import 'display_settings_page.dart';
+import 'daily_widget_page.dart';
 import '../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
@@ -32,6 +33,19 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     ),
   ),
   LanguagePicker(c),
+  Card(
+    child: ListTile(
+      leading: const Icon(Icons.widgets_outlined),
+      title: Text(context.tr('휴대전화 홈 위젯')),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: c.busy
+          ? null
+          : () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => DailyWidgetPage(c)),
+            ),
+    ),
+  ),
   Section(context.tr('내 수첩 설정')),
   Text(context.tr('기록은 이 기기에 암호화해 보관됩니다.'), style: TextStyle(color: forest)),
   Section(
