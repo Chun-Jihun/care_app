@@ -1,2 +1,4 @@
 # Recorded JSON hashes must survive checkout on Windows and Unix.
 *.json text eol=lf
+# Keep the exact bytes checked by the translation generator.
+mobile/lib/l10n/catalogs.g.dart text eol=lf

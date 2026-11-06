@@ -200,3 +200,13 @@
 최종 로그는 `mobile/build/ci-medical-quality-final-2026-11-06.log`다. 체크아웃 및 승인 변경의 수정 전·후 로그는 `ci-checkout-{red,green}.log`, `medical-authorization-{red,green}.log`로 보존했다. 실제 검색·모델·자료 결과는 `mobile/build/medical-validation-2026-11-06*` 경로에 있으며 기존 결과를 덮어쓰지 않았다. 효과 없는 프롬프트 실험 중간에 시작한 전체 검사는 중단했고, 위 최종 수치에는 포함하지 않았다.
 
 사용자가 커밋·푸시를 직접 하기로 결정해 원격 게시·draft PR·재실행은 하지 않았다. **새 파일 `.gitattributes`와 `tests/test_checkout_contract.py`도 반드시 커밋에 포함**해야 한다. 원격 CI 성공은 수정본 푸시 후 확인한다. 실기기·임상 검수·문서 사용 권리 승인과 독립 임상 평가가 완료됐다는 의미는 아니다. 기존 아카이브 통합시험 4개의 파일 읽기 권한 오류는 별도 미해결 범위로 유지한다.
+
+## 2026-11-06: 푸시 후 원격 CI 확인·번역 체크아웃 보완
+
+커밋 `429e19b7cb50c6426b9cf6cfd92529af8b2f91d8`의 [Quality 실행](https://github.com/Chun-Jihun/care_app/actions/runs/42210299759)이 정상 시작됐으나 실패로 종료된 것을 확인했다. SDK 설치와 기존 JSON 해시 오류는 해결됐다. Python은 183개 중 181개 통과·선택 의존성 2개 skip이었고, 다음 번역 검사에서 `Bad state: Run dart run tool/generate_translations.dart`로 중단됐다. Flutter 정적 분석·전체 시험·APK 빌드는 이 원격 실행에서 진행하지 못했다.
+
+기존 체크아웃 시험이 JSON만 포함하여 생성 Dart 파일의 줄바꿈 변환을 놓친 것이 원인이다. `catalogs.g.dart`도 검사 대상으로 확장해 Windows 자동 CRLF 변환에서 실패하는 것을 먼저 재현했다. `.gitattributes`에 해당 생성 파일의 LF 규칙을 추가했으며, 생성기를 CI에서 실행해 변경을 숨기거나 `--check`의 정확 비교를 완화하지 않았다.
+
+수정 후 Windows·Unix 체크아웃 회귀시험과 새 Windows 체크아웃에서의 **실제 Dart 번역 검사(852문구·5언어)**가 통과했다. Ruff 이상 없음, Python **183개 모두 통과·skip 없음**도 확인했다. 앱 실행 코드는 변경하지 않아 Flutter 전체 시험·APK 빌드는 로컬에서 반복하지 않았다. 로그는 `mobile/build/ci-translations-checkout-{red,green}.log`, `ci-translations-generator-green.log`, `ci-translations-python-final.log`다.
+
+추가 수정은 `.gitattributes`, `tests/test_checkout_contract.py`와 관련 안내 문서에 있다. 커밋·푸시는 계속 사용자가 직접 진행하며, 새 원격 실행의 최종 통과는 아직 확인하지 않았다.
