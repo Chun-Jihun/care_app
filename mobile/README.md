@@ -2,13 +2,13 @@
 
 현재 사용·지원 범위·백업 버전·공통 검증 명령은 [모바일 현재 안내](../docs/mobile_current_guide.md)를 따른다. 아래 날짜별 절의 시험 결과는 당시 이력이다.
 
-Android·iOS 공통 Flutter 앱. 모델, API 키, 회원가입 없이 직접 작성하는 간병 기록을 관리한다. 전체 제품 요구사항은 [`../docs/caregiving_notebook_requirements.md`](../docs/caregiving_notebook_requirements.md), 구현 전 실패 시나리오는 [`../docs/non_ai_foundation_safety_plan.md`](../docs/non_ai_foundation_safety_plan.md)에 있다.
+이번 출시 대상은 **Android Flutter 앱**이다(2026-11-06 사용자 결정). iOS는 기기·Mac/Xcode 환경을 확보한 뒤 진행할 후속 지원으로 분리하고 기존 공통 구조와 iOS 소스는 보존한다. 모델, API 키, 회원가입 없이 직접 작성하는 간병 기록을 관리한다. 전체 제품 요구사항은 [`../docs/caregiving_notebook_requirements.md`](../docs/caregiving_notebook_requirements.md), 구현 전 실패 시나리오는 [`../docs/non_ai_foundation_safety_plan.md`](../docs/non_ai_foundation_safety_plan.md)에 있다.
 
 2026-09-11: Android arm64에 선택 설치형 로컬 AI(기록 조회·OCR·음성 입력)를 연결했다. [설치 방법·지원 범위·실제 실행 결과](../docs/mobile_ai_integration.md)를 먼저 확인한다. iOS AI는 OCR 실행 라이브러리 연결과 Mac 검증이 필요하여 현재 비활성화돼 있다. 직접 입력하는 기본 기능은 AI 설치 없이 동작한다.
 
 ## 실행
 
-기준 도구: Flutter 3.47.2 / Dart 3.13.2, JDK 21, Android compile SDK 37, AGP 9.3.2 / Gradle 9.5.0. 최소 OS: Android 7.0(API 24), iOS 15. 첫 의존성 설치·SQLCipher 네이티브 바이너리 다운로드·빌드에는 인터넷이 필요하다. 실행 중인 앱에는 AI 서버나 분석 SDK가 없다.
+기준 도구: Flutter 3.47.2 / Dart 3.13.2, JDK 21, Android compile SDK 37, AGP 9.3.2 / Gradle 9.5.0. 현재 대상 최소 OS: Android 7.0(API 24). 보존 중인 iOS 프로젝트의 deployment target은 15이며 현재 지원을 보장하지 않는다. 첫 의존성 설치·SQLCipher 네이티브 바이너리 다운로드·빌드에는 인터넷이 필요하다. 실행 중인 앱에는 AI 서버나 분석 SDK가 없다.
 
 프로젝트 루트의 Windows PowerShell:
 
@@ -33,7 +33,7 @@ flutter build apk --release --target-platform=android-arm64
 
 APK: `build/app/outputs/flutter-apk/app-release.apk`. 2026-09-23부터 release는 `android/key.properties`의 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`와 실제 키 파일이 있어야 빌드된다. `storeFile` 상대 경로의 기준은 `mobile/android`이며 이 파일과 키는 Git에 넣지 않는다. 디버그 서명으로 자동 대체하지 않는다. 개발 설치는 `flutter build apk --debug --target-platform=android-arm64`를 사용한다. 과거 개발 키 APK에 정식 키 APK를 덮어쓸 수 없으므로 배포 전 암호화 백업·복원/서명 전환 절차를 검증한다. release에는 인터넷 권한이 없으며 debug/profile의 인터넷 권한은 Flutter 개발 도구 연결용이다.
 
-iOS는 Mac과 Xcode, 서명 팀 설정이 필요하다. `flutter build ios --no-codesign`으로 먼저 컴파일을 확인한 후 기기에서 실행한다. Windows에서는 iOS 빌드를 검증하지 않았다.
+iOS 지원을 재개할 때는 Mac과 Xcode, 서명 팀 설정을 준비하고 `flutter build ios --no-codesign`으로 컴파일을 확인한 후 기기에서 실행한다. Windows에서는 iOS 빌드를 검증하지 않았으며 이번 Android 출시 완료 조건에 포함하지 않는다.
 
 ## 사용할 수 있는 기능
 

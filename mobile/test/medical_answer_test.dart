@@ -211,6 +211,63 @@ void main() {
   });
 
   test(
+    'revoking just the question authorization discards in-flight evidence',
+    () async {
+      final original = syntheticPassage(citation);
+      final mutable = MutableCatalog(catalog, [original]);
+      final medical = MedicalAnswerService(mutable, selector);
+      selector.pending = Completer();
+      final pending = medical.answer(syntheticQuestion);
+      while (selector.calls == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      mutable.rules = [
+        ReviewedPassage(
+          id: original.id,
+          answerGroup: original.answerGroup,
+          citation: original.citation,
+          reviewedAt: original.reviewedAt,
+          expiresAt: original.expiresAt,
+          questions: ['다른 합성 질문'],
+        ),
+      ];
+      selector.pending!.complete('{"evidence_ids":["test-1"]}');
+      final answer = await pending;
+      expect(answer.hold, EvidenceHold.invalid);
+      expect(answer.citations, isEmpty);
+    },
+  );
+
+  test(
+    'adding a required passage during inference invalidates the old group',
+    () async {
+      final mutable = MutableCatalog(catalog, [syntheticPassage(citation)]);
+      final medical = MedicalAnswerService(mutable, selector);
+      selector.pending = Completer();
+      final pending = medical.answer(syntheticQuestion);
+      while (selector.calls == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      final extra = KnowledgeCitation(
+        packageHash: citation.packageHash,
+        sourceId: citation.sourceId,
+        pageNumber: citation.pageNumber,
+        textHash: citation.textHash,
+        excerpt: syntheticText.substring(0, 10),
+        excerptStart: 0,
+      );
+      mutable.rules = [
+        syntheticPassage(citation),
+        syntheticPassage(extra, id: 'test-2'),
+      ];
+      selector.pending!.complete('{"evidence_ids":["test-1"]}');
+      final answer = await pending;
+      expect(answer.hold, EvidenceHold.invalid);
+      expect(answer.citations, isEmpty);
+    },
+  );
+
+  test(
     'background and deleted conversations discard late medical replies',
     () async {
       await c.disableAppLock('123456');

@@ -90,6 +90,7 @@ def main():
     permissions = sorted(node.attrib[attr] for node in android.findall('uses-permission'))
     result = dict(schema='care-release-audit-v1', audit_generated_at=datetime.now(timezone.utc).isoformat(),
         source_policy_checked_date='2026-09-23', medical_release_gate_result=False,
+        release_platforms=['android'], deferred_platforms=['ios'],
         packages=packages, media=media_diagnostics(), android_main_permissions=permissions,
         blockers=[
           'clinical source/target-population/exception review incomplete',
@@ -99,8 +100,7 @@ def main():
           'independent clinical retrieval and answer evaluation not performed',
           'real camera, medication-label, caregiver speech and critical-token quality evaluation pending',
           'release signing and store declarations require owner credentials/details',
-          'Android/iOS device, long-duration, memory/battery and update testing deferred to pre-release',
-          'iOS native AI runtime and privacy manifests need Mac/Xcode verification',
+          'Android device, long-duration, memory/battery and update testing deferred to pre-release',
         ],
         source_policy_references={
           'NHS': 'https://www.nhs.uk/our-policies/terms-and-conditions/',

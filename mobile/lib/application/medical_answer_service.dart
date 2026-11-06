@@ -106,20 +106,23 @@ final class MedicalAnswerService {
         return EvidenceAnswer(hold: EvidenceHold.invalid);
       }
       // Recheck authorization after inference (updates/revocations may occur).
-      final current = await catalog.passages();
+      final current = (await catalog.passages())
+          .where((p) => p.questions.any((q) => _normalize(q) == key))
+          .toList();
       final after = (now ?? DateTime.now()).toUtc();
-      if (candidates.any(
-        (p) =>
-            !after.isBefore(p.expiresAt) ||
-            !current.any(
-              (v) =>
-                  v.id == p.id &&
-                  v.citation.matches(p.citation) &&
-                  v.reviewedAt == p.reviewedAt &&
-                  v.expiresAt == p.expiresAt &&
-                  v.answerGroup == p.answerGroup,
-            ),
-      )) {
+      if (current.length != candidates.length ||
+          candidates.any(
+            (p) =>
+                !after.isBefore(p.expiresAt) ||
+                !current.any(
+                  (v) =>
+                      v.id == p.id &&
+                      v.citation.matches(p.citation) &&
+                      v.reviewedAt == p.reviewedAt &&
+                      v.expiresAt == p.expiresAt &&
+                      v.answerGroup == p.answerGroup,
+                ),
+          )) {
         return EvidenceAnswer(hold: EvidenceHold.invalid);
       }
       for (final p in candidates) {
