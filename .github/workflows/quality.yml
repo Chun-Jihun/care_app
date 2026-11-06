@@ -16,6 +16,8 @@ jobs:
     env:
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
       CI: 'true'
+      # Kotlin incremental source paths must share the checkout's Windows drive.
+      PUB_CACHE: ${{ github.workspace }}/.tools/pub-cache
     defaults:
       run:
         shell: pwsh

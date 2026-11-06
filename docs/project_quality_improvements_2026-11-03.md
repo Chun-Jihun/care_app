@@ -210,3 +210,15 @@
 수정 후 Windows·Unix 체크아웃 회귀시험과 새 Windows 체크아웃에서의 **실제 Dart 번역 검사(852문구·5언어)**가 통과했다. Ruff 이상 없음, Python **183개 모두 통과·skip 없음**도 확인했다. 앱 실행 코드는 변경하지 않아 Flutter 전체 시험·APK 빌드는 로컬에서 반복하지 않았다. 로그는 `mobile/build/ci-translations-checkout-{red,green}.log`, `ci-translations-generator-green.log`, `ci-translations-python-final.log`다.
 
 추가 수정은 `.gitattributes`, `tests/test_checkout_contract.py`와 관련 안내 문서에 있다. 커밋·푸시는 계속 사용자가 직접 진행하며, 새 원격 실행의 최종 통과는 아직 확인하지 않았다.
+
+## 2026-11-06: 원격 전체 시험 통과·Windows 빌드 캐시 위치 보완
+
+커밋 `fe0f2082482aaff9caa83c803124de5014c07e5b`의 [Quality 실행](https://github.com/Chun-Jihun/care_app/actions/runs/42211171974)을 완료까지 확인했다. 원격 Ruff·Python(183개 중 181 통과·2 skip)·번역(852문구·5언어)·Flutter 정적 분석·Flutter **250개 전체 시험**·저장소 crash probe·care_ort 분석은 통과했다. 마지막 Android debug 빌드가 실패했다. 진행 중에는 API에서 로그를 내려받을 수 없었으며 완료 후 전체 로그와 사용자가 전달한 로그로 원인을 확인했다.
+
+실패 작업은 `:android_file_picker:compileDebugKotlin`이었다. 핵심 원인은 `this and base files have different roots`로, 기본 Pub 캐시의 소스가 `C:/Users/runneradmin/AppData/Local/Pub/Cache`에 있고 프로젝트는 `D:/a/care_app/care_app/mobile/android`에 있어 Kotlin 증분 캐시가 상대 경로를 만들지 못했다. 단순한 캐시 손상으로 판단해 삭제하거나 Kotlin 증분 컴파일을 끄지 않았다.
+
+워크플로 job 환경에 `PUB_CACHE: ${{ github.workspace }}/.tools/pub-cache`를 지정해 첫 의존성 설치부터 모든 단계가 같은 드라이브의 패키지 소스를 사용하도록 수정했다. 기존 로컬 `mobile.ps1`은 이미 프로젝트 내부 캐시를 사용하므로 수정하지 않았다.
+
+프로젝트와 같은 Kotlin **2.4.0**의 실제 `FilesKt.relativeTo`로 C:/D: 조합의 예외와 D:/D: 조합의 정상 반환을 비교했다. 이어 로컬의 프로젝트 내부 캐시 환경에서 실패했던 Kotlin 작업을 `--rerun-tasks`로 강제 재컴파일해 **22초·10개 작업 실행 성공**, Android arm64 debug APK 빌드 성공을 확인했다. 워크플로 YAML·환경 변수 값 검사와 `git diff --check`도 통과했다. 앱 실행 코드와 시험 조건은 변경하지 않아 전체 시험은 다시 반복하지 않았다.
+
+재현·검증 로그는 Git 제외 경로 `mobile/build/ci-kotlin-path-probe.log`, `ci-kotlin-recompile.log`, `ci-pub-cache-apk-green.log`에 있다. 추가 수정은 `.github/workflows/quality.yml`과 관련 안내 문서이며 커밋·푸시는 계속 사용자가 직접 진행한다. 수정 후 원격 APK 빌드와 전체 CI 성공은 아직 확인하지 않았다.
