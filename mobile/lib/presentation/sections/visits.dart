@@ -6,6 +6,7 @@ import '../../domain/records.dart';
 import '../common.dart';
 import '../details.dart';
 import '../editors.dart';
+import '../visit_recording_page.dart';
 
 List<Widget> visitContent(BuildContext context, CareController c) => [
   Section(context.tr('진료를 준비해요')),
@@ -46,6 +47,23 @@ List<Widget> visitContent(BuildContext context, CareController c) => [
     ),
   ),
   Section(context.tr('진료 후 남기기')),
+  if (c.visitAudio != null)
+    Card(
+      child: ListTile(
+        leading: const Icon(Icons.mic_none, color: forest),
+        title: Text(context.tr('진료 녹음')),
+        subtitle: Text(context.tr('진료 내용을 녹음하고 듣거나 전사해요.')),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: c.busy
+            ? null
+            : () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => VisitRecordingPage(c, c.selectedId!),
+                ),
+              ),
+      ),
+    ),
   Card(
     child: ListTile(
       leading: const Icon(Icons.edit_note, color: forest),

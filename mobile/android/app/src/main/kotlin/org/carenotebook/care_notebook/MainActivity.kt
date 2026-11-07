@@ -11,12 +11,43 @@ import java.io.File
 import java.util.TimeZone
 
 class MainActivity : FlutterFragmentActivity() {
+    private val visitPlayback = VisitAudioPlayback()
+
+    private fun publicHelpTestIntent(): Intent? {
+        if (!packageName.endsWith(".devtest")) return null
+        val intent = Intent().setClassName(packageName, "org.carenotebook.care_notebook.PublicHelpTestActivity")
+        return intent.takeIf { it.resolveActivity(packageManager) != null }
+    }
+
+    override fun onPause() {
+        visitPlayback.stop()
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        super.onPause()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         super.onCreate(savedInstanceState)
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "org.carenotebook/visit_audio").setMethodCallHandler { call, result ->
+            try {
+                when (call.method) {
+                    "keepScreenOn" -> {
+                        if (call.arguments == true) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        result.success(null)
+                    }
+                    "startPlayback" -> { visitPlayback.start(); result.success(null) }
+                    "writePlayback" -> result.success(visitPlayback.write(
+                        checkNotNull(call.argument<ByteArray>("pcm")), checkNotNull(call.argument<Int>("offset"))))
+                    "playbackDrained" -> result.success(visitPlayback.drained())
+                    "stopPlayback" -> { visitPlayback.stop(); result.success(null) }
+                    else -> result.notImplemented()
+                }
+            } catch (_: Exception) { result.error("unavailable", "기기 작업을 완료하지 못했습니다.", null) }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "org.carenotebook/privacy").setMethodCallHandler { call, result ->
             try {
                 when (call.method) {
@@ -27,6 +58,12 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(null)
                     }
                     "timeZone" -> result.success(TimeZone.getDefault().id)
+                    "publicHelpTestAvailable" -> result.success(publicHelpTestIntent() != null)
+                    "openPublicHelpTest" -> {
+                        val intent = checkNotNull(publicHelpTestIntent())
+                        startActivity(intent)
+                        result.success(null)
+                    }
                     "dailyWidgetAvailable" -> result.success(true)
                     "pinDailyWidget" -> result.success(DailyWidgetProvider.pin(this))
                     "updateDailyWidget" -> {

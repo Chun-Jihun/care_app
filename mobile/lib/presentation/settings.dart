@@ -8,13 +8,20 @@ import 'display_settings_page.dart';
 import 'daily_widget_page.dart';
 import '../l10n/app_strings.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../application/care_controller.dart';
 import 'common.dart';
 import 'editors.dart';
 import 'draft_page.dart';
 import 'backup_page.dart';
+
+const _publicHelpChannel = MethodChannel('org.carenotebook/privacy');
+final _publicHelpAvailable = _publicHelpChannel.invokeMethod<bool>(
+  'publicHelpTestAvailable',
+);
 
 List<Widget> settingsContent(BuildContext context, CareController c) => [
   Section(context.tr('화면과 사용 방법')),
@@ -33,6 +40,24 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
     ),
   ),
   LanguagePicker(c),
+  if (kDebugMode && defaultTargetPlatform == TargetPlatform.android)
+    FutureBuilder<bool?>(
+      future: _publicHelpAvailable,
+      builder: (context, snapshot) => snapshot.data == true
+          ? Card(
+              child: ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: Text(context.tr('사용 안내 · 광고 시험')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => attempt(context, () async {
+                  await _publicHelpChannel.invokeMethod<void>(
+                    'openPublicHelpTest',
+                  );
+                }),
+              ),
+            )
+          : const SizedBox.shrink(),
+    ),
   Card(
     child: ListTile(
       leading: const Icon(Icons.widgets_outlined),

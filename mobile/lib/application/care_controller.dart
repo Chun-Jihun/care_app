@@ -16,6 +16,8 @@ import 'services/records_service.dart';
 import 'services/medications_service.dart';
 import 'services/tasks_service.dart';
 import 'services/visits_service.dart';
+import 'services/visit_recording_service.dart';
+import 'visit_audio_device.dart';
 import 'services/profiles_service.dart';
 import 'services/checkins_service.dart';
 import 'services/drafts_service.dart';
@@ -40,6 +42,7 @@ class CareController extends ChangeNotifier {
     PlatformServices platform, {
     this._aiRuntime = const UnavailableAiRuntime(),
     this.microphone,
+    this.visitAudio,
     this.knowledge,
     this.medicalAnswers,
     this.drugCatalog,
@@ -47,6 +50,7 @@ class CareController extends ChangeNotifier {
        _platform = platform;
   final LocalAiRuntime _aiRuntime;
   final MicrophoneCapture Function()? microphone;
+  final VisitAudioDevice Function()? visitAudio;
   final KnowledgeLibrary? knowledge;
   final MedicalAnswerService? medicalAnswers;
   final Future<DrugCatalog> Function()? drugCatalog;
@@ -107,6 +111,7 @@ class CareController extends ChangeNotifier {
   late final medicationBook = MedicationService(_scope);
   late final taskBook = TaskService(_scope);
   late final visitBook = VisitService(_scope);
+  late final visitRecordings = VisitRecordingService(_scope, () => _busy);
   late final profiles = ProfileService(_scope);
   late final checkins = CheckinService(_scope);
   late final drafts = DraftService(

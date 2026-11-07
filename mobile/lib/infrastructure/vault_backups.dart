@@ -20,6 +20,9 @@ final class VaultBackups {
     if (password.length < 12) {
       throw CareError(CareErrorCode.backupPasswordTooShort);
     }
+    if (_state.database.hasVisitAudio) {
+      throw CareError(CareErrorCode.legacyBackupVisitAudio);
+    }
     _state.database.pruneChats();
     await _state.cleanup();
     _state.database.verifyIntegrity();
@@ -102,6 +105,9 @@ final class VaultBackups {
         key: base64Decode(keys['care']!),
         identityKey: base64Decode(keys['identity']!),
       );
+      if (candidate.hasVisitAudio) {
+        throw CareError(CareErrorCode.invalidBackupTables);
+      }
       final files = Map<String, String>.from(data['files'] as Map);
       final expected = candidate.allAttachmentIds.toSet();
       if (files.length != expected.length ||

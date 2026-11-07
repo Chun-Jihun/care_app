@@ -55,6 +55,7 @@ enum CareErrorCode {
   draftEditorMismatch,
   checkinRequired,
   legacyBackupPhotosTooLarge,
+  legacyBackupVisitAudio,
   legacyBackupTooLarge,
   unsupportedBackupFormat,
   invalidBackupKeys,

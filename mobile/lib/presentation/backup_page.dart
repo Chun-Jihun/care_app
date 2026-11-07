@@ -41,6 +41,7 @@ Future<void> backupFlow(BuildContext context, CareController c) async {
                 '선택한 내용을 비밀번호로 암호화해 파일로 저장합니다. 초안과 잠금·알림 설정은 포함하지 않습니다.',
               ),
             ),
+            Text(context.tr('진료 녹음 원본은 백업에 포함되지 않아요.')),
             Section(context.tr('백업할 수첩')),
             for (final patient in c.patients)
               CheckboxListTile(

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
 import '../domain/records.dart';
+import '../domain/visit_recording.dart';
 import '../domain/record_lookup.dart';
 import '../domain/chat.dart';
 import '../domain/drafts.dart';
@@ -19,6 +20,7 @@ import 'repositories/records.dart';
 import 'repositories/medications.dart';
 import 'repositories/tasks.dart';
 import 'repositories/visits.dart';
+import 'repositories/visit_recordings.dart';
 import 'repositories/profiles.dart';
 import 'repositories/chat.dart';
 import 'repositories/drafts.dart';
@@ -39,6 +41,7 @@ class CareDatabase implements NotebookRepository {
   late final _medications = SqliteMedications(_store, _records);
   late final _tasks = SqliteTasks(_store);
   late final _visits = SqliteVisits(_store, _records);
+  late final _visitRecordings = SqliteVisitRecordings(_store);
   late final _profiles = SqliteProfiles(_store);
   late final _chat = SqliteChat(_store);
   late final _drafts = SqliteDrafts(_store, this);
@@ -206,6 +209,9 @@ class CareDatabase implements NotebookRepository {
   List<String> get pendingFileDeletes => _records.pendingFileDeletes;
   void finishFileDelete(String id) => _records.finishFileDelete(id);
   List<String> get allAttachmentIds => _records.allAttachmentIds;
+  bool get hasVisitAudio => _db
+      .select('SELECT 1 FROM visit_recording WHERE byte_count>0 LIMIT 1')
+      .isNotEmpty;
   @override
   List<Medication> medications(String pid, {bool includeArchived = false}) =>
       _medications.medications(pid, includeArchived: includeArchived);
@@ -287,6 +293,23 @@ class CareDatabase implements NotebookRepository {
   void deleteTask(String pid, String id) => _tasks.deleteTask(pid, id);
   @override
   List<VisitPreparation> visits(String pid) => _visits.visits(pid);
+  @override
+  List<VisitRecording> visitRecordings(String pid) =>
+      _visitRecordings.list(pid);
+  @override
+  VisitRecording beginVisitRecording(String pid) => _visitRecordings.begin(pid);
+  @override
+  void appendVisitAudio(String pid, String id, Uint8List pcm) =>
+      _visitRecordings.append(pid, id, pcm);
+  @override
+  Uint8List? readVisitAudio(String pid, String id, int offset) =>
+      _visitRecordings.read(pid, id, offset);
+  @override
+  void keepVisitRecording(String pid, String id) =>
+      _visitRecordings.keep(pid, id);
+  @override
+  void deleteVisitRecording(String pid, String id) =>
+      _visitRecordings.delete(pid, id);
   @override
   VisitPreparation saveVisit(
     String pid, {

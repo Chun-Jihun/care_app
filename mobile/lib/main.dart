@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -5,6 +7,7 @@ import 'l10n/app_strings.dart';
 import 'application/care_controller.dart';
 import 'infrastructure/platform_services.dart';
 import 'infrastructure/vault_store.dart';
+import 'infrastructure/visit_audio_device.dart';
 import 'presentation/app.dart';
 import 'infrastructure/ai/device_ai_runtime.dart';
 import 'infrastructure/ai/memory_recorder.dart';
@@ -35,6 +38,7 @@ Future<void> main() async {
         ai,
       ),
       microphone: MemoryRecorder.new,
+      visitAudio: Platform.isAndroid ? AndroidVisitAudioDevice.new : null,
     );
     await controller.initialize();
     runApp(CareApp(controller: controller));

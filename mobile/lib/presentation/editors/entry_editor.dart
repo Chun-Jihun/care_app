@@ -24,6 +24,7 @@ Future<void> editEntry(
   CareEntry? entry,
   CareDraft? restored,
   String? initialNote,
+  DateTime? initialAt,
   Uint8List? initialPhoto,
   Map<String, String> initialFields = const {},
 }) async {
@@ -46,7 +47,7 @@ Future<void> editEntry(
             entry?.fields[field.key],
       ),
   };
-  var at = data?.at ?? entry?.occurredAt ?? DateTime.now();
+  var at = data?.at ?? entry?.occurredAt ?? initialAt ?? DateTime.now();
   final suggestedFields = <String, List<String>>{};
   for (final key in switch (kind) {
     EntryKind.meal => ['food'],
@@ -85,7 +86,7 @@ Future<void> editEntry(
           title:
               '${context.tr(kind.label)} ${entry == null ? context.tr('기록') : context.tr('수정')}',
           draft: draft,
-          initiallyDirty: initialPhoto != null,
+          initiallyDirty: initialPhoto != null || initialNote != null,
           draftExitNotice: () => photo == null
               ? null
               : context.tr(

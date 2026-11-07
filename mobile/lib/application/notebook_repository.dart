@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import '../domain/records.dart';
+import '../domain/visit_recording.dart';
 import '../domain/chat.dart';
 import '../domain/drafts.dart';
 import '../domain/ai.dart';
@@ -33,6 +36,12 @@ abstract interface class NotebookRepository {
     required String contact,
   });
   void deletePatient(String id);
+  List<VisitRecording> visitRecordings(String pid);
+  VisitRecording beginVisitRecording(String pid);
+  void appendVisitAudio(String pid, String id, Uint8List pcm);
+  Uint8List? readVisitAudio(String pid, String id, int offset);
+  void keepVisitRecording(String pid, String id);
+  void deleteVisitRecording(String pid, String id);
   CareEntry? entry(String pid, String id);
   List<CareEntry> entries(
     String patientId, {

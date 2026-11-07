@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../domain/records.dart';
+import '../domain/visit_recording.dart';
 import 'sqlite_session.dart';
 
 final class SchemaMigrations {
   SchemaMigrations(this._store, this._verify);
-  static const version = 6;
+  static const version = 7;
   final SqliteSession _store;
   final void Function() _verify;
   String get directory => _store.directory;
@@ -59,6 +60,7 @@ final class SchemaMigrations {
       if (source <= 3) _upgradeAiSchema();
       if (source < 5) _upgradeIndexes();
       if (source < 6) _upgradeProducts();
+      if (source < 7) _upgradeVisitRecordings();
       return;
     }
     _store.transaction(() {
@@ -106,6 +108,27 @@ final class SchemaMigrations {
     _upgradeAiSchema();
     _upgradeIndexes();
     _upgradeProducts();
+    _upgradeVisitRecordings();
+  }
+
+  void _upgradeVisitRecordings() {
+    _store.connection.execute('''
+      CREATE TABLE IF NOT EXISTS visit_recording(
+        id TEXT PRIMARY KEY, patient_id TEXT NOT NULL, started_at INTEGER NOT NULL,
+        byte_count INTEGER NOT NULL DEFAULT 0 CHECK(byte_count BETWEEN 0 AND ${VisitRecording.maxBytes} AND byte_count%2=0),
+        kept INTEGER NOT NULL DEFAULT 0 CHECK(kept IN (0,1)), UNIQUE(patient_id,id),
+        FOREIGN KEY(patient_id) REFERENCES patient_context(id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS visit_audio_chunk(
+        patient_id TEXT NOT NULL, recording_id TEXT NOT NULL,
+        byte_offset INTEGER NOT NULL CHECK(byte_offset>=0 AND byte_offset%2=0),
+        pcm BLOB NOT NULL CHECK(typeof(pcm)='blob' AND length(pcm) BETWEEN 2 AND ${VisitRecording.bytesPerSecond} AND length(pcm)%2=0),
+        PRIMARY KEY(patient_id,recording_id,byte_offset),
+        FOREIGN KEY(patient_id,recording_id) REFERENCES visit_recording(patient_id,id) ON DELETE CASCADE
+      );
+      PRAGMA user_version=7;
+      PRAGMA identity.user_version=7;
+    ''');
   }
 
   void _upgradeAiSchema() {
