@@ -78,7 +78,11 @@ class DailyWidgetProvider : AppWidgetProvider() {
         fun pin(context: Context): Boolean {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
             val manager = AppWidgetManager.getInstance(context)
-            return manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(ComponentName(context, DailyWidgetProvider::class.java), null, null)
+            if (!manager.isRequestPinAppWidgetSupported) return false
+            val preview = Bundle().apply {
+                putParcelable(AppWidgetManager.EXTRA_APPWIDGET_PREVIEW, RemoteViews(context.packageName, R.layout.daily_widget))
+            }
+            return manager.requestPinAppWidget(ComponentName(context, DailyWidgetProvider::class.java), preview, null)
         }
         private fun render(context: Context, manager: AppWidgetManager, id: Int) {
             val views = RemoteViews(context.packageName, R.layout.daily_widget)
