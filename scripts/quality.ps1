@@ -34,6 +34,14 @@ try {
         if ($BuildAndroidDebug) {
             & $flutter build apk --debug --target-platform=android-arm64
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Push-Location android
+            try {
+                & ./gradlew.bat :ad-test:assembleDebug '-PcareDeviceTest=ads'
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            } finally { Pop-Location }
+            & "$PSScriptRoot/check_android_ad_isolation.ps1" `
+                -AdApk build/ad-test/outputs/apk/debug/ad-test-debug.apk `
+                -NotebookApk build/app/outputs/flutter-apk/app-debug.apk
         }
     } finally { Pop-Location }
 } finally { Pop-Location }

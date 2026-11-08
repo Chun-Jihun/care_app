@@ -1,4 +1,4 @@
-package org.carenotebook.care_notebook
+package org.carenotebook.care_notebook.adtest
 
 import android.app.Activity
 import android.os.Bundle
@@ -22,7 +22,6 @@ class PublicHelpTestActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        actionBar?.setDisplayHomeAsUpEnabled(true)
         val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         setContentView(ScrollView(this).apply { addView(content) })
 
@@ -88,11 +87,6 @@ class PublicHelpTestActivity : Activity() {
         }
         val extras = Bundle().apply { putString("npa", "1") }
         view.loadAd(AdRequest.Builder().addNetworkExtrasBundle(AdMobAdapter::class.java, extras).build())
-    }
-
-    override fun onNavigateUp(): Boolean {
-        finish()
-        return true
     }
 
     override fun onPause() {

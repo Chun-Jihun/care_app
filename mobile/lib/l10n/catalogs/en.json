@@ -881,6 +881,5 @@
   "음성 원본은 선택 백업에 포함되지 않아요. 전사한 내용은 확인하고 저장해야 진료 기록이 돼요.": "Original audio is excluded from selective backups. Review and save the transcript to make it a visit note.",
   "진료 녹음 원본은 백업에 포함되지 않아요.": "Original visit audio is excluded from backups.",
   "진료 녹음이 있으면 이전 형식의 백업을 만들 수 없어요. 선택 백업을 사용해 주세요.": "Use selective backup when the notebook contains visit audio.",
-  "이 구간은 인식하지 못했어요.": "This segment could not be transcribed.",
-  "사용 안내 · 광고 시험": "Usage guide · Ad test"
+  "이 구간은 인식하지 못했어요.": "This segment could not be transcribed."
 }

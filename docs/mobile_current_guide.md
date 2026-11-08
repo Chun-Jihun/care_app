@@ -94,11 +94,11 @@ Android에서는 복원 파일을 쓰기 전에 기기의 여유 공간을 확�
 
 ## Android 시험 배너
 
-Android 도구를 설정한 뒤 `mobile/android`에서 `./gradlew.bat :app:assembleDebug -Ptarget-platform=android-arm64 -PcareDeviceTest=ads`를 실행한다. 결과는 `mobile/build/app/outputs/apk/debug/app-debug.apk`이며 별도 앱 ID `org.carenotebook.care_notebook.devtest`로 설치한다. 비교 빌드에는 `-PcareDeviceTest=offline`을 사용한다. 두 시험 빌드는 합성 자료만 사용한다.
+Android 도구를 설정한 뒤 `mobile/android`에서 `./gradlew.bat :ad-test:assembleDebug -PcareDeviceTest=ads`를 실행한다. APK는 `mobile/build/ad-test/outputs/apk/debug/ad-test-debug.apk`에 생성되며 앱 ID는 `org.carenotebook.care_notebook.adtest`다. 오프라인 수첩 시험은 `./gradlew.bat :app:assembleDebug -Ptarget-platform=android-arm64 -PcareDeviceTest=offline`으로 빌드하며 기존 `.devtest` ID를 사용한다. 예전 광고 APK가 `.devtest`로 설치돼 있다면 새 오프라인 APK로 업데이트해 광고 코드를 제거한다. 수첩 시험에는 합성 자료만 사용한다.
 
-광고 시험 빌드에서 **설정 → 사용 안내 · 광고 시험 → 시험 배너 불러오기**를 누른 경우에만 Google 데모 배너를 요청한다. 공개 사용 안내는 요청을 건너뛰거나 실패해도 읽을 수 있다. 화면에는 수첩 입력이 없고, 광고 요청에 수첩 정보·전사문·녹음이나 맞춤 검색어를 전달하지 않는다. 시험 광고 화면은 같은 시험 앱의 별도 프로세스에서 실행되며 두 프로세스의 Android UID는 같다. 기본 및 배포 빌드에는 광고 SDK와 광고 화면을 포함하지 않는다. 배포 매니페스트에서 인터넷 권한을 제거한다.
+홈 화면에서 **간병수첩 광고 시험**을 열면 공개 사용 안내가 바로 표시된다. **시험 배너 불러오기**를 누른 경우에만 Google 데모 배너를 요청한다. 요청을 건너뛰거나 실패해도 안내를 읽을 수 있다. 광고 시험 APK에는 수첩 화면과 저장소 기능이 없고, 오프라인 시험 앱 및 정식 수첩과 Android 앱 UID가 분리된다. 수첩 APK에는 광고 SDK와 광고 화면을 포함하지 않는다. 배포 매니페스트에서 인터넷 권한을 제거한다.
 
-Galaxy S24+에서 시험 문장 재생과 30초를 넘겨 녹음한 뒤 홈으로 나갔을 때 초안 복구를 확인했다. 광고 시험은 안내 화면만 열었을 때 시험 앱 UID의 외부 송수신이 집계되지 않았다. DNS가 광고 호스트를 차단한 경우 안내 화면은 열렸고 배너 요청은 실패했다. 광고 호스트가 정상 해석되는 연결에서는 Google 시험 배너가 표시됐고 SDK의 광고 호스트 접속과 시험 앱 UID의 송수신이 확인됐다. UID 통계는 TLS 요청 본문 검사와 별개다.
+Galaxy S24+에서 시험 문장 재생과 30초를 넘겨 녹음한 뒤 홈으로 나갔을 때 초안 복구를 확인했다. 분리 전 광고 APK의 시험에서는 안내 화면만 열었을 때 시험 앱 UID의 외부 송수신이 집계되지 않았다. DNS가 광고 호스트를 차단한 경우 안내 화면은 열렸고 배너 요청은 실패했다. 광고 호스트가 정상 해석되는 연결에서는 Google 시험 배너가 표시됐고 SDK의 광고 호스트 접속과 시험 앱 UID의 송수신이 확인됐다. UID 통계는 TLS 요청 본문 검사와 별개다.
 
 광고를 운영하려면 별도 운영 설정, 동의와 개인정보 공개, 실제 배포 빌드의 전송 검증이 필요하다. [Google 광고 SDK 데이터 공개](https://developers.google.com/admob/android/privacy/play-data-disclosure)
 

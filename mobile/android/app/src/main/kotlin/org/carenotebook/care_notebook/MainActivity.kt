@@ -15,12 +15,6 @@ class MainActivity : FlutterFragmentActivity() {
     private val visitPlayback = VisitAudioPlayback()
     private val backupPicker = BackupDocumentPicker(this)
 
-    private fun publicHelpTestIntent(): Intent? {
-        if (!packageName.endsWith(".devtest")) return null
-        val intent = Intent().setClassName(packageName, "org.carenotebook.care_notebook.PublicHelpTestActivity")
-        return intent.takeIf { it.resolveActivity(packageManager) != null }
-    }
-
     override fun onPause() {
         visitPlayback.stop()
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -62,12 +56,6 @@ class MainActivity : FlutterFragmentActivity() {
                     "timeZone" -> result.success(TimeZone.getDefault().id)
                     "availableVaultBytes" -> result.success(StatFs(filesDir.path).availableBytes)
                     "pickBackup" -> backupPicker.open(call.arguments as Int, result)
-                    "publicHelpTestAvailable" -> result.success(publicHelpTestIntent() != null)
-                    "openPublicHelpTest" -> {
-                        val intent = checkNotNull(publicHelpTestIntent())
-                        startActivity(intent)
-                        result.success(null)
-                    }
                     "dailyWidgetAvailable" -> result.success(true)
                     "pinDailyWidget" -> result.success(DailyWidgetProvider.pin(this))
                     "updateDailyWidget" -> {

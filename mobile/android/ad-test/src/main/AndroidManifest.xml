@@ -5,9 +5,17 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" tools:node="remove" />
-    <application android:usesCleartextTraffic="false">
-        <activity android:name=".PublicHelpTestActivity" android:exported="false" android:process=":public_help"
-            android:label="간병수첩 사용 안내" android:theme="@android:style/Theme.Material.Light" />
+    <application
+        android:label="간병수첩 광고 시험"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false">
+        <activity android:name=".PublicHelpTestActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <provider android:name="com.google.android.gms.ads.MobileAdsInitProvider" tools:node="remove" />
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />

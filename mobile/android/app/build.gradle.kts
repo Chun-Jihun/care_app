@@ -11,8 +11,7 @@ val signingFile = rootProject.file("key.properties")
 if (signingFile.isFile) signingFile.inputStream().use { releaseSecrets.load(it) }
 val releaseKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
 val hasReleaseSigning = releaseKeys.all { !releaseSecrets.getProperty(it).isNullOrBlank() }
-val careDeviceTest = providers.gradleProperty("careDeviceTest").orNull
-val testAds = careDeviceTest == "ads"
+val offlineTest = providers.gradleProperty("careDeviceTest").orNull == "offline"
 
 // Resolve at task execution so ordinary debug/test configuration needs no secrets.
 val verifyReleaseSigning by tasks.registering {
@@ -69,23 +68,16 @@ android {
     }
     buildTypes {
         debug {
-            if (careDeviceTest != null) applicationIdSuffix = ".devtest"
+            if (offlineTest) applicationIdSuffix = ".devtest"
         }
         release {
             signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
-        }
-    }
-    if (testAds) {
-        sourceSets.named("debug") {
-            manifest.srcFile("src/adTest/AndroidManifest.xml")
-            kotlin.srcDir("src/adTest/kotlin")
         }
     }
 }
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    if (testAds) debugImplementation("com.google.android.gms:play-services-ads:25.5.0")
 }
 
 kotlin {
