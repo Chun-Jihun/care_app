@@ -194,6 +194,31 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
           trailing: const Icon(Icons.chevron_right),
           onTap: c.busy ? null : () => restoreFlow(context, c),
         ),
+        if (defaultTargetPlatform == TargetPlatform.android)
+          ListTile(
+            leading: const Icon(Icons.storage_outlined, color: forest),
+            title: Text(context.tr('앱 저장 공간 정리')),
+            subtitle: Text(
+              context.tr('삭제한 녹음 등이 사용하던 공간을 돌려받아요. 보관 중인 기록과 사진은 유지돼요.'),
+            ),
+            onTap: c.busy
+                ? null
+                : () => attempt(context, () async {
+                    final reclaimed = await c.compactStorage();
+                    if (!context.mounted || !c.unlocked) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          context.tr(
+                            reclaimed > 0
+                                ? '앱 저장 공간을 정리했어요.'
+                                : '돌려받을 저장 공간이 없어요.',
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+          ),
       ],
     ),
   ),

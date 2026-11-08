@@ -3,6 +3,7 @@ package org.carenotebook.care_notebook
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.StatFs
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -59,6 +60,7 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(null)
                     }
                     "timeZone" -> result.success(TimeZone.getDefault().id)
+                    "availableVaultBytes" -> result.success(StatFs(filesDir.path).availableBytes)
                     "pickBackup" -> backupPicker.open(call.arguments as Int, result)
                     "publicHelpTestAvailable" -> result.success(publicHelpTestIntent() != null)
                     "openPublicHelpTest" -> {

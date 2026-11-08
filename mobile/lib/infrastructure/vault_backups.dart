@@ -87,6 +87,8 @@ final class VaultBackups {
     ].every((k) => keys[k] != null && base64Decode(keys[k]!).length == 32)) {
       throw CareError(CareErrorCode.invalidBackupKeys);
     }
+    // Allow for the restored files, migration copies, and rollback journals.
+    await _state.requireSpace(3 * encrypted.length);
     final generation = CareDatabase.newId();
     final stage = await Directory(p.join(_state.root.path, generation))
         .create(recursive: true);
@@ -307,6 +309,20 @@ final class VaultBackups {
         }
       }
     }
+    await _state.cleanup();
+    final source = _state.directory.path;
+    final paths = [
+      'care.db',
+      'identity.db',
+      for (final id in _state.database.allAttachmentIds)
+        p.join('attachments', '$id.enc'),
+    ];
+    // The archive is uncompressed. Budget for imported data and its journal.
+    var requiredBytes = 2 * encrypted.length;
+    for (final path in paths) {
+      requiredBytes += await File(p.join(source, path)).length();
+    }
+    await _state.requireSpace(requiredBytes);
     final generation = CareDatabase.newId();
     final stage = await Directory(p.join(_state.root.path, generation))
         .create(recursive: true);
@@ -314,15 +330,9 @@ final class VaultBackups {
     CareDatabase? candidate;
     var committed = false;
     try {
-      await _state.cleanup();
-      for (final name in ['care', 'identity']) {
-        await File(p.join(_state.directory.path, '$name.db'))
-            .copy(p.join(stage.path, '$name.db'));
-      }
       final dir = await Directory(p.join(stage.path, 'attachments')).create();
-      for (final id in _state.database.allAttachmentIds) {
-        await File(p.join(_state.directory.path, 'attachments', '$id.enc'))
-            .copy(p.join(dir.path, '$id.enc'));
+      for (final path in paths) {
+        await File(p.join(source, path)).copy(p.join(stage.path, path));
       }
       candidate = CareDatabase.open(
         stage.path,

@@ -107,6 +107,8 @@ enum CareErrorCode {
   storageLocationInvalid,
   storageKeyMissing,
   storageFileMissing,
+  storageSpaceInsufficient,
+  storageSpaceCheckFailed,
   attachmentDeleteInvalid,
   reminderIdCollision,
   taskTitleRequired,

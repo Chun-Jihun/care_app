@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -11,18 +12,76 @@ import 'crypto.dart';
 
 /// Infrastructure-only owner of active encrypted generations and key material.
 final class VaultState {
-  VaultState(this.root, this._secrets);
+  VaultState(this.root, this._secrets, this.availableBytes);
   final Directory root;
   final SecretStore _secrets;
+  final Future<int> Function()? availableBytes;
   late CareDatabase database;
   late String generation;
   late Map<String, String> keys;
   bool _opened = false;
   bool maintenancePending = false;
   static const maxBackupBytes = 100 * 1024 * 1024;
+  static const _mib = 1024 * 1024;
   static final idPattern = RegExp(r'^[0-9a-fA-F-]{36}$');
   Directory get directory => Directory(p.join(root.path, generation));
+  File get _compactFile => File(p.join(directory.path, 'care.compact.tmp'));
   Uint8List key(String name) => base64Decode(keys[name]!);
+  Future<void> requireSpace(int bytes) async {
+    final available = await availableBytes?.call();
+    if (available == null) return;
+    // Leave room for page allocation, journals and filesystem metadata.
+    final deficit = bytes + 8 * _mib - available;
+    if (deficit > 0) {
+      throw CareError(
+        CareErrorCode.storageSpaceInsufficient,
+        labels: ['${(deficit + _mib - 1) ~/ _mib}'],
+      );
+    }
+  }
+
+  Future<int> compactStorage({void Function()? beforeCommit}) async {
+    final estimate = database.compactedCareBytes;
+    if (estimate == null) return 0;
+    final target = _compactFile;
+    if (await target.exists()) await target.delete();
+    await requireSpace(estimate);
+    final source = File(p.join(directory.path, 'care.db'));
+    final sourceBytes = await source.length();
+    final changes = database.changeCount;
+    final path = directory.path, stagedPath = target.path;
+    final careKey = key('care'), identityKey = key('identity');
+    try {
+      await Isolate.run(
+        () => CareDatabase.writeCompactedCopy(
+          path,
+          stagedPath,
+          careKey,
+          identityKey,
+        ),
+      );
+      final saved = sourceBytes - await target.length();
+      beforeCommit?.call();
+      if (database.changeCount != changes) throw CareError(CareErrorCode.busy);
+      if (saved <= 0) return 0;
+      database.close();
+      try {
+        target.renameSync(source.path);
+      } finally {
+        database = database.reopenAfterCompaction(careKey, identityKey);
+      }
+      return saved;
+    } finally {
+      careKey.fillRange(0, careKey.length, 0);
+      identityKey.fillRange(0, identityKey.length, 0);
+      try {
+        if (await target.exists()) await target.delete();
+      } on FileSystemException {
+        maintenancePending = true;
+      }
+    }
+  }
+
   Future<void> saveKeys(String id, Map<String, String> value) =>
       _secrets.write('vault.$id', jsonEncode(value));
   Future<void> deleteKeys(String id) => _secrets.delete('vault.$id');
@@ -82,6 +141,8 @@ final class VaultState {
     try {
       await cleanup();
       await prune();
+      final staged = _compactFile;
+      if (await staged.exists()) await staged.delete();
     } catch (_) {
       maintenancePending = true;
     }

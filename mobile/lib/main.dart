@@ -28,7 +28,13 @@ Future<void> main() async {
     final ai = DeviceAiRuntime();
     final knowledge = DeviceKnowledgeLibrary();
     final controller = CareController(
-      VaultStore(await DevicePlatformServices.prepareDirectory(), secrets),
+      VaultStore(
+        await DevicePlatformServices.prepareDirectory(),
+        secrets,
+        availableBytes: Platform.isAndroid
+            ? DevicePlatformServices.availableVaultBytes
+            : null,
+      ),
       DevicePlatformServices(),
       aiRuntime: ai,
       knowledge: knowledge,

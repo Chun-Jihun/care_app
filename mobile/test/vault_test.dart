@@ -4,7 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
+import 'package:care_notebook/domain/backup.dart';
 import 'package:care_notebook/domain/records.dart';
+import 'package:care_notebook/domain/visit_recording.dart';
 import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/infrastructure/care_database.dart';
 import 'package:care_notebook/infrastructure/crypto.dart';
@@ -15,16 +17,113 @@ void main() {
   late Directory root;
   late MemorySecrets secrets;
   late VaultStore vault;
+  late int availableBytes;
   setUp(() async {
     root = await Directory.systemTemp.createTemp('care-vault-test-');
     secrets = MemorySecrets();
-    vault = VaultStore(root, secrets);
+    availableBytes = 8 * 1024 * 1024 * 1024;
+    vault = VaultStore(
+      root,
+      secrets,
+      availableBytes: () async => availableBytes,
+    );
     await vault.open();
   });
   tearDown(() async {
     vault.close();
     await root.delete(recursive: true);
   });
+
+  test('a small backup needs space for a copy of the current vault', () async {
+    final pid = vault.repository.createPatient().id;
+    const password = 'review-backup-password';
+    final backup = await vault.backupSelection(
+      password,
+      BackupSelection(patientIds: {pid}),
+    );
+    final recording = vault.repository.beginVisitRecording(pid);
+    final pcm = Uint8List(VisitRecording.bytesPerSecond);
+    for (var i = 0; i < 64; i++) {
+      vault.repository.appendVisitAudio(pid, recording.id, pcm);
+    }
+    availableBytes = 9 * 1024 * 1024;
+    expect(backup.length, lessThan(64 * 1024));
+    await expectLater(
+      vault.importSelection(backup, password),
+      throwsA(
+        isA<CareError>().having(
+          (e) => e.code,
+          'code',
+          CareErrorCode.storageSpaceInsufficient,
+        ),
+      ),
+    );
+    expect(vault.repository.patients().single.id, pid);
+    expect(vault.repository.readVisitAudio(pid, recording.id, 0), pcm);
+
+    vault.repository.deleteVisitRecording(pid, recording.id);
+    await vault.compactStorage();
+    await vault.importSelection(backup, password);
+    expect(vault.repository.patients(), hasLength(2));
+  });
+
+  test(
+    'compaction shrinks the encrypted DB and preserves live records',
+    () async {
+      final pid = vault.repository.createPatient(alias: '보존할 수첩').id;
+      final note = vault.repository.saveEntry(
+        pid,
+        kind: EntryKind.generalNote,
+        note: '기존 기록',
+        occurredAt: DateTime.now(),
+      );
+      final deleted = vault.repository.beginVisitRecording(pid);
+      final pcm = Uint8List(VisitRecording.bytesPerSecond)..[0] = 42;
+      for (var i = 0; i < 32; i++) {
+        vault.repository.appendVisitAudio(pid, deleted.id, pcm);
+      }
+      final kept = vault.repository.beginVisitRecording(pid);
+      vault.repository.appendVisitAudio(pid, kept.id, pcm);
+      vault.repository.keepVisitRecording(pid, kept.id);
+      vault.repository.deleteVisitRecording(pid, deleted.id);
+      final db = root
+          .listSync(recursive: true)
+          .whereType<File>()
+          .singleWhere((file) => file.path.endsWith('care.db'));
+      final size = await db.length();
+
+      availableBytes = 0;
+      await expectLater(
+        vault.compactStorage(),
+        throwsA(
+          isA<CareError>().having(
+            (e) => e.code,
+            'code',
+            CareErrorCode.storageSpaceInsufficient,
+          ),
+        ),
+      );
+      expect(await db.length(), size);
+      availableBytes = 64 * 1024 * 1024;
+      await expectLater(
+        vault.compactStorage(
+          beforeCommit: () => throw CareError(CareErrorCode.locked),
+        ),
+        throwsA(
+          isA<CareError>().having((e) => e.code, 'code', CareErrorCode.locked),
+        ),
+      );
+      expect(await db.length(), size);
+      await vault.compactStorage();
+      expect(await db.length(), lessThan(size - 512 * 1024));
+      vault.close();
+      await vault.open();
+      expect(vault.repository.patients().single.alias, '보존할 수첩');
+      expect(vault.repository.entries(pid).single.id, note.id);
+      expect(vault.repository.visitRecordings(pid).single.id, kept.id);
+      expect(vault.repository.readVisitAudio(pid, kept.id, 0), pcm);
+    },
+  );
   test('REVIEW-04 rejects oversized PNG headers before allocating pixels', () {
     final source = Uint8List.fromList(
       img.encodePng(img.Image(width: 2, height: 2)),
@@ -198,6 +297,21 @@ void main() {
       throwsA(isA<CareError>()),
     );
     expect(vault.repository.entries(p.id), hasLength(2));
+    final before = Map<String, String>.of(secrets.values);
+    availableBytes = 0;
+    await expectLater(
+      vault.restore(backup, password),
+      throwsA(
+        isA<CareError>().having(
+          (e) => e.code,
+          'code',
+          CareErrorCode.storageSpaceInsufficient,
+        ),
+      ),
+    );
+    expect(vault.repository.entries(p.id), hasLength(2));
+    expect(secrets.values, before);
+    availableBytes = 64 * 1024 * 1024;
     await vault.restore(backup, password);
     expect(vault.repository.entries(p.id).single.note, 'BACKUP_SENTINEL');
     expect(vault.repository.patients().single.alias, '백업 별칭');

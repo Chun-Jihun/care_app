@@ -14,10 +14,13 @@ export '../application/ports.dart' show SecretStore;
 
 /// Implements the application vault port without exposing its keys or database.
 final class VaultStore implements NotebookVault {
-  VaultStore(Directory root, SecretStore secrets)
-    : _state = VaultState(root, secrets),
-      credentials = LocalCredentials(secrets),
-      preferences = LocalPreferences(secrets);
+  VaultStore(
+    Directory root,
+    SecretStore secrets, {
+    Future<int> Function()? availableBytes,
+  }) : _state = VaultState(root, secrets, availableBytes),
+       credentials = LocalCredentials(secrets),
+       preferences = LocalPreferences(secrets);
   final VaultState _state;
   @override
   final Credentials credentials;
@@ -39,6 +42,9 @@ final class VaultStore implements NotebookVault {
       _state.cleanup(removeOrphans: removeOrphans);
   @override
   Future<void> wipe() => _state.wipe();
+  @override
+  Future<int> compactStorage({void Function()? beforeCommit}) =>
+      _state.compactStorage(beforeCommit: beforeCommit);
   @override
   void close() => _state.close();
   @override

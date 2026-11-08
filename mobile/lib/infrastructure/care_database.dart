@@ -51,11 +51,43 @@ class CareDatabase implements NotebookRepository {
     required Uint8List key,
     required Uint8List identityKey,
   }) {
+    final store = _connect(directory, key, identityKey);
+    try {
+      SchemaMigrations(store._store, store.verifyIntegrity).migrate();
+      store.verifyIntegrity();
+      for (final name in ['care', 'identity']) {
+        for (var version = 1; version < schemaVersion; version++) {
+          final backup = File(
+            p.join(directory, '$name.migration-v$version.bak'),
+          );
+          // A cleanup failure cannot make a verified database unavailable.
+          try {
+            if (backup.existsSync()) backup.deleteSync();
+          } on FileSystemException {
+            // Retry after the next successful open, never restore over new data.
+          }
+        }
+      }
+      store.pruneChats();
+      store.pruneDrafts();
+      return store;
+    } catch (_) {
+      store.close();
+      rethrow;
+    }
+  }
+
+  static CareDatabase _connect(
+    String directory,
+    Uint8List key,
+    Uint8List identityKey, {
+    String? carePath,
+  }) {
     if (key.length != 32 || identityKey.length != 32) {
       throw CareError(CareErrorCode.invalidStorageKey);
     }
     Directory(directory).createSync(recursive: true);
-    final db = sqlite3.open(p.join(directory, 'care.db'));
+    final db = sqlite3.open(carePath ?? p.join(directory, 'care.db'));
     try {
       if (db.select('PRAGMA cipher_version').isEmpty) {
         throw CareError(CareErrorCode.encryptedStorageUnavailable);
@@ -78,30 +110,54 @@ class CareDatabase implements NotebookRepository {
       db.execute('PRAGMA identity.journal_mode=DELETE');
       db.execute('PRAGMA identity.synchronous=FULL');
       db.execute('PRAGMA identity.secure_delete=ON');
-      final store = CareDatabase._(db, directory);
-      SchemaMigrations(store._store, store.verifyIntegrity).migrate();
-      store.verifyIntegrity();
-      for (final name in ['care', 'identity']) {
-        for (var version = 1; version < schemaVersion; version++) {
-          final backup = File(
-            p.join(directory, '$name.migration-v$version.bak'),
-          );
-          // A cleanup failure cannot make a verified database unavailable.
-          try {
-            if (backup.existsSync()) backup.deleteSync();
-          } on FileSystemException {
-            // Retry after the next successful open, never restore over new data.
-          }
-        }
-      }
-      store.pruneChats();
-      store.pruneDrafts();
-      return store;
+      return CareDatabase._(db, directory);
     } catch (_) {
       db.close();
       rethrow;
     }
   }
+
+  int _pragma(String name) =>
+      int.parse(_db.select('PRAGMA $name').single.values.single.toString());
+
+  int get changeCount =>
+      _db.select('SELECT total_changes()').single.values.single as int;
+
+  int? get compactedCareBytes {
+    final free = _pragma('main.freelist_count');
+    if (free == 0) return null;
+    return (_pragma('main.page_count') - free) * _pragma('main.page_size');
+  }
+
+  static void writeCompactedCopy(
+    String directory,
+    String stagedPath,
+    Uint8List key,
+    Uint8List identityKey,
+  ) {
+    final source = _connect(directory, key, identityKey);
+    try {
+      // SQLCipher keys the VACUUM target with the main database's key.
+      source._db.execute('VACUUM main INTO ?', [stagedPath]);
+    } finally {
+      source.close();
+    }
+    final candidate = _connect(
+      directory,
+      key,
+      identityKey,
+      carePath: stagedPath,
+    );
+    try {
+      candidate.verifyIntegrity();
+    } finally {
+      candidate.close();
+    }
+  }
+
+  // Both the current and compacted files have already passed integrity checks.
+  CareDatabase reopenAfterCompaction(Uint8List key, Uint8List identityKey) =>
+      _connect(directory, key, identityKey);
 
   void verifyIntegrity() {
     if (_db

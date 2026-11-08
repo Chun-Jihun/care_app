@@ -9,6 +9,40 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test(
+    'Android vault capacity is read in bytes and failure blocks staging',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(
+          DevicePlatformServices.privacy,
+          null,
+        );
+      });
+      var succeeds = true;
+      messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, (
+        call,
+      ) async {
+        expect(call.method, 'availableVaultBytes');
+        if (succeeds) return 6 * 1024 * 1024 * 1024;
+        throw PlatformException(code: 'unavailable');
+      });
+      expect(await DevicePlatformServices.availableVaultBytes(), 6442450944);
+      succeeds = false;
+      await expectLater(
+        DevicePlatformServices.availableVaultBytes(),
+        throwsA(
+          isA<CareError>().having(
+            (e) => e.code,
+            'code',
+            CareErrorCode.storageSpaceCheckFailed,
+          ),
+        ),
+      );
+    },
+  );
+
   test('Android backup import requests a bounded document and cleans the staged copy', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     final messenger =

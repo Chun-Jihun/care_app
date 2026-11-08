@@ -625,6 +625,9 @@ class CareController extends ChangeNotifier {
   Future<Uint8List?> chooseBackup() => backups.choose();
   Future<void> restoreBackup(Uint8List data, String password) =>
       backups.restore(data, password);
+  Future<int> compactStorage() => _exclusive(
+    (epoch) => _vault.compactStorage(beforeCommit: () => _check(epoch)),
+  );
   Future<void> deleteAll() => _exclusive((_) async {
     if (_widgetAvailable) {
       try {

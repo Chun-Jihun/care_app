@@ -112,6 +112,10 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.animatedPhotoUnsupported: '움직이는 사진은 지원하지 않습니다. 정지 사진을 선택해 주세요.',
   CareErrorCode.photoDecodeFailed: '사진을 읽을 수 없습니다.',
   CareErrorCode.photoNotFound: '현재 기록의 사진을 찾을 수 없습니다.',
+  CareErrorCode.storageSpaceInsufficient:
+      '기기 저장 공간이 약 {0}MB 더 필요해요. 공간을 확보한 뒤 다시 시도해 주세요.',
+  CareErrorCode.storageSpaceCheckFailed:
+      '기기 저장 공간을 확인하지 못했어요. 앱을 다시 열고 시도해 주세요.',
   CareErrorCode.storageLocationInvalid: '저장소 위치를 확인할 수 없습니다.',
   CareErrorCode.storageKeyMissing: '기기 보안 키를 찾을 수 없습니다. 암호화 백업이 필요합니다.',
   CareErrorCode.storageFileMissing: '저장소 파일이 없습니다. 기존 데이터를 보존했습니다.',

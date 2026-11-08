@@ -75,6 +75,16 @@ class DevicePlatformServices extends PlatformServices {
     return root;
   }
 
+  static Future<int> availableVaultBytes() async {
+    try {
+      final bytes = await privacy.invokeMethod<int>('availableVaultBytes');
+      if (bytes != null && bytes >= 0) return bytes;
+    } on PlatformException {
+      // Do not start writing a temporary database if the volume cannot be checked.
+    }
+    throw CareError(CareErrorCode.storageSpaceCheckFailed);
+  }
+
   /// Clean private staging files that may remain after process termination.
   static Future<void> cleanupPickerCache() async {
     final temp = await getTemporaryDirectory();
