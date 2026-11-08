@@ -67,6 +67,29 @@ class LocalSnapshotTests(unittest.TestCase):
         self.assertEqual(calls[0][1], 2)
         build_index(self.snapshot)
 
+    def test_one_page_budget_keeps_making_progress_with_four_workers(self):
+        calls = []
+
+        def fetch(endpoint, key, **kwargs):
+            calls.append((endpoint, kwargs["page_no"]))
+            return fake_fetch(endpoint, key, **kwargs)
+
+        operations = SERVICES["permits"]
+        expected = [(f"{operations.endpoint}/{op}", page)
+                    for op in operations.operations for page in (1, 2, 3)]
+        for index, expected_call in enumerate(expected):
+            options = dict(rows=1, workers=4, delay=0, max_requests=1,
+                           resume=index > 0, page_fetcher=fetch)
+            if index < len(expected) - 1:
+                with self.assertRaisesRegex(DownloaderError, "--resume"):
+                    collect(self.snapshot, "permits", operations.endpoint,
+                            "synthetic-key", **options)
+            else:
+                manifest = collect(self.snapshot, "permits", operations.endpoint,
+                                   "synthetic-key", **options)
+                self.assertTrue(manifest["download_complete"])
+            self.assertEqual(calls[index:], [expected_call])
+
     def test_partial_snapshot_cannot_be_indexed(self):
         with self.assertRaises(DownloaderError):
             self.collect(page_fetcher=fake_fetch, max_requests=1)

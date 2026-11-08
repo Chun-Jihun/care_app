@@ -48,6 +48,9 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.photoTooLarge: '사진은 20MB 이하로 선택해 주세요.',
   CareErrorCode.backupSaveCancelled: '백업 저장을 취소했습니다.',
   CareErrorCode.backupFileTooLarge: '백업 파일이 너무 큽니다.',
+  CareErrorCode.backupOpenFailed: '백업 파일을 읽지 못했어요. 다시 선택해 주세요.',
+  CareErrorCode.legacyRestoreVisitAudio:
+      '진료 녹음 원본이 남아 있어 이전 백업으로 수첩 전체를 교체할 수 없어요. 현재 녹음은 그대로 보관돼요.',
   CareErrorCode.newerStorageVersion: '이 백업은 더 새 버전의 앱에서 만들어졌습니다. 앱을 업데이트해 주세요.',
   CareErrorCode.storageVersionMismatch: '저장소 버전이 일치하지 않습니다. 원본을 보존했습니다.',
   CareErrorCode.unknownStorageFormat: '알 수 없는 저장소 형식입니다. 원본을 보존했습니다.',

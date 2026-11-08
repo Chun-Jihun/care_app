@@ -2,6 +2,7 @@ import '../l10n/app_strings.dart';
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -70,23 +71,26 @@ class DevicePlatformServices extends PlatformServices {
     if (Platform.isAndroid) {
       await ImagePicker().retrieveLostData();
     }
-    await cleanupPickerImages();
+    await cleanupPickerCache();
     return root;
   }
 
-  /// Native pickers stage images in the app's private cache. Never touch originals.
-  static Future<void> cleanupPickerImages() async {
+  /// Clean private staging files that may remain after process termination.
+  static Future<void> cleanupPickerCache() async {
     final temp = await getTemporaryDirectory();
     await for (final file in temp.list(recursive: true, followLinks: false)) {
       if (file is File &&
           p.isWithin(temp.path, file.path) &&
-          [
-            '.jpg',
-            '.jpeg',
-            '.png',
-            '.heic',
-            '.heif',
-          ].contains(p.extension(file.path).toLowerCase())) {
+          (const {
+                '.jpg',
+                '.jpeg',
+                '.png',
+                '.heic',
+                '.heif',
+              }.contains(p.extension(file.path).toLowerCase()) ||
+              (p.dirname(file.path) == temp.path &&
+                  p.basename(file.path).startsWith('care-backup-import-') &&
+                  p.extension(file.path) == '.tmp'))) {
         await file.delete();
       }
     }
@@ -273,6 +277,30 @@ class DevicePlatformServices extends PlatformServices {
 
   @override
   Future<Uint8List?> pickBackup() async {
+    const limit = VaultStore.maxBackupBytes + 128;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final String? path;
+      try {
+        path = await privacy.invokeMethod<String>('pickBackup', limit);
+      } on PlatformException catch (error) {
+        throw CareError(
+          error.code == 'backupFileTooLarge'
+              ? CareErrorCode.backupFileTooLarge
+              : CareErrorCode.backupOpenFailed,
+        );
+      }
+      if (path == null) return null;
+      final file = File(path);
+      try {
+        return await file.readAsBytes();
+      } finally {
+        try {
+          await file.delete();
+        } on FileSystemException {
+          // The next startup retries cleanup of the private staged file.
+        }
+      }
+    }
     try {
       final file = await FilePicker.pickFile(
         dialogTitle: strings.text('간병수첩 백업 선택'),
@@ -281,7 +309,7 @@ class DevicePlatformServices extends PlatformServices {
       if (file == null) {
         return null;
       }
-      if (await file.length() > VaultStore.maxBackupBytes + 128) {
+      if (await file.length() > limit) {
         throw CareError(CareErrorCode.backupFileTooLarge);
       }
       return await file.readAsBytes();

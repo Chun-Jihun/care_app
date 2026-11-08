@@ -11,6 +11,9 @@ import 'common.dart';
 import 'settings.dart';
 import 'medical_citation_card.dart';
 
+const urgentContactNotice =
+    '위급한 상황이라면 앱 답변을 기다리지 말고 즉시 의료기관이나 현지 응급전화에 연락해 주세요. 대한민국에서는 119입니다.';
+
 class AiReplyView extends StatelessWidget {
   const AiReplyView(this.c, this.pid, this.reply, {super.key});
   final CareController c;
@@ -73,7 +76,7 @@ class AiReplyView extends StatelessWidget {
                         '약의 병용·용량·중단이나 치료 변경은 안내할 수 없습니다. 의료진 또는 약사에게 확인해 주세요.',
                       _ => '검수된 의료 근거가 아직 연결되지 않아 이 질문에는 답변할 수 없어요. 약의 병용·변경이나 치료 판단은 의료진 또는 약사에게 확인해 주세요.',
                     },
-                    AiReplyKind.urgent => '위급한 상황이라면 앱 답변을 기다리지 말고 즉시 의료기관이나 현지 응급전화에 연락해 주세요. 대한민국에서는 119입니다.',
+                    AiReplyKind.urgent => urgentContactNotice,
                     AiReplyKind.notebookScope =>
                       '현재 선택한 수첩의 기록만 조회할 수 있어요. 필요한 수첩으로 전환한 뒤 질문해 주세요.',
                     AiReplyKind.unavailable => '기기 AI를 실행하지 못했어요. 설정에서 모델 설치 상태와 기기 저장 공간을 확인해 주세요. 질문은 선택한 보관 방식으로 남겼습니다.',

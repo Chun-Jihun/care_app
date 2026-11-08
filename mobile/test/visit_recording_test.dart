@@ -7,6 +7,7 @@ import 'package:care_notebook/application/visit_audio_buffer.dart';
 import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/application/visit_audio_device.dart';
 import 'package:care_notebook/domain/backup.dart';
+import 'package:care_notebook/domain/drafts.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/domain/visit_recording.dart';
 import 'package:care_notebook/infrastructure/crypto.dart';
@@ -17,9 +18,64 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'ai_service_test.dart' show FakeAi;
 import 'support.dart';
 
 void main() {
+  testWidgets(
+    'an unedited visit transcript is recoverable after backgrounding',
+    (tester) async {
+      late Directory root;
+      late CareController c;
+      late VisitRecording recording;
+      await tester.runAsync(() async {
+        root = await Directory.systemTemp.createTemp('care-visit-transcript-');
+        c = CareController(
+          VaultStore(root, MemorySecrets()),
+          FakePlatform(),
+          aiRuntime: FakeAi(),
+          visitAudio: _VisitMic.new,
+        );
+        await c.initialize();
+        await c.startWithoutLock();
+        await c.drafts.setRetention(DraftRetention.month);
+        final pid = c.selectedId!;
+        recording = c.visitRecordings.begin(pid);
+        c.visitRecordings.append(pid, recording.id, Uint8List(32000));
+      });
+      final pid = c.selectedId!;
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ko'),
+            supportedLocales: const [Locale('ko')],
+            localizationsDelegates: const [
+              AppStrings.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            home: VisitRecordingPage(c, pid),
+          ),
+        );
+        await tester.tap(find.text('전사하고 검토하기'));
+        await tester.pumpAndSettle();
+        expect(find.text('진료·연락 기록'), findsOneWidget);
+        c.handleBackground();
+        final payload = c.drafts.list(pid).single.payload as EntryDraftPayload;
+        expect(payload.note, '[00:00] possibly wrong 15 mg');
+        expect(
+          payload.at?.millisecondsSinceEpoch,
+          recording.startedAt.millisecondsSinceEpoch,
+        );
+        expect(c.records.entries(pid), isEmpty);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        c.dispose();
+        await tester.runAsync(() => root.delete(recursive: true));
+      }
+    },
+  );
+
   testWidgets('consent gates the mic and leaving the app retains a draft', (
     tester,
   ) async {
@@ -120,6 +176,41 @@ void main() {
     expect(reopened.visitRecordings.read(pid, recording.id, 0), pcm);
     expect(reopened.records.entries(pid), isEmpty);
   });
+
+  test(
+    'legacy preview and replacement preserve existing visit audio',
+    () async {
+      final root = await Directory.systemTemp.createTemp('care-visit-legacy-');
+      final vault = VaultStore(root, MemorySecrets());
+      final c = testController(vault, FakePlatform());
+      addTearDown(() => root.delete(recursive: true));
+      addTearDown(c.dispose);
+      await c.initialize();
+      await c.startWithoutLock();
+      const password = 'synthetic-legacy-password';
+      final legacy = await vault.backup(password);
+      final pid = c.selectedId!;
+      final recording = c.visitRecordings.begin(pid);
+      final pcm = Uint8List.fromList([12, 34, 56, 78]);
+      c.visitRecordings.append(pid, recording.id, pcm);
+
+      final blocked = throwsA(
+        isA<CareError>().having(
+          (e) => e.code,
+          'code',
+          CareErrorCode.legacyRestoreVisitAudio,
+        ),
+      );
+      await expectLater(c.inspectBackup(legacy, password), blocked);
+      c.visitRecordings.keep(pid, recording.id);
+      await expectLater(c.restoreBackup(legacy, password), blocked);
+      expect(c.visitRecordings.read(pid, recording.id, 0), pcm);
+
+      c.visitRecordings.delete(pid, recording.id);
+      expect((await c.inspectBackup(legacy, password)).legacy, isTrue);
+      await c.restoreBackup(legacy, password);
+    },
+  );
 
   test(
     'raw audio stays encrypted and outside backups and other notebooks',

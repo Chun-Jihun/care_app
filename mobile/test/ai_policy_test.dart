@@ -7,6 +7,8 @@ import 'package:care_notebook/domain/ai.dart';
 void main() {
   test('medical, urgent and ambiguous questions never reach generation', () {
     expect(AiQueryPolicy.preflight('숨을 못 쉬어요'), AiReplyKind.urgent);
+    expect(AiQueryPolicy.preflight('숨을 잘 못 쉬어요'), AiReplyKind.urgent);
+    expect(AiQueryPolicy.preflight('숨이 안 쉬어져요'), AiReplyKind.urgent);
     expect(
       AiQueryPolicy.preflight('Is this medicine safe?'),
       AiReplyKind.medicalHold,

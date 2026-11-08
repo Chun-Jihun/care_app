@@ -63,12 +63,14 @@ Future<void> editEntry(
         .toList();
   }
   final fieldsKey = GlobalKey<RecordFieldsState>();
+  final hasPrefilledNote = initialNote?.trim().isNotEmpty ?? false;
   final draft = DraftSession(
     c,
     patientId: pid,
     type: DraftType.entry,
     targetId: entry?.id,
     restored: restored,
+    hasPrefilledContent: hasPrefilledNote,
     snapshot: () => EntryDraftPayload(
       kind: kind,
       note: note.text,
@@ -86,7 +88,7 @@ Future<void> editEntry(
           title:
               '${context.tr(kind.label)} ${entry == null ? context.tr('기록') : context.tr('수정')}',
           draft: draft,
-          initiallyDirty: initialPhoto != null || initialNote != null,
+          initiallyDirty: initialPhoto != null || hasPrefilledNote,
           draftExitNotice: () => photo == null
               ? null
               : context.tr(

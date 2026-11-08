@@ -12,6 +12,7 @@ import java.util.TimeZone
 
 class MainActivity : FlutterFragmentActivity() {
     private val visitPlayback = VisitAudioPlayback()
+    private val backupPicker = BackupDocumentPicker(this)
 
     private fun publicHelpTestIntent(): Intent? {
         if (!packageName.endsWith(".devtest")) return null
@@ -58,6 +59,7 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(null)
                     }
                     "timeZone" -> result.success(TimeZone.getDefault().id)
+                    "pickBackup" -> backupPicker.open(call.arguments as Int, result)
                     "publicHelpTestAvailable" -> result.success(publicHelpTestIntent() != null)
                     "openPublicHelpTest" -> {
                         val intent = checkNotNull(publicHelpTestIntent())

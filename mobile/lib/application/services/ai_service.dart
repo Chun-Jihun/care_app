@@ -58,7 +58,12 @@ final class AiService {
 
   Future<void> dispose() => _runtime.dispose();
 
-  Future<void> ask(String pid, String question, AppLanguage language) async {
+  Future<void> ask(
+    String pid,
+    String question,
+    AppLanguage language, {
+    Future<void> Function()? onUrgent,
+  }) async {
     _scope.requirePatient(pid);
     if (_asking) throw const AiException(AiFailure.busy);
     if (question.trim().isEmpty || question.length > 20000) {
@@ -68,6 +73,12 @@ final class AiService {
     _asking = true;
     try {
       final revision = _chat.revision;
+      final guard = AiQueryPolicy.guard(question);
+      if (guard == AiReplyKind.urgent && onUrgent != null) {
+        await onUrgent();
+        _scope.check(epoch);
+        if (_chat.revision != revision) return;
+      }
       final prior = _previous;
       final previous =
           prior?.epoch == epoch &&
@@ -83,7 +94,6 @@ final class AiService {
       // even when the notebook stays open because app lock is disabled.
       if (_chat.revision != revision) return;
       AiReply reply;
-      final guard = AiQueryPolicy.guard(question);
       final lookup = guard == null
           ? RecordLookupParser.parse(
               question,

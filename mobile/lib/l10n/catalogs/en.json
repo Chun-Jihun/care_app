@@ -180,6 +180,8 @@
   "백업 저장을 취소했습니다.": "Backup saving was cancelled.",
   "간병수첩 백업 선택": "Select a Care Notebook backup",
   "백업 파일이 너무 큽니다.": "The backup file is too large.",
+  "백업 파일을 읽지 못했어요. 다시 선택해 주세요.": "The backup file could not be read. Select it again.",
+  "진료 녹음 원본이 남아 있어 이전 백업으로 수첩 전체를 교체할 수 없어요. 현재 녹음은 그대로 보관돼요.": "Visit recordings are still on this device, so the older backup cannot replace all notebooks. Your recordings have been kept.",
   "사진 합계가 50MB를 넘습니다. 기간을 줄이거나 사진을 제외해 주세요.": "Photos total more than 50 MB. Shorten the date range or exclude photos.",
   "백업 크기가 한도를 넘습니다. 선택 기간을 줄여 주세요.": "The backup exceeds the size limit. Shorten the selected date range.",
   "지원하지 않는 백업 형식입니다.": "This backup format is not supported.",

@@ -16,11 +16,13 @@ void main() {
   late Directory root;
   late CareController c;
   late FakeAi ai;
+  late MemorySecrets secrets;
   setUp(() async {
     root = await Directory.systemTemp.createTemp('care-chat-notice-');
     ai = FakeAi();
+    secrets = MemorySecrets();
     c = CareController(
-      VaultStore(root, MemorySecrets()),
+      VaultStore(root, secrets),
       FakePlatform(),
       aiRuntime: ai,
     );
@@ -42,6 +44,35 @@ void main() {
     expect(find.text('확인 전에는 보이지 않는 합성 대화'), findsNothing);
     expect(ai.calls, 0);
   }
+
+  testWidgets('explicit urgent wording opens contacts even if storage fails', (
+    tester,
+  ) async {
+    withFixtureSql(root, secrets, (sql) {
+      sql.execute('''
+        CREATE TRIGGER fail_question BEFORE INSERT ON chat_message
+        BEGIN SELECT RAISE(ABORT, 'synthetic write failure'); END;
+      ''');
+    });
+    await tester.pumpWidget(CareApp(controller: c));
+    await tester.pumpAndSettle();
+    await open(tester);
+    await acknowledgeChatNotice(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('chat_input')),
+      '숨이 안 쉬어져요',
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('질문 남기기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('위급할 때 119 (대한민국)'), findsOneWidget);
+    expect(ai.calls, 0);
+    expect(c.chat.messages(c.selectedId!), hasLength(1));
+    await tester.tap(find.widgetWithText(TextButton, '확인'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('작업을 완료하지 못했습니다'), findsOneWidget);
+  });
 
   testWidgets(
     'notice gates every entry; outside tap cannot bypass; cancel and back leave chat',

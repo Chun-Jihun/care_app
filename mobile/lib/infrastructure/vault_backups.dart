@@ -65,6 +65,7 @@ final class VaultBackups {
     String password, {
     void Function()? beforeCommit,
   }) async {
+    _checkLegacyReplacement();
     if (encrypted.length > VaultState.maxBackupBytes + 128) {
       throw CareError(CareErrorCode.backupFileTooLarge);
     }
@@ -251,12 +252,21 @@ final class VaultBackups {
     String password,
   ) async {
     final archive = await _readArchive(encrypted, password);
-    if (archive['format'] == 1) return BackupPreview(legacy: true);
+    if (archive['format'] == 1) {
+      _checkLegacyReplacement();
+      return BackupPreview(legacy: true);
+    }
     final rows = _archiveRows(archive);
     if (_state.database.hasImportedBackup(archive['id'] as String)) {
       throw CareError(CareErrorCode.duplicateBackup);
     }
     return BackupPreview(legacy: false, counts: BackupDocument.counts(rows));
+  }
+
+  void _checkLegacyReplacement() {
+    if (_state.database.hasVisitAudio) {
+      throw CareError(CareErrorCode.legacyRestoreVisitAudio);
+    }
   }
 
   Future<void> importSelection(

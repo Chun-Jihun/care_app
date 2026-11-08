@@ -13,6 +13,7 @@ import '../domain/chat.dart';
 import '../domain/errors.dart';
 import '../domain/reviewed_input.dart';
 import 'common.dart';
+import 'contact_action.dart';
 import 'editors.dart';
 
 class ChatPage extends StatefulWidget {
@@ -176,7 +177,12 @@ class _ChatBodyState extends State<ChatBody> {
       error = null;
     });
     try {
-      await widget.c.ai.ask(widget.pid, input.text, widget.c.language);
+      await widget.c.ai.ask(
+        widget.pid,
+        input.text,
+        widget.c.language,
+        onUrgent: showUrgentContact,
+      );
       if (mounted) {
         setState(() => responseReady = true);
         input.clear();
@@ -204,6 +210,35 @@ class _ChatBodyState extends State<ChatBody> {
         setState(() => sending = false);
       }
     }
+  }
+
+  Future<void> showUrgentContact() async {
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
+    unawaited(
+      showDialog<void>(
+        context: context,
+        useRootNavigator: false,
+        builder: (dialogContext) => AlertDialog(
+          scrollable: true,
+          title: Text(dialogContext.tr('연락')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(dialogContext.tr(urgentContactNotice)),
+              contactCard(dialogContext, widget.c),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.tr('확인')),
+            ),
+          ],
+        ),
+      ),
+    );
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   @override

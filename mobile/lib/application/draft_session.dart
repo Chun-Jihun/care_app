@@ -15,6 +15,7 @@ class DraftSession {
     required DraftPayload Function() snapshot,
     this.targetId,
     CareDraft? restored,
+    bool hasPrefilledContent = false,
   }) : _c = c,
        _snapshot = snapshot,
        id = restored?.id ?? c.drafts.newId(),
@@ -27,9 +28,12 @@ class DraftSession {
             restored.targetId != targetId)) {
       throw CareError(CareErrorCode.draftEditorMismatch);
     }
-    _last = snapshot().encode();
+    _last = restored == null && hasPrefilledContent
+        ? null
+        : snapshot().encode();
     _status.value = _saved ? DraftStatus.restored : DraftStatus.waiting;
     c.drafts.registerFlusher(flush);
+    if (_last == null) changed();
   }
   final CareController _c;
   final String id;
@@ -39,7 +43,7 @@ class DraftSession {
   final _status = ValueNotifier<DraftStatus>(DraftStatus.waiting);
   ValueListenable<DraftStatus> get status => _status;
   Timer? _timer;
-  late String _last;
+  String? _last;
   late final int _session;
   bool _saved, _finished = false, _disposed = false;
 

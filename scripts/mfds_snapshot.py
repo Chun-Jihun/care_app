@@ -178,9 +178,11 @@ def collect(snapshot: Path, service_name: str, base: str, key: str, *,
                     first = len(state["pages"]) + 1
                     last = (max(1, math.ceil(state["total_count"] / rows))
                             if state["total_count"] is not None else 1)
-                    numbers = range(first, min(first + workers - 1, last) + 1)
-                    if requested + len(numbers) > max_requests:
+                    remaining = max_requests - requested
+                    if remaining == 0:
                         raise DownloaderError("이번 실행의 요청 한도에 도달했습니다. --resume으로 재개하세요.")
+                    count = min(workers, last - first + 1, remaining)
+                    numbers = range(first, first + count)
                     requested += len(numbers)
                     futures = [pool.submit(retrieve, op, number) for number in numbers]
                     for future in futures:
