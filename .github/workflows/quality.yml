@@ -56,5 +56,5 @@ jobs:
         run: |
           & "$env:ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager.bat" 'platforms;android-37.0' 'build-tools;36.0.0'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Verify contracts, translations, static analysis, storage and debug build
+      - name: Verify contracts, debug builds and Android release privacy
         run: ./scripts/quality.ps1 -BuildAndroidDebug

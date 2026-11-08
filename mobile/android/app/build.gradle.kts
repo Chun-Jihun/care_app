@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 
 plugins {
     id("com.android.application")
@@ -21,7 +22,31 @@ val verifyReleaseSigning by tasks.registering {
     }
 }
 tasks.configureEach {
-    if (name == "preReleaseBuild") dependsOn(verifyReleaseSigning)
+    if (name == "packageRelease" || name == "packageReleaseBundle") {
+        dependsOn(verifyReleaseSigning)
+    }
+}
+
+tasks.register("prepareReleaseAudit") {
+    // Read the exact manifest prepared for packaging, without creating an APK or AAB.
+    val packagingManifest = tasks.named("processReleaseManifestForPackage")
+    dependsOn(packagingManifest)
+    val manifests = files(packagingManifest).asFileTree.matching {
+        include("**/AndroidManifest.xml")
+    }
+    val runtime = configurations.named("releaseRuntimeClasspath")
+    val reportDir = layout.buildDirectory.dir("reports/release-audit")
+    doLast {
+        val resolution = runtime.get().incoming.resolutionResult
+        val unresolved = resolution.allDependencies.filterIsInstance<UnresolvedDependencyResult>()
+        check(unresolved.isEmpty()) {
+            "Unresolved release dependencies: ${unresolved.joinToString { it.attempted.displayName }}"
+        }
+        val report = reportDir.get().asFile
+        manifests.singleFile.copyTo(report.resolve("AndroidManifest.xml"), overwrite = true)
+        val dependencies = resolution.allComponents.map { it.id.displayName }.sorted()
+        report.resolve("runtime-dependencies.txt").writeText(dependencies.joinToString("\n", postfix = "\n"))
+    }
 }
 
 android {

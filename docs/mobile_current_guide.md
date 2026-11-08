@@ -8,7 +8,7 @@
 
 ## 개발 실행과 검사
 
-도구 기준은 [모바일 README](../mobile/README.md#실행), 설치·제외 파일은 [저장소 안내](repository_hygiene.md)를 따른다. 개발 설치에는 debug 빌드를 사용한다. release는 소유자가 준비한 정식 서명 키가 필요하며 CI는 debug만 빌드한다.
+도구 기준은 [모바일 README](../mobile/README.md#실행), 설치·제외 파일은 [저장소 안내](repository_hygiene.md)를 따른다. 개발 설치에는 debug 빌드를 사용한다. 배포 APK와 AAB를 만들려면 소유자가 준비한 정식 서명 키가 필요하다. CI는 debug 빌드와 서명 없는 release 구성 검사를 실행한다.
 
 프로젝트 루트에서 의존성을 준비한 뒤 아래 검사를 실행한다.
 
@@ -16,11 +16,13 @@
 python -m pip install -r scripts/requirements-quality.txt
 .\scripts\mobile.ps1 -Action Dependencies
 .\scripts\quality.ps1
-# SDK/JDK/Android 의존성이 준비된 환경에서 debug 빌드도 포함
+# SDK/JDK/Android 의존성이 준비된 환경에서 Android 빌드·감사도 포함
 .\scripts\quality.ps1 -BuildAndroidDebug
 ```
 
 `quality.ps1`은 Python 치명적 구문·제어 흐름·미정의 이름 검사(Ruff), 합성 Python 시험, 다섯 번역 카탈로그 계약, Flutter 정적 분석·시험, 저장소 충돌 복구 probe, care_ort 정적 분석을 순서대로 실행하고 첫 실패를 반환한다. Python 전체 정적 타입 검사가 구성된 것은 아니다. Flutter/Dart 타입 분석은 포함한다.
+
+`-BuildAndroidDebug`는 기본·광고 시험 APK를 검사하고, `:app:prepareReleaseAudit`로 배포 패키징에 사용될 병합 매니페스트와 전이 의존성 목록을 생성한다. Python 감사에서 허용 목록 밖 권한이나 Google 광고 SDK·시험 구성 요소가 발견되면 실패한다. 전체 근거 감사에서는 `--android-release-dir mobile/build/app/reports/release-audit`로 이 결과를 포함한다. 해당 인수가 없으면 Android 구성 검사는 미검증으로 기록한다.
 
 Flutter 시험은 순차 실행(`--concurrency=1`)을 기본으로 한다. 현재 Windows 환경의 병렬 실행에서 서로 다른 시험 파일이 완료되지 않는 현상을 관찰했으며, 해당 파일의 단독 실행은 통과했다. 원인은 확정하지 않았고 시험·assertion을 제외하지 않았다. `mobile.ps1`의 Test·Validate와 CI도 같은 기본값을 사용한다.
 

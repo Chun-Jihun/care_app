@@ -36,6 +36,8 @@ try {
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             Push-Location android
             try {
+                & ./gradlew.bat :app:prepareReleaseAudit '-Ptarget-platform=android-arm64'
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                 & ./gradlew.bat :ad-test:assembleDebug '-PcareDeviceTest=ads'
                 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             } finally { Pop-Location }
@@ -44,4 +46,8 @@ try {
                 -NotebookApk build/app/outputs/flutter-apk/app-debug.apk
         }
     } finally { Pop-Location }
+    if ($BuildAndroidDebug) {
+        & $Python -m scripts.audit_mobile_release --android-only --android-release-dir mobile/build/app/reports/release-audit
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
 } finally { Pop-Location }
