@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,11 +7,14 @@ import 'package:flutter/material.dart';
 import '../application/care_controller.dart';
 import '../application/visit_audio_buffer.dart';
 import '../domain/ai.dart';
+import '../domain/drafts.dart';
 import '../domain/records.dart';
 import '../domain/visit_recording.dart';
 import '../l10n/app_strings.dart';
 import 'ai_settings.dart';
 import 'common.dart';
+import 'draft_page.dart';
+import 'draft_support.dart';
 import 'editors/entry_editor.dart';
 
 enum _AudioWork { idle, starting, recording, stopping, playing, transcribing }
@@ -221,7 +225,7 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
       _processed = 0;
       _total = recording.byteCount;
     });
-    final text = StringBuffer();
+    final segments = <({int seconds, String text})>[];
     final skipped = context.tr('이 구간은 인식하지 못했어요.');
     var recognized = false;
     try {
@@ -253,15 +257,17 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
           );
           if (!_current(operation)) return;
           recognized = true;
-          text.writeln(
-            '[${_time(start ~/ VisitRecording.bytesPerSecond)}] $result',
-          );
+          segments.add((
+            seconds: start ~/ VisitRecording.bytesPerSecond,
+            text: result,
+          ));
         } on AiException catch (error) {
           if (error.code != AiFailure.noSpeech) rethrow;
           if (!_current(operation)) return;
-          text.writeln(
-            '[${_time(start ~/ VisitRecording.bytesPerSecond)}] $skipped',
-          );
+          segments.add((
+            seconds: start ~/ VisitRecording.bytesPerSecond,
+            text: skipped,
+          ));
         } finally {
           samples.fillRange(0, samples.length, 0);
         }
@@ -269,19 +275,85 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
       }
       if (!mounted || !_current(operation)) return;
       if (!recognized) throw const AiException(AiFailure.noSpeech);
+      final parts = _transcriptParts(recording.startedAt, segments);
+      if (parts.length == 1) {
+        setState(() => _work = _AudioWork.idle);
+        await editEntry(
+          context,
+          widget.c,
+          EntryKind.medicalContact,
+          initialNote: parts.single.note,
+          initialAt: parts.single.at,
+        );
+        return;
+      }
+      if (!await chooseDraftRetention(context, widget.c, onlyIfUnset: true) ||
+          !mounted ||
+          !_current(operation)) {
+        return;
+      }
+      final ids = await widget.c.drafts.addEntries(widget.pid, parts);
+      if (!mounted || !_current(operation)) return;
       setState(() => _work = _AudioWork.idle);
-      await editEntry(
+      await pushPage(
         context,
-        widget.c,
-        EntryKind.medicalContact,
-        initialNote: text.toString().trim(),
-        initialAt: recording.startedAt,
+        MaterialPageRoute<void>(
+          builder: (_) => DraftPage(widget.c, transcriptDraftIds: ids),
+        ),
       );
     } on Object catch (error) {
       if (_current(operation)) _error = error;
     } finally {
       if (mounted) setState(() => _work = _AudioWork.idle);
     }
+  }
+
+  List<EntryDraftPayload> _transcriptParts(
+    DateTime recordedAt,
+    List<({int seconds, String text})> segments,
+  ) {
+    final parts = <EntryDraftPayload>[];
+    final note = StringBuffer();
+    var startSeconds = 0;
+    void finishPart() {
+      parts.add(
+        EntryDraftPayload(
+          kind: EntryKind.medicalContact,
+          note: note.toString().trimRight(),
+          at: recordedAt.add(Duration(seconds: startSeconds)),
+        ),
+      );
+      note.clear();
+    }
+
+    for (final segment in segments) {
+      final prefix = '[${_time(segment.seconds)}] ';
+      var start = 0;
+      do {
+        var end = min(
+          segment.text.length,
+          start + entryNoteLimit - prefix.length,
+        );
+        if (end < segment.text.length &&
+            (segment.text.codeUnitAt(end - 1) & 0xFC00) == 0xD800) {
+          // A supplementary character uses two UTF-16 code units.
+          end--;
+        }
+        final line = '$prefix${segment.text.substring(start, end)}';
+        if (note.isNotEmpty && note.length + 1 + line.length > entryNoteLimit) {
+          finishPart();
+        }
+        if (note.isEmpty) {
+          startSeconds = segment.seconds;
+        } else {
+          note.write('\n');
+        }
+        note.write(line);
+        start = end;
+      } while (start < segment.text.length);
+    }
+    finishPart();
+    return parts;
   }
 
   void _cancel() {

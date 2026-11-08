@@ -22,6 +22,103 @@ import 'ai_service_test.dart' show FakeAi;
 import 'support.dart';
 
 void main() {
+  final first = '앞부분 ${'가' * 12000}';
+  final second = '뒷부분 ${'나' * 9000}';
+  final fullSegmentPrefix = '가' * 19991;
+  const fullSegmentTail = '😀나나나나나나나';
+  for (final (description, segments, notes, secondsApart) in [
+    (
+      'long visit transcripts can be reviewed and saved in order',
+      [first, second],
+      ['[00:00] $first', '[00:30] $second'],
+      30,
+    ),
+    (
+      'a full-size speech segment keeps its timestamp and whole emoji',
+      ['$fullSegmentPrefix$fullSegmentTail'],
+      ['[00:00] $fullSegmentPrefix', '[00:00] $fullSegmentTail'],
+      0,
+    ),
+  ]) {
+    testWidgets(description, (tester) async {
+      late Directory root;
+      late CareController c;
+      final ai = _SegmentedSpeech(segments);
+      await tester.runAsync(() async {
+        root = await Directory.systemTemp.createTemp('care-visit-transcript-');
+        c = CareController(
+          VaultStore(root, MemorySecrets()),
+          FakePlatform(),
+          aiRuntime: ai,
+          visitAudio: _VisitMic.new,
+        );
+        await c.initialize();
+        await c.startWithoutLock();
+        await c.drafts.setRetention(DraftRetention.month);
+        final pid = c.selectedId!;
+        final recording = c.visitRecordings.begin(pid);
+        final pcm = Uint8List(32000);
+        for (var i = 0; i < (segments.length - 1) * 30 + 1; i++) {
+          c.visitRecordings.append(pid, recording.id, pcm);
+        }
+      });
+      final pid = c.selectedId!;
+      Future<void> savePart(String label) async {
+        await tester.tap(find.text(label));
+        await tester.pumpAndSettle();
+        await tester.runAsync(() async {
+          await tester.tap(find.widgetWithText(FilledButton, '저장'));
+          for (var i = 0; i < 50 && c.busy; i++) {
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+          }
+        });
+        await tester.pumpAndSettle();
+      }
+
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ko'),
+            supportedLocales: const [Locale('ko')],
+            localizationsDelegates: const [
+              AppStrings.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            home: VisitRecordingPage(c, pid),
+          ),
+        );
+        await tester.tap(find.text('전사하고 검토하기'));
+        await tester.pumpAndSettle();
+        expect(find.text('전사문 검토'), findsOneWidget);
+        final drafts = c.drafts
+            .list(pid)
+            .map((draft) => draft.payload as EntryDraftPayload);
+        expect(drafts.map((draft) => draft.note), unorderedEquals(notes));
+        expect(c.records.entries(pid), isEmpty);
+        await savePart('전사 구간 1/2');
+        expect(c.records.entries(pid).single.note, notes.first);
+        c.handleBackground();
+        expect(
+          (c.drafts.list(pid).single.payload as EntryDraftPayload).note,
+          notes.last,
+        );
+        await savePart('전사 구간 2/2');
+        final saved = c.records.entries(pid);
+        expect(saved.map((entry) => entry.note), unorderedEquals(notes));
+        expect(
+          saved.first.occurredAt.difference(saved.last.occurredAt),
+          Duration(seconds: secondsApart),
+        );
+        expect(c.drafts.list(pid), isEmpty);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        c.dispose();
+        await tester.runAsync(() => root.delete(recursive: true));
+      }
+    });
+  }
+
   testWidgets(
     'an unedited visit transcript is recoverable after backgrounding',
     (tester) async {
@@ -282,6 +379,16 @@ void main() {
       );
     },
   );
+}
+
+class _SegmentedSpeech extends FakeAi {
+  _SegmentedSpeech(this.segments);
+  final List<String> segments;
+  var next = 0;
+
+  @override
+  Future<String> transcribe(Float32List samples, String language) async =>
+      segments[next++];
 }
 
 class _VisitMic implements VisitAudioDevice {

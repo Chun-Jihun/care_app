@@ -194,47 +194,71 @@ String _draftText(BuildContext context, CareDraft draft) {
 }
 
 class DraftPage extends StatelessWidget {
-  const DraftPage(this.c, {super.key});
+  const DraftPage(this.c, {super.key, this.transcriptDraftIds});
   final CareController c;
+  final List<String>? transcriptDraftIds;
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: c,
     builder: (context, _) {
       if (!c.unlocked) return const SizedBox.shrink();
-      final drafts = [...c.drafts.list(c.selectedId), ...c.drafts.list(null)];
+      final transcript = transcriptDraftIds;
+      final notebookDrafts = c.drafts.list(c.selectedId);
+      final byId = {for (final draft in notebookDrafts) draft.id: draft};
+      final drafts = transcript == null
+          ? [...notebookDrafts, ...c.drafts.list(null)]
+          : [for (final id in transcript) ?byId[id]];
       return Scaffold(
-        appBar: AppBar(title: Text(context.tr('작성 중인 초안'))),
+        appBar: AppBar(
+          title: Text(context.tr(transcript == null ? '작성 중인 초안' : '전사문 검토')),
+        ),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Text(
-              context.tr('{0} 수첩과 돌보는 나의 초안입니다. 저장을 눌러야 기록으로 확정됩니다.', [
-                context.strings.patient(c.patient),
-              ]),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                context.tr('보관기간: {0}', [
-                  context.tr(c.drafts.retention?.label ?? '선택 필요'),
+            if (transcript == null) ...[
+              Text(
+                context.tr('{0} 수첩과 돌보는 나의 초안입니다. 저장을 눌러야 기록으로 확정됩니다.', [
+                  context.strings.patient(c.patient),
                 ]),
               ),
-              subtitle: Text(context.tr('마지막 자동 저장 시각부터 계산해요.')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => attempt(context, () async {
-                await chooseDraftRetention(context, c);
-              }),
-            ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  context.tr('보관기간: {0}', [
+                    context.tr(c.drafts.retention?.label ?? '선택 필요'),
+                  ]),
+                ),
+                subtitle: Text(context.tr('마지막 자동 저장 시각부터 계산해요.')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => attempt(context, () async {
+                  await chooseDraftRetention(context, c);
+                }),
+              ),
+            ] else if (drafts.isNotEmpty)
+              Text(
+                context.tr('전사문을 {0}개 초안으로 나눴어요. 각 구간을 열어 확인하고 저장해 주세요.', [
+                  transcript.length,
+                ]),
+              ),
             if (drafts.isEmpty)
               EmptyCard(
                 context.tr('작성 중인 초안이 없어요'),
-                context.tr('작성 중 앱이 잠기거나 초안을 보관하고 나가면 여기에서 이어서 작성할 수 있어요.'),
+                context.tr(
+                  transcript == null
+                      ? '작성 중 앱이 잠기거나 초안을 보관하고 나가면 여기에서 이어서 작성할 수 있어요.'
+                      : '이 전사문에 남은 초안이 없어요.',
+                ),
               ),
             for (final d in drafts)
               Card(
                 child: ListTile(
                   title: Text(
-                    '${draftLabel(context, d)}${d.targetId == null ? '' : context.tr(' · 기존 항목 작성 중')}',
+                    transcript == null
+                        ? '${draftLabel(context, d)}${d.targetId == null ? '' : context.tr(' · 기존 항목 작성 중')}'
+                        : context.tr('전사 구간 {0}/{1}', [
+                            transcript.indexOf(d.id) + 1,
+                            transcript.length,
+                          ]),
                   ),
                   subtitle: Text(
                     context.tr('{0} {1} 저장{2}', [

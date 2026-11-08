@@ -139,6 +139,7 @@ abstract interface class NotebookRepository {
     bool create = true,
     DateTime? now,
   });
+  List<String> addEntryDrafts(String pid, List<EntryDraftPayload> entries);
   void deleteDraft(String? pid, String id);
   String? draftBase(DraftType type, String? pid, String? targetId);
   void completeDraft(String? pid, String id);

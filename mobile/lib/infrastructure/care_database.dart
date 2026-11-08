@@ -434,6 +434,22 @@ class CareDatabase implements NotebookRepository {
     now: now,
   );
   @override
+  List<String> addEntryDrafts(String pid, List<EntryDraftPayload> entries) =>
+      _store.transaction(() {
+        final ids = <String>[];
+        for (final entry in entries) {
+          final id = newId();
+          saveDraft(
+            id: id,
+            patientId: pid,
+            type: DraftType.entry,
+            payload: entry,
+          );
+          ids.add(id);
+        }
+        return ids;
+      });
+  @override
   void deleteDraft(String? pid, String id) => _drafts.deleteDraft(pid, id);
   @override
   String? draftBase(DraftType type, String? pid, String? targetId) =>

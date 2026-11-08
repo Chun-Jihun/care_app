@@ -45,6 +45,27 @@ void main() {
         password,
       );
 
+  test('a failed part leaves no partially saved transcript drafts', () async {
+    final pid = c.selectedId!;
+    await expectLater(
+      c.drafts.addEntries(pid, [
+        EntryDraftPayload(kind: EntryKind.medicalContact, note: '첫 구간'),
+        EntryDraftPayload(
+          kind: EntryKind.medicalContact,
+          note: 'a' * (256 * 1024),
+        ),
+      ]),
+      throwsA(
+        isA<CareError>().having(
+          (e) => e.code,
+          'code',
+          CareErrorCode.draftTooLong,
+        ),
+      ),
+    );
+    expect(c.drafts.list(pid), isEmpty);
+  });
+
   test(
     'ARCH-06 frozen format 2 backup imports after a SQL-only column is added',
     () async {

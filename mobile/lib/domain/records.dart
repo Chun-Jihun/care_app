@@ -135,8 +135,10 @@ const recordFields = <EntryKind, List<RecordField>>{
   EntryKind.generalNote: [],
 };
 
+const entryNoteLimit = 20000;
+
 void validateEntry(EntryKind kind, Map<String, String> fields, String note) {
-  if (note.length > 20000) {
+  if (note.length > entryNoteLimit) {
     throw CareError(CareErrorCode.noteTooLong);
   }
   for (final field in kind.fields) {

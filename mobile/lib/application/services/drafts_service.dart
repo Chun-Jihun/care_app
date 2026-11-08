@@ -1,4 +1,3 @@
-
 import '../ports.dart';
 
 import 'package:flutter/foundation.dart';
@@ -68,6 +67,15 @@ final class DraftService {
     ChangeImpact.drafts,
     (repository) => repository.setDraftRetention(value),
   );
+  Future<List<String>> addEntries(
+    String pid,
+    List<EntryDraftPayload> entries,
+  ) => _scope.write(
+    pid,
+    ChangeImpact.drafts,
+    (repository) => repository.addEntryDrafts(pid, entries),
+  );
+
   void saveNow({
     required String id,
     required String? patientId,
