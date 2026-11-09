@@ -132,11 +132,10 @@ void main() {
               note: 'archived original',
               occurredAt: DateTime.now(),
             );
-            if (replaceAll) {
-              await c.exportBackup('synthetic-backup-password');
-            } else {
+            const selectionPassword = 'synthetic-backup-password';
+            if (!replaceAll) {
               await c.exportSelection(
-                'synthetic-backup-password',
+                selectionPassword,
                 BackupSelection(patientIds: {c.selectedId!}),
               );
             }
@@ -149,13 +148,10 @@ void main() {
             secrets.holdNextGeneration = true;
             work = replaceAll
                 ? c.restoreBackup(
-                    platform.archive!,
-                    'synthetic-backup-password',
+                    await readLegacyFullBackup(),
+                    legacyFullBackupPassword,
                   )
-                : c.importSelection(
-                    platform.archive!,
-                    'synthetic-backup-password',
-                  );
+                : c.importSelection(platform.archive!, selectionPassword);
             await secrets.prepared.future.timeout(const Duration(seconds: 20));
           });
           await tester.pumpWidget(CareApp(controller: c));
@@ -175,7 +171,10 @@ void main() {
           });
           await tester.pumpAndSettle();
           expect(find.byType(MedicationDetails), findsNothing);
-          expect(c.entries.single.note, 'archived original');
+          expect(
+            c.entries.single.note,
+            replaceAll ? legacyFullBackupNote : 'archived original',
+          );
           expect(c.patients.length, replaceAll ? 1 : 2);
           expect(c.medications.length, replaceAll ? 0 : 1);
           expect(tester.takeException(), isNull);

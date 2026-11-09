@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:care_notebook/application/care_controller.dart';
+import 'package:care_notebook/domain/backup.dart';
 import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/platform_services.dart';
@@ -67,7 +68,10 @@ void main() {
       );
       await expectLater(c.chooseBackup(), throwsA(isA<CareError>()));
       await expectLater(
-        c.exportBackup('long-backup-password'),
+        c.exportSelection(
+          'long-backup-password',
+          BackupSelection(patientIds: {pid}),
+        ),
         throwsA(isA<CareError>()),
       );
       await expectLater(c.selectPatient(pid), throwsA(isA<CareError>()));
@@ -169,7 +173,10 @@ void main() {
   });
 
   test('REVIEW-01 backup prepared after lock is not exported', () async {
-    final exporting = c.exportBackup('review-backup-password');
+    final exporting = c.exportSelection(
+      'review-backup-password',
+      BackupSelection(patientIds: {c.selectedId!}),
+    );
     c.lock();
     await expectLater(exporting, throwsA(isA<CareError>()));
     expect(platform.saveCalls, 0);

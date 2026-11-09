@@ -154,9 +154,7 @@ void main() {
   test(
     'REVIEW-05 restore commit wins over a future legacy clock marker',
     () async {
-      final p = vault.repository.createPatient(alias: '복원할 수첩');
-      const password = 'review-backup-password';
-      final backup = await vault.backup(password);
+      final backup = await readLegacyFullBackup();
       vault.repository.createPatient(alias: '복원 전 수첩');
       final marker = (await Directory(
         '${root.path}/commits',
@@ -164,31 +162,29 @@ void main() {
       await marker.rename(
         '${root.path}/commits/ffffffff-ffff-7fff-8fff-ffffffffffff.commit',
       );
-      await vault.restore(backup, password);
+      await vault.restore(backup, legacyFullBackupPassword);
       vault.close();
       vault = VaultStore(root, secrets);
       await vault.open();
-      expect(vault.repository.patients().single.id, p.id);
+      expect(vault.repository.patients().single.alias, legacyFullBackupAlias);
     },
   );
   test(
     'REVIEW-05 cleanup failure after commit keeps restored state usable',
     () async {
-      final p = vault.repository.createPatient(alias: '복원한 수첩');
-      const password = 'review-backup-password';
-      final backup = await vault.backup(password);
+      final backup = await readLegacyFullBackup();
       final originalKey = secrets.values.keys.single;
       vault.repository.createPatient();
       secrets.rejectDeleteKey = originalKey;
-      await vault.restore(backup, password);
+      await vault.restore(backup, legacyFullBackupPassword);
       expect(vault.maintenancePending, true);
-      expect(vault.repository.patients().single.id, p.id);
+      expect(vault.repository.patients().single.alias, legacyFullBackupAlias);
       vault.close();
       secrets.rejectDeleteKey = null;
       vault = VaultStore(root, secrets);
       await vault.open();
       expect(vault.maintenancePending, false);
-      expect(vault.repository.patients().single.id, p.id);
+      expect(vault.repository.patients().single.alias, legacyFullBackupAlias);
       expect(secrets.values.containsKey(originalKey), false);
     },
   );
@@ -196,15 +192,13 @@ void main() {
   test(
     'REVIEW-01/05 cancelled restore keeps original generation and keys',
     () async {
-      vault.repository.createPatient();
-      const password = 'review-backup-password';
-      final backup = await vault.backup(password);
+      final backup = await readLegacyFullBackup();
       final current = vault.repository.createPatient(alias: '보존할 수첩');
       final originalKeys = Map<String, String>.from(secrets.values);
       await expectLater(
         vault.restore(
           backup,
-          password,
+          legacyFullBackupPassword,
           beforeCommit: () => throw CareError(CareErrorCode.unknownFailure),
         ),
         throwsA(isA<CareError>()),
@@ -253,22 +247,10 @@ void main() {
     expect(await disk.exists(), false);
     expect((vault.repository as CareDatabase).pendingFileDeletes, isEmpty);
   });
-  test('LOCAL-08 backup verifies password, tamper, source links and commits a complete replacement', () async {
-    final p = vault.repository.createPatient(alias: '백업 별칭');
-    final e = vault.repository.saveEntry(
-      p.id,
-      kind: EntryKind.generalNote,
-      note: 'BACKUP_SENTINEL',
-      occurredAt: DateTime.now(),
-    );
-    await vault.addPhoto(
-      p.id,
-      e.id,
-      Uint8List.fromList(img.encodePng(img.Image(width: 4, height: 4))),
-    );
-    vault.repository.addCheckin(fatigue: '내 상태', sleep: '수면', stress: '기록');
-    const password = 'long-backup-password';
-    final backup = await vault.backup(password);
+  test('LOCAL-08 format 1 fixture verifies password, tamper, source links and complete replacement', () async {
+    const password = legacyFullBackupPassword;
+    final backup = await readLegacyFullBackup();
+    final p = vault.repository.createPatient(alias: '복원 전 수첩');
     vault.repository.saveEntry(
       p.id,
       kind: EntryKind.generalNote,
@@ -279,11 +261,11 @@ void main() {
       vault.restore(backup, 'wrong-password'),
       throwsA(anything),
     );
-    expect(vault.repository.entries(p.id), hasLength(2));
+    expect(vault.repository.entries(p.id).single.note, '복원 전 현재 기록');
     final corrupt = Uint8List.fromList(backup);
     corrupt[60] ^= 1;
     await expectLater(vault.restore(corrupt, password), throwsA(anything));
-    expect(vault.repository.entries(p.id), hasLength(2));
+    expect(vault.repository.entries(p.id).single.note, '복원 전 현재 기록');
     final decoded = jsonDecode(
       utf8.decode(await VaultCrypto.passwordOpen(backup, password)),
     ) as Map<String, dynamic>;
@@ -296,7 +278,7 @@ void main() {
       vault.restore(incomplete, password),
       throwsA(isA<CareError>()),
     );
-    expect(vault.repository.entries(p.id), hasLength(2));
+    expect(vault.repository.entries(p.id).single.note, '복원 전 현재 기록');
     final before = Map<String, String>.of(secrets.values);
     availableBytes = 0;
     await expectLater(
@@ -309,18 +291,29 @@ void main() {
         ),
       ),
     );
-    expect(vault.repository.entries(p.id), hasLength(2));
+    expect(vault.repository.entries(p.id).single.note, '복원 전 현재 기록');
     expect(secrets.values, before);
     availableBytes = 64 * 1024 * 1024;
     await vault.restore(backup, password);
-    expect(vault.repository.entries(p.id).single.note, 'BACKUP_SENTINEL');
-    expect(vault.repository.patients().single.alias, '백업 별칭');
+    final restored = vault.repository.patients().single;
+    expect(restored.id, isNot(p.id));
+    expect(restored.alias, legacyFullBackupAlias);
+    expect(
+      vault.repository.entries(restored.id).single.note,
+      legacyFullBackupNote,
+    );
+    expect(
+      vault.repository.chatMessages(restored.id).single.text,
+      'FORMAT1_SYNTHETIC_CHAT',
+    );
     expect(vault.repository.checkins(), hasLength(1));
     vault.close();
     vault = VaultStore(root, secrets);
     await vault.open();
-    expect(vault.repository.entries(p.id), hasLength(1));
-    expect(vault.repository.attachments(p.id, e.id), hasLength(1));
+    final entry = vault.repository.entries(restored.id).single;
+    final photo = vault.repository.attachments(restored.id, entry.id).single;
+    final jpeg = await vault.photo(restored.id, entry.id, photo.id);
+    expect(img.decodeJpg(jpeg)?.width, 4);
     expect(
       (await root
           .list()

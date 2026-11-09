@@ -73,8 +73,6 @@ final class VaultStore implements NotebookVault {
   Future<Uint8List> photo(String pid, String eid, String id) =>
       _photos.photo(pid, eid, id);
   @override
-  Future<Uint8List> backup(String password) => _backups.backup(password);
-  @override
   Future<void> restore(
     Uint8List encrypted,
     String password, {

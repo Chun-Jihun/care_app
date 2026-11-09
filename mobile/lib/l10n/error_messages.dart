@@ -59,11 +59,6 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.scopeMismatch: '현재 수첩의 항목을 찾을 수 없습니다.',
   CareErrorCode.draftEditorMismatch: '현재 작성 화면의 초안이 아닙니다.',
   CareErrorCode.checkinRequired: '내 상태를 한 가지 이상 적어 주세요.',
-  CareErrorCode.legacyBackupPhotosTooLarge:
-      '현재 버전은 사진을 포함해 50MB까지 한 번에 백업할 수 있습니다.',
-  CareErrorCode.legacyBackupTooLarge: '백업 크기가 현재 버전의 한도를 초과했습니다.',
-  CareErrorCode.legacyBackupVisitAudio:
-      '진료 녹음이 있으면 이전 형식의 백업을 만들 수 없어요. 선택 백업을 사용해 주세요.',
   CareErrorCode.unsupportedBackupFormat: '지원하지 않는 백업 형식입니다.',
   CareErrorCode.invalidBackupKeys: '백업 키 형식이 올바르지 않습니다.',
   CareErrorCode.incompleteBackupStorage: '백업 저장소가 불완전합니다.',

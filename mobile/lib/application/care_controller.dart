@@ -615,7 +615,6 @@ class CareController extends ChangeNotifier {
       photos.add(pid, eid, camera: camera);
   Future<Uint8List> photo(String pid, String eid, String id) =>
       photos.open(pid, eid, id);
-  Future<void> exportBackup(String password) => backups.exportLegacy(password);
   Future<void> exportSelection(String password, BackupSelection selection) =>
       backups.export(password, selection);
   Future<BackupPreview> inspectBackup(Uint8List data, String password) =>

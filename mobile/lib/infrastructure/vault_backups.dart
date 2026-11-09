@@ -16,49 +16,6 @@ import 'vault_state.dart';
 final class VaultBackups {
   VaultBackups(this._state);
   final VaultState _state;
-  Future<Uint8List> backup(String password) async {
-    if (password.length < 12) {
-      throw CareError(CareErrorCode.backupPasswordTooShort);
-    }
-    if (_state.database.hasVisitAudio) {
-      throw CareError(CareErrorCode.legacyBackupVisitAudio);
-    }
-    _state.database.pruneChats();
-    await _state.cleanup();
-    _state.database.verifyIntegrity();
-    final files = <String, String>{};
-    var size = 0;
-    for (final id in _state.database.allAttachmentIds) {
-      final data = await File(
-        p.join(_state.directory.path, 'attachments', '$id.enc'),
-      ).readAsBytes();
-      size += data.length;
-      if (size > VaultState.maxBackupBytes / 2) {
-        throw CareError(CareErrorCode.legacyBackupPhotosTooLarge);
-      }
-      files[id] = base64Encode(data);
-    }
-    final payload = Uint8List.fromList(
-      utf8.encode(
-        jsonEncode({
-          'format': 1,
-          'keys': _state.keys,
-          'care': base64Encode(
-            await File(p.join(_state.directory.path, 'care.db')).readAsBytes(),
-          ),
-          'identity': base64Encode(
-            await File(p.join(_state.directory.path, 'identity.db'))
-                .readAsBytes(),
-          ),
-          'files': files,
-        }),
-      ),
-    );
-    if (payload.length > VaultState.maxBackupBytes) {
-      throw CareError(CareErrorCode.legacyBackupTooLarge);
-    }
-    return Isolate.run(() => VaultCrypto.passwordSeal(payload, password));
-  }
 
   Future<void> restore(
     Uint8List encrypted,

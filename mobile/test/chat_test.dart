@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:care_notebook/domain/backup.dart';
 import 'package:care_notebook/domain/chat.dart';
 import 'package:care_notebook/domain/records.dart';
 import 'package:care_notebook/infrastructure/care_database.dart';
@@ -80,13 +81,19 @@ void main() {
       testRepository(c).pruneChats(now: now.add(const Duration(days: 7)));
       await c.setChatRetention(pid, ChatRetention.forever);
       await c.addChatMessage(pid, '복원 질문');
-      final backup = await testVault(c).backup('chat-backup-password');
+      const password = 'chat-backup-password';
+      final backup = await testVault(c).backupSelection(
+        password,
+        BackupSelection(patientIds: {pid}, chats: true),
+      );
       await c.clearChatMessages(pid);
-      await c.restoreBackup(backup, 'chat-backup-password');
-      expect(c.chatMessages(pid).single.text, '복원 질문');
-      testRepository(c).deletePatient(pid);
+      await c.importSelection(backup, password);
+      final restored = c.patients.singleWhere((patient) => patient.id != pid);
+      await c.selectPatient(restored.id);
+      expect(c.chatMessages(restored.id).single.text, '복원 질문');
+      testRepository(c).deletePatient(restored.id);
       expect(
-        () => testRepository(c).chatMessages(pid),
+        () => testRepository(c).chatMessages(restored.id),
         throwsA(isA<CareError>()),
       );
       testRepository(c).verifyIntegrity();

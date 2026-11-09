@@ -25,6 +25,13 @@ CareDatabase testRepository(CareController controller) =>
 PlatformServices testPlatform(CareController controller) =>
     _platforms[controller]!;
 
+const legacyFullBackupPassword = 'synthetic-format1-password';
+const legacyFullBackupAlias = '합성 백업 수첩';
+const legacyFullBackupNote = 'FORMAT1_SYNTHETIC_NOTE';
+
+Future<Uint8List> readLegacyFullBackup() =>
+    File('test/fixtures/legacy_full_v1.carebackup').readAsBytes();
+
 void withFixtureSql(
   Directory root,
   MemorySecrets secrets,

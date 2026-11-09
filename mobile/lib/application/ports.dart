@@ -51,7 +51,6 @@ abstract interface class NotebookVault {
     void Function()? beforeCommit,
   });
   Future<Uint8List> photo(String pid, String eid, String id);
-  Future<Uint8List> backup(String password);
   Future<Uint8List> backupSelection(String password, BackupSelection selection);
   BackupPreview previewSelection(BackupSelection selection);
   Future<BackupPreview> inspectBackup(Uint8List data, String password);

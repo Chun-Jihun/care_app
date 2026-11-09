@@ -284,8 +284,8 @@ void main() {
       addTearDown(c.dispose);
       await c.initialize();
       await c.startWithoutLock();
-      const password = 'synthetic-legacy-password';
-      final legacy = await vault.backup(password);
+      const password = legacyFullBackupPassword;
+      final legacy = await readLegacyFullBackup();
       final pid = c.selectedId!;
       final recording = c.visitRecordings.begin(pid);
       final pcm = Uint8List.fromList([12, 34, 56, 78]);
@@ -352,8 +352,6 @@ void main() {
         () => c.visitRecordings.read(pid, draft.id, 0),
         throwsA(isA<CareError>()),
       );
-      await expectLater(vault.backup(password), throwsA(isA<CareError>()));
-
       await c.selectPatient(pid);
       c.visitRecordings.delete(pid, draft.id);
       expect(

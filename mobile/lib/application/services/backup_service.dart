@@ -30,11 +30,6 @@ final class BackupService {
         _scope.check(epoch);
         await _scope.external(() => _platform.saveBackup(data));
       });
-  Future<void> exportLegacy(String password) => _run((epoch) async {
-    final data = await _vault.backup(password);
-    _scope.check(epoch);
-    await _scope.external(() => _platform.saveBackup(data));
-  });
   Future<BackupPreview> inspect(Uint8List data, String password) =>
       _run((epoch) async {
         final result = await _vault.inspectBackup(data, password);
