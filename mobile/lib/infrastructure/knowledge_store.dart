@@ -203,11 +203,30 @@ final class KnowledgeStore {
       }
       check();
       final destination = _version(release.id);
-      if (await destination.exists()) {
-        // Never delete an installed version under a historical citation.
-        await verify(release);
-      } else {
-        await stage.rename(destination.path);
+      final type = await FileSystemEntity.type(
+        destination.path,
+        followLinks: false,
+      );
+      if (type != FileSystemEntityType.directory &&
+          type != FileSystemEntityType.notFound) {
+        _fail();
+      }
+      final exists = type == FileSystemEntityType.directory;
+      var needsFiles = !exists;
+      if (exists) {
+        try {
+          await verify(release);
+        } on KnowledgePackageException {
+          needsFiles = true;
+        }
+      }
+      if (needsFiles) {
+        final repairing = (await _history()).contains(release.id);
+        check();
+        // A journaled release becomes readable as soon as its files return.
+        if (repairing) progress(1);
+        await _publish(stage, destination, replace: exists);
+        if (repairing) return;
       }
       check();
       await _activate(
@@ -225,6 +244,29 @@ final class KnowledgeStore {
       if (stage != null && await stage.exists()) await _deleteStage(stage);
     }
   });
+
+  Future<void> _publish(
+    Directory stage,
+    Directory destination, {
+    required bool replace,
+  }) async {
+    final damaged = replace
+        ? await destination.rename('${stage.path}-damaged')
+        : null;
+    try {
+      await stage.rename(destination.path);
+    } on FileSystemException {
+      await damaged?.rename(destination.path);
+      rethrow;
+    }
+    if (damaged != null) {
+      try {
+        await _deleteStage(damaged);
+      } on FileSystemException {
+        // Retry cleanup at the next install after publishing the repair.
+      }
+    }
+  }
 
   Future<void> _deleteStage(Directory stage) async {
     final base = p.normalize(p.absolute(root.path));

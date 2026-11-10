@@ -42,6 +42,11 @@ void main() {
       ], allowPreview: true);
       await store.install(b.bundle.path, (_) {}, () {});
       expect((await store.status()).previous!.id, a.release.id);
+      await File('${location.path}/${a.release.id}/documents/knowledge.sqlite3')
+          .writeAsBytes([0], mode: FileMode.append);
+      await store.install(a.bundle.path, (_) {}, () {});
+      expect((await store.status()).active!.id, b.release.id);
+      expect((await store.status()).previous!.id, a.release.id);
       final historical = await store.reader(
         packageHash: a.citation.packageHash,
       );
@@ -113,6 +118,69 @@ void main() {
       throwsA(isA<KnowledgePackageException>()),
     );
   });
+
+  test(
+    'a verified reinstall repairs the only release and keeps its citation',
+    () async {
+      final pack = await makeDelivery(root, 'original', approved: true);
+      final location = Directory('${root.path}/installed');
+      var store = KnowledgeStore(location, [pack.release]);
+      await store.install(pack.bundle.path, (_) {}, () {});
+      final database = File(
+        '${location.path}/${pack.release.id}/documents/knowledge.sqlite3',
+      );
+      await database.writeAsBytes([0], mode: FileMode.append);
+      final damaged = await database.readAsBytes();
+      expect((await store.status()).damaged, isTrue);
+
+      final bytes = await pack.bundle.readAsBytes();
+      bytes[bytes.length - 1] ^= 1;
+      final invalid = await File('${root.path}/invalid').writeAsBytes(bytes);
+      await expectLater(
+        store.install(invalid.path, (_) {}, () {}),
+        throwsA(isA<KnowledgePackageException>()),
+      );
+      expect(await database.readAsBytes(), damaged);
+
+      var readyToVerify = false;
+      await expectLater(
+        store.install(pack.bundle.path, (v) => readyToVerify = v >= .8, () {
+          if (readyToVerify) throw StateError('cancel before repair');
+        }),
+        throwsStateError,
+      );
+      expect(await database.readAsBytes(), damaged);
+
+      await expectLater(
+        store.install(pack.bundle.path, (progress) {
+          if (progress == 1) {
+            final stage = location
+                .listSync()
+                .whereType<Directory>()
+                .singleWhere((e) => e.path.contains('stage-'));
+            stage.deleteSync(recursive: true);
+          }
+        }, () {}),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(await database.readAsBytes(), damaged);
+
+      await store.install(pack.bundle.path, (_) {}, () {});
+      store = KnowledgeStore(location, [pack.release]);
+      final status = await store.status();
+      expect(status.damaged, isFalse);
+      expect(status.active!.id, pack.release.id);
+      expect(status.previous, isNull);
+      expect(
+        await location.list().where((e) => e.path.contains('stage-')).isEmpty,
+        isTrue,
+      );
+      final reader = await store.reader(packageHash: pack.citation.packageHash);
+      final document = await reader!.resolve(pack.citation);
+      expect(document.text, syntheticText);
+      expect(document.citation.matches(pack.citation), isTrue);
+    },
+  );
 
   test('cancellation at the final activation boundary preserves the previous release', () async {
     final a = await makeDelivery(root, 'a');
