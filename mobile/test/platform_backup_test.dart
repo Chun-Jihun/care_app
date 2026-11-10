@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:care_notebook/domain/ai.dart';
 import 'package:care_notebook/domain/records.dart';
+import 'package:care_notebook/infrastructure/ai/device_ai_runtime.dart';
+import 'package:care_notebook/infrastructure/device_knowledge_library.dart';
 import 'package:care_notebook/infrastructure/platform_services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -61,12 +64,16 @@ void main() {
     messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, (
       call,
     ) async {
-      expect(call.method, 'pickBackup');
-      expect(call.arguments, 104857728);
+      expect(call.method, 'pickDocument');
+      expect(call.arguments, {'maxBytes': 104857728, 'installBytes': 0});
       return switch (attempts++) {
         0 => file.path,
         1 => null,
-        _ => throw PlatformException(code: 'backupFileTooLarge'),
+        2 => throw PlatformException(code: 'documentTooLarge'),
+        _ => throw PlatformException(
+          code: 'documentSpaceInsufficient',
+          details: 1024 * 1024 + 1,
+        ),
       };
     });
     final platform = DevicePlatformServices();
@@ -83,5 +90,94 @@ void main() {
         ),
       ),
     );
+    await expectLater(
+      platform.pickBackup(),
+      throwsA(
+        isA<CareError>()
+            .having(
+              (e) => e.code,
+              'code',
+              CareErrorCode.storageSpaceInsufficient,
+            )
+            .having((e) => e.labels, 'labels', ['2']),
+      ),
+    );
   });
+
+  test(
+    'Android model and evidence imports bound and clean their own stage',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const pathProvider = MethodChannel('plugins.flutter.io/path_provider');
+      final dir = await Directory.systemTemp.createTemp('care-document-test-');
+      messenger.setMockMethodCallHandler(pathProvider, (call) async {
+        expect(call.method, 'getApplicationSupportDirectory');
+        return dir.path;
+      });
+      final runtime = DeviceAiRuntime();
+      addTearDown(() async {
+        debugDefaultTargetPlatformOverride = null;
+        messenger.setMockMethodCallHandler(
+          DevicePlatformServices.privacy,
+          null,
+        );
+        messenger.setMockMethodCallHandler(pathProvider, null);
+        await runtime.dispose();
+        await dir.delete(recursive: true);
+      });
+      final model = await File('${dir.path}/care-document-import-model.tmp')
+          .writeAsBytes([1]);
+      final evidence = await File(
+        '${dir.path}/care-document-import-evidence.tmp',
+      ).writeAsBytes([2]);
+      final manifestBytes = await File('assets/ai/manifest.json').length();
+      var attempts = 0;
+      messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, (
+        call,
+      ) async {
+        expect(call.method, 'pickDocument');
+        if (attempts++ < 2) {
+          expect(call.arguments, {
+            'maxBytes': 1716572594,
+            'installBytes': 1716572594 - 12 - manifestBytes,
+          });
+          if (attempts == 1) throw PlatformException(code: 'documentTooLarge');
+          runtime.cancel();
+          return model.path;
+        }
+        expect(call.arguments, {
+          'maxBytes': 50 * 1024 * 1024 + 65536 + 12,
+          'installBytes': 50 * 1024 * 1024,
+        });
+        return evidence.path;
+      });
+      await expectLater(
+        runtime.pickBundle(),
+        throwsA(
+          isA<AiException>().having(
+            (e) => e.code,
+            'code',
+            AiFailure.modelInvalid,
+          ),
+        ),
+      );
+      await expectLater(
+        runtime.pickBundle(),
+        throwsA(
+          isA<AiException>().having((e) => e.code, 'code', AiFailure.cancelled),
+        ),
+      );
+      expect(await model.exists(), isFalse);
+      expect(await evidence.exists(), isTrue);
+      final library = DeviceKnowledgeLibrary();
+      final path = (await library.pickBundle())!;
+      await expectLater(
+        library.install(path, (_) {}, () => throw StateError('cancelled')),
+        throwsStateError,
+      );
+      expect(await evidence.exists(), isFalse);
+    },
+  );
 }

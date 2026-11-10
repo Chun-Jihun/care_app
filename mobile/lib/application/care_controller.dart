@@ -137,8 +137,10 @@ class CareController extends ChangeNotifier {
     if (library == null) return;
     final epoch = captureSession();
     final path = await _external(library.pickBundle);
-    _check(epoch);
-    if (path == null) return;
+    if (path == null) {
+      _check(epoch);
+      return;
+    }
     await library.install(path, progress, () {
       _check(epoch);
       checkCancelled?.call();

@@ -70,6 +70,11 @@ class DevicePlatformServices extends PlatformServices {
     await privacy.invokeMethod<void>('protectDirectory', {'path': root.path});
     if (Platform.isAndroid) {
       await ImagePicker().retrieveLostData();
+      try {
+        await FilePicker.clearTemporaryFiles();
+      } on Exception {
+        // Previous versions could leave a partial copy in the picker cache.
+      }
     }
     await cleanupPickerCache();
     return root;
@@ -99,10 +104,51 @@ class DevicePlatformServices extends PlatformServices {
                 '.heif',
               }.contains(p.extension(file.path).toLowerCase()) ||
               (p.dirname(file.path) == temp.path &&
-                  p.basename(file.path).startsWith('care-backup-import-') &&
+                  (p.basename(file.path).startsWith('care-document-import-') ||
+                      p
+                          .basename(file.path)
+                          .startsWith('care-backup-import-')) &&
                   p.extension(file.path) == '.tmp'))) {
-        await file.delete();
+        try {
+          await file.delete();
+        } on FileSystemException {
+          // Android may evict a cache entry while the directory is scanned.
+        }
       }
+    }
+  }
+
+  static Future<String?> pickBoundedDocument({
+    required int maxBytes,
+    int installBytes = 0,
+  }) async {
+    try {
+      return await privacy.invokeMethod<String>('pickDocument', {
+        'maxBytes': maxBytes,
+        'installBytes': installBytes,
+      });
+    } on PlatformException catch (error) {
+      if (error.code == 'documentSpaceInsufficient') {
+        const mib = 1024 * 1024;
+        final missing = error.details as int;
+        throw CareError(
+          CareErrorCode.storageSpaceInsufficient,
+          labels: ['${(missing + mib - 1) ~/ mib}'],
+        );
+      }
+      rethrow;
+    }
+  }
+
+  static Future<void> discardPickedDocument(String path) async {
+    try {
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        await File(path).delete();
+      } else {
+        await FilePicker.clearTemporaryFiles();
+      }
+    } on Object {
+      // Startup also cleans abandoned private staging files.
     }
   }
 
@@ -291,24 +337,19 @@ class DevicePlatformServices extends PlatformServices {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final String? path;
       try {
-        path = await privacy.invokeMethod<String>('pickBackup', limit);
+        path = await pickBoundedDocument(maxBytes: limit);
       } on PlatformException catch (error) {
         throw CareError(
-          error.code == 'backupFileTooLarge'
+          error.code == 'documentTooLarge'
               ? CareErrorCode.backupFileTooLarge
               : CareErrorCode.backupOpenFailed,
         );
       }
       if (path == null) return null;
-      final file = File(path);
       try {
-        return await file.readAsBytes();
+        return await File(path).readAsBytes();
       } finally {
-        try {
-          await file.delete();
-        } on FileSystemException {
-          // The next startup retries cleanup of the private staged file.
-        }
+        await discardPickedDocument(path);
       }
     }
     try {

@@ -13,7 +13,7 @@ import java.util.TimeZone
 
 class MainActivity : FlutterFragmentActivity() {
     private val visitPlayback = VisitAudioPlayback()
-    private val backupPicker = BackupDocumentPicker(this)
+    private val documentPicker = BoundedDocumentPicker(this)
 
     override fun onPause() {
         visitPlayback.stop()
@@ -55,7 +55,11 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     "timeZone" -> result.success(TimeZone.getDefault().id)
                     "availableVaultBytes" -> result.success(StatFs(filesDir.path).availableBytes)
-                    "pickBackup" -> backupPicker.open(call.arguments as Int, result)
+                    "pickDocument" -> documentPicker.open(
+                        checkNotNull(call.argument<Number>("maxBytes")).toLong(),
+                        checkNotNull(call.argument<Number>("installBytes")).toLong(),
+                        result,
+                    )
                     "dailyWidgetAvailable" -> result.success(true)
                     "pinDailyWidget" -> result.success(DailyWidgetProvider.pin(this))
                     "updateDailyWidget" -> {

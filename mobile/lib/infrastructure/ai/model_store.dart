@@ -18,6 +18,11 @@ final class ModelStore {
   final Uint8List manifestBytes;
   late final Map<String, dynamic> manifest =
       jsonDecode(utf8.decode(manifestBytes)) as Map<String, dynamic>;
+  late final int payloadBytes = (manifest['files'] as List).fold<int>(
+    0,
+    (sum, file) => sum + (file['bytes'] as int),
+  );
+  int get bundleBytes => 12 + manifestBytes.length + payloadBytes;
   late final String id = sha256.convert(manifestBytes).toString();
   Directory get directory => Directory(p.join(root.path, id));
   String path(String name) {
@@ -111,8 +116,7 @@ final class ModelStore {
         throw const AiException(AiFailure.modelInvalid);
       }
       final files = (manifest['files'] as List).cast<Map>();
-      final total = files.fold<int>(0, (sum, f) => sum + (f['bytes'] as int));
-      if (await input.length() != 12 + manifestBytes.length + total) {
+      if (await input.length() != bundleBytes) {
         throw const AiException(AiFailure.modelInvalid);
       }
       var completed = 0;
@@ -132,7 +136,7 @@ final class ModelStore {
             await output.writeFrom(chunk);
             remaining -= chunk.length;
             completed += chunk.length;
-            progress(completed / total * .8);
+            progress(completed / payloadBytes * .8);
           }
           await output.flush();
         } finally {

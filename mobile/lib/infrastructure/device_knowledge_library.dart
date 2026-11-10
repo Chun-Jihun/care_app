@@ -10,6 +10,7 @@ import '../domain/knowledge.dart';
 import '../domain/knowledge_installation.dart';
 import 'knowledge_store.dart';
 import 'local_drug_catalog.dart';
+import 'platform_services.dart';
 import '../domain/drug_safety.dart';
 
 final class DeviceKnowledgeLibrary implements KnowledgeLibrary {
@@ -48,7 +49,19 @@ final class DeviceKnowledgeLibrary implements KnowledgeLibrary {
   @override
   Future<KnowledgeInstallation> status() async => (await _store).status();
   @override
-  Future<String?> pickBundle() async => (await FilePicker.pickFile())?.path;
+  Future<String?> pickBundle() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return DevicePlatformServices.pickBoundedDocument(
+        maxBytes:
+            12 +
+            KnowledgeRelease.maxDescriptorBytes +
+            KnowledgeRelease.maxPayloadBytes,
+        installBytes: KnowledgeRelease.maxPayloadBytes,
+      );
+    }
+    return (await FilePicker.pickFile())?.path;
+  }
+
   @override
   Future<void> install(
     String path,
@@ -56,13 +69,10 @@ final class DeviceKnowledgeLibrary implements KnowledgeLibrary {
     void Function() check,
   ) async {
     try {
+      check();
       await (await _store).install(path, progress, check);
     } finally {
-      try {
-        await FilePicker.clearTemporaryFiles();
-      } on Object {
-        /* best effort */
-      }
+      await DevicePlatformServices.discardPickedDocument(path);
     }
   }
 

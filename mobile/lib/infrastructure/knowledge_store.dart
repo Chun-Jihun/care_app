@@ -155,7 +155,7 @@ final class KnowledgeStore {
         _fail();
       }
       final length = ByteData.sublistView(header).getUint32(8, Endian.little);
-      if (length < 1 || length > 65536) _fail();
+      if (length < 1 || length > KnowledgeRelease.maxDescriptorBytes) _fail();
       final bytes = await input.read(length);
       if (bytes.length != length) _fail();
       final release = _allowed(sha256.convert(bytes).toString());

@@ -7,9 +7,14 @@ import 'knowledge.dart';
 
 /// Supplied by the application, never by the file selected for import.
 final class KnowledgeRelease {
+  static const maxDescriptorBytes = 65536;
+  static const maxPayloadBytes = 50 * 1024 * 1024;
+
   KnowledgeRelease(Uint8List bytes)
     : bytes = Uint8List.fromList(bytes).asUnmodifiableView() {
-    if (bytes.length > 65536) throw const FormatException('release too large');
+    if (bytes.length > maxDescriptorBytes) {
+      throw const FormatException('release too large');
+    }
     final value = jsonDecode(utf8.decode(bytes));
     if (value is! Map ||
         value['schema'] != 'care-knowledge-delivery-v1' ||
@@ -52,7 +57,7 @@ final class KnowledgeRelease {
     if (files.isEmpty ||
         files.length > 9 ||
         files.map((f) => f.name).toSet().length != files.length ||
-        payloadBytes > 50 * 1024 * 1024) {
+        payloadBytes > maxPayloadBytes) {
       throw const FormatException('invalid release size');
     }
   }

@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../domain/ai.dart';
 import '../../domain/medical_evidence.dart';
+import '../platform_services.dart';
 import 'model_store.dart';
 import 'chat_engine.dart';
 import 'ocr_engine.dart';
@@ -38,8 +39,11 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
       await const MethodChannel('org.carenotebook/privacy')
           .invokeMethod<void>('protectDirectory', {'path': root.path});
     }
-    final bytes = (await rootBundle.load('assets/ai/manifest.json')).buffer
-        .asUint8List();
+    final data = await rootBundle.load('assets/ai/manifest.json');
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
     return ModelStore(root, bytes);
   }
 
@@ -53,10 +57,7 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
       return AiModelStatus(
         installed: await store.installed(),
         version: store.manifest['version'] as String,
-        bytes: (store.manifest['files'] as List).fold<int>(
-          0,
-          (sum, f) => sum + (f['bytes'] as int),
-        ),
+        bytes: store.payloadBytes,
       );
     } on Object {
       return const AiModelStatus();
@@ -65,9 +66,26 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
 
   @override
   Future<String?> pickBundle() async {
+    if (_busy || _pickedPath != null) throw const AiException(AiFailure.busy);
     final epoch = _generation;
-    final result = await FilePicker.pickFile();
-    _pickedPath = result?.path;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final store = await _store;
+      _check(epoch);
+      try {
+        _pickedPath = await DevicePlatformServices.pickBoundedDocument(
+          maxBytes: store.bundleBytes,
+          installBytes: store.payloadBytes,
+        );
+      } on PlatformException catch (error) {
+        throw AiException(
+          error.code == 'documentTooLarge'
+              ? AiFailure.modelInvalid
+              : AiFailure.failed,
+        );
+      }
+    } else {
+      _pickedPath = (await FilePicker.pickFile())?.path;
+    }
     if (_disposed || epoch != _generation) {
       await _clearPickedCache();
       throw const AiException(AiFailure.cancelled);
@@ -76,24 +94,31 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
   }
 
   Future<void> _clearPickedCache() async {
-    if (_pickedPath == null) return;
+    final path = _pickedPath;
     _pickedPath = null;
-    try {
-      await FilePicker.clearTemporaryFiles();
-    } on Object {
-      // A cache cleanup error cannot invalidate an already verified installation.
-    }
+    if (path != null) await DevicePlatformServices.discardPickedDocument(path);
   }
 
   @override
-  Future<void> installBundle(String path, void Function(double) progress) =>
-      _run((epoch) async {
-        try {
-          await (await _store).install(path, progress, () => _check(epoch));
-        } finally {
-          await _clearPickedCache();
-        }
-      }, timeout: const Duration(minutes: 10));
+  Future<void> installBundle(
+    String path,
+    void Function(double) progress,
+  ) async {
+    final picked = _pickedPath == path;
+    if (picked) _pickedPath = null;
+    if (_disposed || !_supported || _busy) {
+      if (picked) await DevicePlatformServices.discardPickedDocument(path);
+      throw AiException(_busy ? AiFailure.busy : AiFailure.unavailable);
+    }
+    return _run((epoch) async {
+      try {
+        await (await _store).install(path, progress, () => _check(epoch));
+      } finally {
+        if (picked) await DevicePlatformServices.discardPickedDocument(path);
+      }
+    }, timeout: const Duration(minutes: 10));
+  }
+
   @override
   Future<void> removeModels() => _run((epoch) async {
     final store = await _store;
