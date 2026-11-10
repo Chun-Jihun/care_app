@@ -8,7 +8,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../application/ai_query_policy.dart';
 import '../application/care_controller.dart';
+import '../domain/ai.dart';
 import '../domain/chat.dart';
 import '../domain/errors.dart';
 import '../domain/reviewed_input.dart';
@@ -184,7 +186,7 @@ class _ChatBodyState extends State<ChatBody> {
         onUrgent: showUrgentContact,
       );
       if (mounted) {
-        setState(() => responseReady = true);
+        setState(() => responseReady = policy != null);
         input.clear();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && scroll.hasClients) {
@@ -244,6 +246,11 @@ class _ChatBodyState extends State<ChatBody> {
   @override
   Widget build(BuildContext context) {
     final c = widget.c, pid = widget.pid;
+    final canSend =
+        !sending &&
+        input.text.trim().isNotEmpty &&
+        (policy != null ||
+            AiQueryPolicy.guard(input.text) == AiReplyKind.urgent);
     return SafeArea(
       top: false,
       child: Column(
@@ -582,10 +589,7 @@ class _ChatBodyState extends State<ChatBody> {
                 const SizedBox(width: 8),
                 IconButton.filled(
                   tooltip: context.tr('질문 남기기'),
-                  onPressed:
-                      policy == null || sending || input.text.trim().isEmpty
-                      ? null
-                      : send,
+                  onPressed: canSend ? send : null,
                   icon: sending
                       ? const SizedBox(
                           width: 22,

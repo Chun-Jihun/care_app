@@ -182,6 +182,32 @@ void main() {
     expect(testRepository(c).drafts(c.selectedId), isEmpty);
   });
   testWidgets(
+    'first chat opens urgent contacts without retaining the question',
+    (tester) async {
+      await start(tester);
+      final pid = c.selectedId!;
+      expect(c.chat.retention(pid), isNull);
+      await tester.tap(find.byTooltip('간병 도우미 대화'));
+      await tester.pumpAndSettle();
+      await acknowledgeChatNotice(tester);
+      final input = find.byKey(const ValueKey('chat_input'));
+      await tester.enterText(input, '숨이 안 쉬어져요');
+      await tester.pump();
+      await tester.tap(find.byTooltip('질문 남기기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('위급할 때 119 (대한민국)'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, '확인'));
+      await tester.pumpAndSettle();
+      expect(c.chat.retention(pid), isNull);
+      expect(c.chat.messages(pid), isEmpty);
+      expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+      expect(find.text('답변이 준비되었습니다.'), findsNothing);
+      expect(find.textContaining('질문 보관 방식을 먼저 선택해 주세요.'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'CHAT-01/02/05 chat UI needs policy, requires visit confirmation and clears private routes',
     (tester) async {
       await start(tester);

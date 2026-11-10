@@ -77,7 +77,7 @@ final class AiService {
       if (guard == AiReplyKind.urgent && onUrgent != null) {
         await onUrgent();
         _scope.check(epoch);
-        if (_chat.revision != revision) return;
+        if (_chat.revision != revision || _chat.retention(pid) == null) return;
       }
       final prior = _previous;
       final previous =
