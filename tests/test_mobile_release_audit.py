@@ -13,6 +13,7 @@ class ReleaseAuditTests(unittest.TestCase):
             evidence = Path(temp)
             manifest = evidence / 'AndroidManifest.xml'
             runtime = evidence / 'runtime-dependencies.txt'
+            local_runtime = evidence / 'runtime-local-files.txt'
             safe_runtime = 'androidx.core:core:1.17.0\n'
 
             def write_manifest(permission='', component=''):
@@ -25,6 +26,7 @@ class ReleaseAuditTests(unittest.TestCase):
                 )
 
             runtime.write_text(safe_runtime, encoding='utf-8')
+            local_runtime.write_text('', encoding='utf-8')
             write_manifest()
             self.assertEqual(audit_android_release(evidence)['permissions'], ['android.permission.RECORD_AUDIO'])
             for node, name in [
@@ -44,6 +46,17 @@ class ReleaseAuditTests(unittest.TestCase):
             write_manifest()
             runtime.write_text(safe_runtime + 'com.google.android.gms:play-services-ads-api:25.5.0\n', encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'play-services-ads-api'):
+                audit_android_release(evidence)
+
+            runtime.write_text(safe_runtime, encoding='utf-8')
+            for filename in ('compatibility.jar', 'vendored.aar', 'classes'):
+                with self.subTest(local_file=filename):
+                    local_runtime.write_text(filename, encoding='utf-8')
+                    with self.assertRaisesRegex(ValueError, f'Unapproved.*{filename}'):
+                        audit_android_release(evidence)
+
+            local_runtime.unlink()
+            with self.assertRaisesRegex(ValueError, 'Missing Android release local file inventory'):
                 audit_android_release(evidence)
 
     def test_model_json_requires_exact_keys_unique_ids_and_all_conditions(self):

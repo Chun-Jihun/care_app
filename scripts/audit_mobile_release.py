@@ -56,6 +56,12 @@ def audit_android_release(directory):
     dependencies = sorted(line.strip() for line in dependency_lines if line.strip())
     if not dependencies:
         raise ValueError('Missing resolved Android release dependencies')
+    local_inventory = directory / 'runtime-local-files.txt'
+    if not local_inventory.is_file():
+        raise ValueError('Missing Android release local file inventory')
+    local_files = local_inventory.read_text(encoding='utf-8').splitlines()
+    if local_files:
+        raise ValueError(f"Unapproved Android release local file dependencies: {', '.join(local_files)}")
     ad_dependency_prefixes = (
         'com.google.android.gms:play-services-ads',
         *ad_manifest_prefixes,

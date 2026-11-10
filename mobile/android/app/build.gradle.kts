@@ -1,4 +1,6 @@
 import java.util.Properties
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 
 plugins {
@@ -37,15 +39,21 @@ tasks.register("prepareReleaseAudit") {
     val runtime = configurations.named("releaseRuntimeClasspath")
     val reportDir = layout.buildDirectory.dir("reports/release-audit")
     doLast {
-        val resolution = runtime.get().incoming.resolutionResult
+        val incoming = runtime.get().incoming
+        val resolution = incoming.resolutionResult
         val unresolved = resolution.allDependencies.filterIsInstance<UnresolvedDependencyResult>()
         check(unresolved.isEmpty()) {
             "Unresolved release dependencies: ${unresolved.joinToString { it.attempted.displayName }}"
         }
+        // File dependencies are absent from the component graph.
+        val localFiles = incoming.artifactView {
+            componentFilter { id -> id !is ModuleComponentIdentifier && id !is ProjectComponentIdentifier }
+        }.files.files.map { it.name.ifEmpty { it.path } }.sorted()
         val report = reportDir.get().asFile
         manifests.singleFile.copyTo(report.resolve("AndroidManifest.xml"), overwrite = true)
         val dependencies = resolution.allComponents.map { it.id.displayName }.sorted()
         report.resolve("runtime-dependencies.txt").writeText(dependencies.joinToString("\n", postfix = "\n"))
+        report.resolve("runtime-local-files.txt").writeText(localFiles.joinToString("\n"))
     }
 }
 
