@@ -30,16 +30,31 @@ class MobileAiPackagingTests(unittest.TestCase):
                 (folder / leaf).write_bytes(('synthetic ' + name + leaf).encode())
         source = self.root / 'data/mobile-ai/sources'
         source.mkdir()
-        (source / 'silero-v6.2.onnx').write_bytes(b'synthetic vad')
+        self.vad = source / 'silero-v6.2.onnx'
+        self.vad.write_bytes(b'synthetic vad')
         self.asset = self.root / 'mobile/assets/ai/manifest.json'
         self.asset.parent.mkdir(parents=True)
         self.asset.write_bytes(b'prior trusted manifest')
         self.lock = self.root / 'experiments/mobile_ai_v1/model-pack.lock.json'
         self.lock.parent.mkdir(parents=True)
         self.lock.write_bytes(b'prior lock')
+        self.lock.with_name('native-sources.lock.json').write_text(json.dumps([{
+            'path': self.vad.relative_to(self.root).as_posix(),
+            'url': 'https://example.invalid/vad',
+            'bytes': self.vad.stat().st_size,
+            'sha256': hashlib.sha256(self.vad.read_bytes()).hexdigest(),
+        }]), encoding='utf-8')
         self.pack = self.root / 'data/mobile-ai/care-ai-dev-2026-09-11-v2.careai'
         self.addCleanup(patch.stopall)
         patch.object(package_mobile_ai, 'ROOT', self.root).start()
+
+    def test_corrupt_vad_is_rejected_before_publication(self):
+        self.vad.write_bytes(b'cut')
+        with self.assertRaisesRegex(ValueError, 'VAD source'):
+            package_mobile_ai.main()
+        self.assertFalse(self.pack.exists())
+        self.assertEqual(self.asset.read_bytes(), b'prior trusted manifest')
+        self.assertEqual(self.lock.read_bytes(), b'prior lock')
 
     def test_manifest_failure_preserves_previous_release_and_retry_succeeds(self):
         write = Path.write_bytes

@@ -7,6 +7,7 @@ import hashlib
 import struct
 from scripts.ai_training_common import ROOT, read_json, sha256
 from scripts.artifact_publication import staged_release
+from scripts.prepare_mobile_ai_native import VAD_SOURCE, native_source_pins
 
 def main():
     exports=ROOT/'data/mobile-ai/exports'
@@ -24,12 +25,16 @@ def main():
         'speech/encoder.onnx':exports/'asr/small-encoder.int8.onnx',
         'speech/decoder.onnx':exports/'asr/small-decoder.int8.onnx',
         'speech/tokens.txt':exports/'asr/small-tokens.txt',
-        'speech/vad.onnx':ROOT/'data/mobile-ai/sources/silero-v6.2.onnx',
+        'speech/vad.onnx':ROOT/VAD_SOURCE,
     }
     manifest=dict(format=1,version='care-ai-dev-2026-09-11-v2',medical_release_gate_result=False,
         models={'chat':'Qwen3.5-2B SFT BF16 merge + Q4_K_M','ocr':'PP-OCRv5 trained CTC heads',
                 'speech':'Whisper small LoRA merge + INT8','vad':'Silero v6.2'},
         files=[dict(path=name,bytes=path.stat().st_size,sha256=sha256(path)) for name,path in files.items()])
+    vad = next(entry for entry in manifest['files'] if entry['path'] == 'speech/vad.onnx')
+    pinned_vad = native_source_pins(ROOT)[VAD_SOURCE]
+    if any(vad[key] != pinned_vad[key] for key in ('bytes', 'sha256')):
+        raise ValueError('VAD source failed pinned size or SHA-256 check. Run scripts.prepare_mobile_ai_native.')
     data=(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
     asset=ROOT/'mobile/assets/ai/manifest.json'
     pack=ROOT/'data/mobile-ai/care-ai-dev-2026-09-11-v2.careai'

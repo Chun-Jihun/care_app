@@ -127,6 +127,8 @@ iOS는 Mac이 없어 컴파일/기기 검증을 하지 못했다. 추가로 현�
 원천·변환물·모델 묶음 잠금 파일은 `experiments/mobile_ai_v1/`에 있다. 대용량 모델은 Git에 넣지 않는다.
 `scripts/prepare_mobile_ai_sources.py`, `prepare_mobile_ai_native.py`는 고정 원천을 준비하며
 `export_mobile_ai.py`는 `chat/asr/ocr-ko/ocr-multi/ocr-det`를 별도 실행한다. 출력 디렉터리는 덮어쓰지 않는다.
+네이티브 준비 도구는 `native-sources.lock.json`의 크기와 SHA-256으로 기존 파일과 다운로드를 검증한다.
+유효한 캐시는 재사용하고, 손상된 파일은 검증이 끝난 다운로드로 교체한다. 모델 묶음을 만들 때도 Silero 원천을 같은 기준으로 검사한다.
 학습 checkpoint와 exporter 환경이 필요하다. `package_mobile_ai.py`가 고정 manifest와 `.careai`를 생성한다.
 현재 선택 export 폴더는 chat, asr, ocr-ko-v9, ocr-multi-v1, ocr-det다.
 
