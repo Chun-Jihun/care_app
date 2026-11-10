@@ -2,11 +2,13 @@ import json
 import io
 import tempfile
 import unittest
+from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from scripts.fetch_mfds_easy_drug import DownloaderError, parse_page_payload
+from scripts.fetch_mfds_local import build_parser, run
 from scripts.mfds_catalog import SERVICES, build_url, normalize_base
 from scripts.mfds_local_store import build_index, lookup
 from scripts.mfds_snapshot import collect, read_manifest, save_json
@@ -35,6 +37,66 @@ class LocalSnapshotTests(unittest.TestCase):
     def collect(self, **kwargs):
         return collect(self.snapshot, "permits", SERVICES["permits"].endpoint,
                        "SYNTHETIC-KEY-NEVER-REAL", rows=2, workers=1, delay=0, **kwargs)
+
+    def fetch_args(self, *options):
+        env = self.snapshot.parent / "synthetic.env"
+        env.write_text("GETDRUG_SERVICE_KEY=synthetic-key\nDUR_SERVICE_KEY=synthetic-key\n",
+                       encoding="utf-8")
+        return build_parser().parse_args([
+            "fetch", "--snapshot-id", self.snapshot.name, "--output-root", str(self.snapshot.parent),
+            "--env-file", str(env), "--num-rows", "2", "--workers", "1", "--delay-seconds", "0",
+            *options,
+        ])
+
+    def test_batch_resume_continues_permits_and_starts_unstarted_dur(self):
+        calls = []
+
+        def fetch(endpoint, key, **kwargs):
+            calls.append((endpoint, kwargs["page_no"]))
+            return fake_fetch(endpoint, key, **kwargs)
+
+        permits = self.snapshot.parent / "permits" / self.snapshot.name
+        dur = self.snapshot.parent / "dur" / self.snapshot.name
+        expected = [(f"{service.endpoint}/{op}", page)
+                    for service in SERVICES.values() for op in service.operations for page in (1, 2)]
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "scripts.fetch_mfds_local.collect", new=partial(collect, page_fetcher=fetch)
+        ):
+            with self.assertRaisesRegex(DownloaderError, "--resume"):
+                run(self.fetch_args("--max-requests", "1"))
+            self.assertEqual(calls, expected[:1])
+            self.assertFalse(dur.exists())
+            run(self.fetch_args("--resume"))
+            self.assertEqual(calls, expected)
+            run(self.fetch_args("--resume"))
+            self.assertEqual(calls, expected)
+        for snapshot in (permits, dur):
+            self.assertEqual(read_manifest(snapshot)["snapshot_id"], self.snapshot.name)
+            self.assertTrue((snapshot / "catalog.sqlite3").is_file())
+
+    def test_resume_requires_a_checkpoint_and_preserves_existing_directories(self):
+        with patch.dict("os.environ", {}, clear=True), patch("scripts.fetch_mfds_local.collect") as download:
+            with self.assertRaisesRegex(DownloaderError, "진행 파일"):
+                run(self.fetch_args("--resume"))
+            self.assertFalse((self.snapshot.parent / "permits").exists())
+            self.assertFalse((self.snapshot.parent / "dur").exists())
+            download.assert_not_called()
+
+        permits = self.snapshot.parent / "permits" / self.snapshot.name
+        dur = self.snapshot.parent / "dur" / self.snapshot.name
+        dur.mkdir(parents=True)
+        sentinel = dur / "interrupted.tmp"
+        sentinel.write_bytes(b"preserve")
+        collect(permits, "permits", SERVICES["permits"].endpoint, "synthetic-key",
+                rows=2, workers=1, delay=0, page_fetcher=fake_fetch)
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "scripts.fetch_mfds_local.collect", new=partial(collect, page_fetcher=fake_fetch)
+        ):
+            for options in (("--resume",), ("--resume", "--service", "dur")):
+                with self.subTest(options=options), self.assertRaisesRegex(DownloaderError, "진행 파일"):
+                    run(self.fetch_args(*options))
+        self.assertEqual(sentinel.read_bytes(), b"preserve")
+        self.assertFalse((dur / "manifest.json").exists())
 
     def test_all_operations_complete_and_offline_queries_need_no_network_or_key(self):
         m = self.collect(page_fetcher=fake_fetch)

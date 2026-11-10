@@ -57,8 +57,14 @@ def run(args: argparse.Namespace) -> None:
     snapshot_id = args.snapshot_id or utc_now().strftime("%Y%m%dT%H%M%SZ")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", snapshot_id):
         raise DownloaderError("스냅샷 ID 형식이 잘못되었습니다.")
-    values = load_dotenv(args.env_file)
     selected = list(SERVICES) if args.service == "all" else [args.service]
+    snapshots = {name: args.output_root / name / snapshot_id for name in selected}
+    batch_resume = args.resume and args.service == "all"
+    if batch_resume and not args.dry_run and not any(
+        (snapshot / "manifest.json").is_file() for snapshot in snapshots.values()
+    ):
+        raise DownloaderError(f"스냅샷 {snapshot_id}의 진행 파일을 찾을 수 없습니다. --snapshot-id를 확인하세요.")
+    values = load_dotenv(args.env_file)
     configs = []
     for name in selected:
         service = SERVICES[name]
@@ -70,7 +76,7 @@ def run(args: argparse.Namespace) -> None:
             raise DownloaderError(f"{key_name}가 비어 있습니다.")
         configs.append((name, base, key))
     for name, base, key in configs:
-        snapshot = args.output_root / name / snapshot_id
+        snapshot = snapshots[name]
         print(f"{name}: {base}; operations={len(SERVICES[name].operations)}; output={snapshot}", flush=True)
         if args.dry_run:
             continue
@@ -80,8 +86,12 @@ def run(args: argparse.Namespace) -> None:
         with lock.open("x", encoding="ascii") as stream:
             stream.write(str(os.getpid()))
         try:
+            # Only a service with no snapshot directory can start during a batch resume.
+            resume = args.resume and (not batch_resume or snapshot.exists())
+            if resume and not (snapshot / "manifest.json").is_file():
+                raise DownloaderError(f"{name} 스냅샷의 진행 파일(manifest.json)을 찾을 수 없습니다.")
             collect(snapshot, name, base, key, rows=args.num_rows, workers=args.workers,
-                    delay=args.delay_seconds, max_requests=args.max_requests, resume=args.resume)
+                    delay=args.delay_seconds, max_requests=args.max_requests, resume=resume)
             print(f"building offline DB: {snapshot}", flush=True)
             print(f"saved: {build_index(snapshot)}", flush=True)
         finally:
