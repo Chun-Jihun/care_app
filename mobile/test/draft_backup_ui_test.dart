@@ -14,6 +14,7 @@ import 'package:care_notebook/presentation/app.dart';
 import 'package:care_notebook/presentation/backup_page.dart';
 import 'package:care_notebook/presentation/editors.dart';
 import 'package:care_notebook/presentation/draft_page.dart';
+import 'package:care_notebook/presentation/visit_record_picker.dart';
 
 import 'support.dart';
 
@@ -208,22 +209,41 @@ void main() {
     await tester.ensureVisible(find.text('기록 선택 · 0개 선택됨'));
     await tester.tap(find.text('기록 선택 · 0개 선택됨'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byType(CheckboxListTile));
-    await tester.tap(find.byType(CheckboxListTile));
+    final picker = find.byType(VisitRecordPicker);
+    final editorSelection = tester.widget<VisitRecordPicker>(picker).selected;
+    final source = find.widgetWithText(CheckboxListTile, entry.note);
+    await tester.ensureVisible(source);
+    await tester.tap(source);
     await tester.pumpAndSettle();
     await tester.tap(find.text('선택한 기록 1개 적용'));
     await tester.pumpAndSettle();
+    expect(editorSelection, {entry.id}, reason: 'Applied source before lock');
+
     c.lock();
     await tester.pumpAndSettle();
     await tester.runAsync(() => c.unlockPin('123456'));
-    testRepository(c).deleteEntry(pid, entry.id);
+    final savedDraft = c.drafts.list(pid).single.payload as VisitDraftPayload;
+    expect(savedDraft.selected, [entry.id], reason: 'Source saved across lock');
+    await tester.runAsync(() => c.records.deleteEntry(pid, entry.id));
+    expect(c.records.entry(pid, entry.id), isNull);
     await tester.pumpAndSettle();
     await tester.tap(find.text('작성 중인 초안이 있어요'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('진료 준비').last);
+    await tester.tap(find.widgetWithText(ListTile, '진료 준비'));
     await tester.pumpAndSettle();
+    final openPicker = find.text('기록 선택 · 1개 선택됨');
+    await tester.ensureVisible(openPicker);
+    await tester.tap(openPicker);
+    await tester.pumpAndSettle();
+    expect(tester.widget<VisitRecordPicker>(picker).selected, {
+      entry.id,
+    }, reason: 'Deleted source retained in the restored editor');
+    Navigator.of(tester.element(picker)).pop();
+    await tester.pumpAndSettle();
+
+    expect(find.text('삭제된 원본 연결 제외'), findsOneWidget);
     await tapIO(tester, find.text('저장'));
-    expect(c.visits, isEmpty);
+    expect(testRepository(c).visits(pid), isEmpty);
     expect(find.text('현재 수첩의 항목을 찾을 수 없습니다.'), findsOneWidget);
     await tester.ensureVisible(find.text('삭제된 원본 연결 제외'));
     await tester.tap(find.text('삭제된 원본 연결 제외'));
