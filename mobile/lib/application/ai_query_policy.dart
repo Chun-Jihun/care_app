@@ -19,7 +19,9 @@ final class AiQueryPolicy {
   );
   // Precautionary escalation for explicit urgent requests, not a clinical classifier.
   static final _urgent = RegExp(
-    r'응급|긴급|119|숨을?\s*(?:잘\s*)?못\s*쉬|숨이?\s*(?:잘\s*)?안\s*쉬어|의식이?\s*없|emergency|unconscious|cannot.breathe|can.t.breathe|救急|意識がない|呼吸できない|急救|失去意识|失去意識|无法呼吸|無法呼吸',
+    r'응급|긴급|119|숨을?\s*(?:잘\s*)?못\s*쉬|숨이?\s*(?:잘\s*)?안\s*쉬어|'
+    r'숨을?\s*쉴\s*수가?\s*없|의식이?\s*없|'
+    r'emergency|unconscious|cannot.breathe|can.t.breathe|救急|意識がない|呼吸できない|急救|失去意识|失去意識|无法呼吸|無法呼吸',
     caseSensitive: false,
   );
 

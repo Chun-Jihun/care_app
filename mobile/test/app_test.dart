@@ -191,7 +191,7 @@ void main() {
       await tester.pumpAndSettle();
       await acknowledgeChatNotice(tester);
       final input = find.byKey(const ValueKey('chat_input'));
-      await tester.enterText(input, '숨이 안 쉬어져요');
+      await tester.enterText(input, '숨을 쉴 수 없어요');
       await tester.pump();
       await tester.tap(find.byTooltip('질문 남기기'));
       await tester.pumpAndSettle();

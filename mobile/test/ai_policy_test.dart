@@ -9,6 +9,14 @@ void main() {
     expect(AiQueryPolicy.preflight('숨을 못 쉬어요'), AiReplyKind.urgent);
     expect(AiQueryPolicy.preflight('숨을 잘 못 쉬어요'), AiReplyKind.urgent);
     expect(AiQueryPolicy.preflight('숨이 안 쉬어져요'), AiReplyKind.urgent);
+    for (final phrase in ['숨을 쉴 수 없어요', '숨 쉴 수가 없어요', '숨을쉴수없어요']) {
+      expect(
+        AiQueryPolicy.preflight(phrase),
+        AiReplyKind.urgent,
+        reason: phrase,
+      );
+    }
+    expect(AiQueryPolicy.guard('지금은 숨을 쉴 수 있어요'), isNull);
     expect(
       AiQueryPolicy.preflight('Is this medicine safe?'),
       AiReplyKind.medicalHold,
