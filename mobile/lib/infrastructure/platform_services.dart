@@ -244,34 +244,44 @@ class DevicePlatformServices extends PlatformServices {
           );
       _channelLanguage = strings.language;
     }
-    final pending = (await _notifications.pendingNotificationRequests())
-        .map((r) => r.id)
-        .toSet();
+    final pending = {
+      for (final request in await _notifications.pendingNotificationRequests())
+        request.id: request.payload,
+    };
     final now = DateTime.now();
     final future = reminders.where((r) => r.at.isAfter(now)).take(60).toList();
-    // An inexact alarm may be due but not delivered yet. Keep it until it fires
-    // unless the user completes, disables or removes that specific task.
+    // Keep delayed alarms only for the same due time. An alarm absent from
+    // pending may already be visible in the notification tray.
     final retained = {
       ...future.map((r) => r.id),
-      ...reminders
-          .where((r) => !r.daily && !r.at.isAfter(now))
-          .map((r) => r.id),
+      for (final reminder in reminders)
+        if (!reminder.daily &&
+            !reminder.at.isAfter(now) &&
+            (!pending.containsKey(reminder.id) ||
+                pending[reminder.id] ==
+                    reminder.at.millisecondsSinceEpoch.toString()))
+          reminder.id,
     };
-    for (final id in {...pending, ..._scheduled.keys}.difference(retained)) {
+    for (final id in {
+      ...pending.keys,
+      ..._scheduled.keys,
+    }.difference(retained)) {
       await _notifications.cancel(id: id);
       _scheduled.remove(id);
     }
     for (final reminder in future) {
+      final scheduledAt = reminder.at.millisecondsSinceEpoch.toString();
       final signature = reminder.daily
           ? '${strings.language.code}:$zone:daily:${reminder.at.hour}:${reminder.at.minute}'
-          : '${strings.language.code}:$zone:${reminder.at.millisecondsSinceEpoch}';
-      if (pending.contains(reminder.id) &&
+          : '${strings.language.code}:$zone:$scheduledAt';
+      if (pending.containsKey(reminder.id) &&
           _scheduled[reminder.id] == signature) {
         continue;
       }
       await _notifications.zonedSchedule(
         id: reminder.id,
         scheduledDate: tz.TZDateTime.from(reminder.at, tz.local),
+        payload: reminder.daily ? null : scheduledAt,
         title: strings.text('간병수첩'),
         body: strings.text('확인할 일정이 있어요. 수첩을 열어 확인해 주세요.'),
         notificationDetails: NotificationDetails(

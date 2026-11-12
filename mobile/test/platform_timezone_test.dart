@@ -17,7 +17,15 @@ void main() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     const channel = MethodChannel('dexterous.com/flutter/local_notifications');
     final calls = <MethodCall>[];
-    final pending = <int>{10, 30};
+    final now = DateTime.now();
+    final reminders = [
+      Reminder(10, now.subtract(const Duration(seconds: 30))),
+      Reminder(20, now.add(const Duration(hours: 1))),
+    ];
+    final pending = <int, String?>{
+      10: reminders.first.at.millisecondsSinceEpoch.toString(),
+      30: null,
+    };
     messenger.setMockMethodCallHandler(
       DevicePlatformServices.privacy,
       (_) async => 'UTC',
@@ -28,13 +36,13 @@ void main() {
         case 'initialize':
           return true;
         case 'pendingNotificationRequests':
-          return pending
+          return pending.entries
               .map(
-                (id) => {
-                  'id': id,
+                (request) => {
+                  'id': request.key,
                   'title': '간병수첩',
                   'body': '',
-                  'payload': null,
+                  'payload': request.value,
                 },
               )
               .toList();
@@ -45,7 +53,8 @@ void main() {
           pending.clear();
           return null;
         case 'zonedSchedule':
-          pending.add(call.arguments['id'] as int);
+          pending[call.arguments['id'] as int] =
+              call.arguments['payload'] as String?;
           return null;
         default:
           return null;
@@ -56,13 +65,9 @@ void main() {
       messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, null);
     });
     final platform = DevicePlatformServices();
-    final now = DateTime.now();
-    final reminders = [
-      Reminder(10, now.subtract(const Duration(seconds: 30))),
-      Reminder(20, now.add(const Duration(hours: 1))),
-    ];
     await platform.schedule(reminders);
-    expect(pending, {10, 20});
+    expect(pending.keys.toSet(), {10, 20});
+    expect(pending[20], reminders.last.at.millisecondsSinceEpoch.toString());
     expect(calls.where((c) => c.method == 'cancelAll'), isEmpty);
     expect(calls.where((c) => c.method == 'cancel').single.arguments['id'], 30);
     await platform.schedule(reminders);
@@ -81,11 +86,22 @@ void main() {
         next['body'],
         platform.strings.text('확인할 일정이 있어요. 수첩을 열어 확인해 주세요.'),
       );
-      expect(pending, {10, 20});
+      expect(pending.keys.toSet(), {10, 20});
       expect(calls.where((c) => c.method == 'cancelAll'), isEmpty);
     }
     expect(calls.where((c) => c.method == 'zonedSchedule'), hasLength(5));
-    await platform.schedule([]);
+
+    final restarted = DevicePlatformServices();
+    final yesterday = now.subtract(const Duration(days: 1));
+    await restarted.schedule([reminders.first, Reminder(20, yesterday)]);
+    expect(pending.keys, [10]);
+    expect(calls.where((c) => c.method == 'cancel').last.arguments['id'], 20);
+
+    pending[40] = null; // A request scheduled by the previous app version.
+    await restarted.schedule([reminders.first, Reminder(40, yesterday)]);
+    expect(pending.keys, [10]);
+
+    await restarted.schedule([]);
     expect(pending, isEmpty);
   });
   test(
