@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -170,13 +171,16 @@ void main() {
   test(
     'LOCAL-08 authenticated encryption rejects tampering and wrong passwords',
     () async {
+      final data = Uint8List.fromList([1, 2, 3]);
       final encrypted = await VaultCrypto.passwordSeal(
-        Uint8List.fromList([1, 2, 3]),
+        data,
         'correct-horse-battery',
       );
+      expect(ascii.decode(encrypted.sublist(0, 8)), 'CAREBK01');
+      expect(encrypted.length, data.length + 52);
       expect(
         await VaultCrypto.passwordOpen(encrypted, 'correct-horse-battery'),
-        [1, 2, 3],
+        data,
       );
       expect(
         () => VaultCrypto.passwordOpen(encrypted, 'wrong-password'),

@@ -17,18 +17,13 @@ class VaultCrypto {
     List<int> data,
     List<int> key, {
     String context = 'care-file-v1',
-  }) async {
-    final result = await _aes.encrypt(
-      data,
-      secretKey: SecretKey(key),
-      aad: utf8.encode(context),
-    );
-    return Uint8List.fromList([
-      ...result.nonce,
-      ...result.cipherText,
-      ...result.mac.bytes,
-    ]);
-  }
+  }) async => (await _encrypt(data, key, context)).concatenation();
+
+  static Future<SecretBox> _encrypt(
+    List<int> data,
+    List<int> key,
+    String context,
+  ) => _aes.encrypt(data, secretKey: SecretKey(key), aad: utf8.encode(context));
 
   static Future<Uint8List> open(
     List<int> data,
@@ -62,16 +57,18 @@ class VaultCrypto {
       throw CareError(CareErrorCode.backupPasswordTooShort);
     }
     final salt = randomBytes(16);
-    final encrypted = await seal(
+    final encrypted = await _encrypt(
       data,
       await derive(password, salt),
-      context: 'care-backup-v1',
+      'care-backup-v1',
     );
-    return Uint8List.fromList([
-      ...utf8.encode('CAREBK01'),
-      ...salt,
-      ...encrypted,
-    ]);
+    return (BytesBuilder(copy: false)
+          ..add(utf8.encode('CAREBK01'))
+          ..add(salt)
+          ..add(encrypted.nonce)
+          ..add(encrypted.cipherText)
+          ..add(encrypted.mac.bytes))
+        .takeBytes();
   }
 
   static Future<Uint8List> passwordOpen(Uint8List data, String password) async {
