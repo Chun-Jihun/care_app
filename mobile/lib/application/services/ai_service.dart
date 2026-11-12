@@ -225,4 +225,29 @@ final class AiService {
     final task = _tasks.create(ContextSelection(patientId: pid));
     return task.run((_) => _runtime.transcribe(samples, language.code));
   }
+
+  Future<T> withTranscriber<T>(
+    String pid,
+    AppLanguage language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) {
+    final task = _tasks.create(ContextSelection(patientId: pid));
+    return task.run(
+      (reader) => _runtime.withTranscriber(language.code, (decode) {
+        void check() {
+          if (reader.cancelled) throw const AiException(AiFailure.cancelled);
+        }
+
+        check();
+        return use((samples) async {
+          check();
+          try {
+            return await decode(samples);
+          } finally {
+            check();
+          }
+        });
+      }),
+    );
+  }
 }

@@ -196,6 +196,9 @@ abstract interface class MicrophoneCapture {
   Future<void> dispose();
 }
 
+/// Decodes one segment at a time within a withTranscriber callback.
+typedef SpeechTranscriber = Future<String> Function(Float32List samples);
+
 abstract interface class LocalAiRuntime {
   Future<AiModelStatus> status();
   Future<String?> pickBundle();
@@ -204,6 +207,10 @@ abstract interface class LocalAiRuntime {
   Future<String> extractQuery(String question, String language);
   Future<OcrDraft> recognize(Uint8List image, String language);
   Future<String> transcribe(Float32List samples, String language);
+  Future<T> withTranscriber<T>(
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  );
   void cancel();
   Future<void> dispose();
 }
@@ -230,6 +237,11 @@ final class UnavailableAiRuntime implements LocalAiRuntime {
   @override
   Future<String> transcribe(Float32List samples, String language) async =>
       throw const AiException(AiFailure.unavailable);
+  @override
+  Future<T> withTranscriber<T>(
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) async => throw const AiException(AiFailure.unavailable);
   @override
   void cancel() {}
   @override

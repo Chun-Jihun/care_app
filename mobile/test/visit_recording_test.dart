@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:care_notebook/application/visit_audio_buffer.dart';
 import 'package:care_notebook/application/care_controller.dart';
 import 'package:care_notebook/application/visit_audio_device.dart';
+import 'package:care_notebook/domain/ai.dart';
 import 'package:care_notebook/domain/backup.dart';
 import 'package:care_notebook/domain/drafts.dart';
 import 'package:care_notebook/domain/records.dart';
@@ -90,6 +91,9 @@ void main() {
         await tester.tap(find.text('전사하고 검토하기'));
         await tester.pumpAndSettle();
         expect(find.text('전사문 검토'), findsOneWidget);
+        expect(ai.opened, 1);
+        expect(ai.closed, 1);
+        expect(ai.next, segments.length);
         final drafts = c.drafts
             .list(pid)
             .map((draft) => draft.payload as EntryDraftPayload);
@@ -383,6 +387,20 @@ class _SegmentedSpeech extends FakeAi {
   _SegmentedSpeech(this.segments);
   final List<String> segments;
   var next = 0;
+  var opened = 0, closed = 0;
+
+  @override
+  Future<T> withTranscriber<T>(
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) async {
+    opened++;
+    try {
+      return await super.withTranscriber(language, use);
+    } finally {
+      closed++;
+    }
+  }
 
   @override
   Future<String> transcribe(Float32List samples, String language) async =>

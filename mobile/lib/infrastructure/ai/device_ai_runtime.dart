@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../domain/ai.dart';
+import '../../domain/errors.dart';
 import '../../domain/medical_evidence.dart';
 import '../platform_services.dart';
 import 'model_store.dart';
@@ -133,7 +134,7 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
 
   Future<T> _run<T>(
     Future<T> Function(int) action, {
-    Duration timeout = const Duration(seconds: 90),
+    Duration? timeout = const Duration(seconds: 90),
   }) async {
     if (_disposed || !_supported) {
       throw const AiException(AiFailure.unavailable);
@@ -150,22 +151,26 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
       if (identical(_cancelSignal, signal)) _cancelSignal = null;
     });
     try {
-      final value =
-          await Future.any<T>([
-            work,
-            signal.future.then<T>(
-              (_) => throw const AiException(AiFailure.cancelled),
-            ),
-          ]).timeout(
-            timeout,
-            onTimeout: () {
-              cancel();
-              throw const AiException(AiFailure.cancelled);
-            },
-          );
+      final outcome = Future.any<T>([
+        work,
+        signal.future.then<T>(
+          (_) => throw const AiException(AiFailure.cancelled),
+        ),
+      ]);
+      final value = await (timeout == null
+          ? outcome
+          : outcome.timeout(
+              timeout,
+              onTimeout: () {
+                cancel();
+                throw const AiException(AiFailure.cancelled);
+              },
+            ));
       _check(epoch);
       return value;
     } on AiException {
+      rethrow;
+    } on CareError {
       rethrow;
     } on Object {
       throw const AiException(AiFailure.failed);
@@ -218,22 +223,57 @@ final class DeviceAiRuntime implements LocalAiRuntime, EvidenceSelector {
         return runOcrWorker(detector, recognizer, dictionary, image);
       });
   @override
-  Future<String> transcribe(Float32List samples, String language) =>
-      _run((epoch) async {
-        final store = await _ready(epoch, [
-          'speech/encoder.onnx',
-          'speech/decoder.onnx',
-          'speech/tokens.txt',
-          'speech/vad.onnx',
-        ]);
-        final paths = {
-          'encoder': store.path('speech/encoder.onnx'),
-          'decoder': store.path('speech/decoder.onnx'),
-          'tokens': store.path('speech/tokens.txt'),
-          'vad': store.path('speech/vad.onnx'),
-        };
-        return runSpeechWorker(paths, samples, language);
-      });
+  Future<String> transcribe(Float32List samples, String language) => _run(
+    (epoch) => _useSpeechWorker(epoch, language, (decode) => decode(samples)),
+  );
+
+  @override
+  Future<T> withTranscriber<T>(
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) => _run((epoch) => _useSpeechWorker(epoch, language, use), timeout: null);
+
+  Future<T> _useSpeechWorker<T>(
+    int epoch,
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) async {
+    final store = await _speechStep(
+      epoch,
+      () => _ready(epoch, [
+        'speech/encoder.onnx',
+        'speech/decoder.onnx',
+        'speech/tokens.txt',
+        'speech/vad.onnx',
+      ]),
+    );
+    final paths = {
+      'encoder': store.path('speech/encoder.onnx'),
+      'decoder': store.path('speech/decoder.onnx'),
+      'tokens': store.path('speech/tokens.txt'),
+      'vad': store.path('speech/vad.onnx'),
+    };
+    return runSpeechWorker(
+      paths,
+      language,
+      (decode) => use((samples) => _speechStep(epoch, () => decode(samples))),
+    );
+  }
+
+  Future<T> _speechStep<T>(int epoch, Future<T> Function() step) async {
+    _check(epoch);
+    // Time out the caller while letting the isolate finish its native call.
+    final timer = Timer(const Duration(seconds: 90), () {
+      if (epoch == _generation) cancel();
+    });
+    try {
+      return await step();
+    } finally {
+      timer.cancel();
+      _check(epoch);
+    }
+  }
+
   @override
   void cancel() {
     _generation++;
@@ -258,8 +298,3 @@ Future<OcrDraft> runOcrWorker(
   String dictionary,
   Uint8List image,
 ) => Isolate.run(() => recognizeLocal(detector, recognizer, dictionary, image));
-Future<String> runSpeechWorker(
-  Map<String, String> paths,
-  Float32List samples,
-  String language,
-) => Isolate.run(() => transcribeLocal(paths, samples, language));

@@ -229,50 +229,52 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
     final skipped = context.tr('이 구간은 인식하지 못했어요.');
     var recognized = false;
     try {
-      while (_current(operation) && _processed < _total) {
-        final start = _processed;
-        final samples = Float32List(VisitRecording.sampleRate * 30);
-        var length = 0;
-        try {
-          for (var i = 0; i < 30 && _processed < _total; i++) {
-            final pcm = widget.c.visitRecordings.read(
-              widget.pid,
-              recording.id,
-              _processed,
-            )!;
-            try {
-              final data = ByteData.sublistView(pcm);
-              for (var j = 0; j < pcm.length; j += 2) {
-                samples[length++] = data.getInt16(j, Endian.little) / 32768;
+      await widget.c.ai.withTranscriber(widget.pid, widget.c.language, (
+        decode,
+      ) async {
+        while (_current(operation) && _processed < _total) {
+          final start = _processed;
+          final samples = Float32List(VisitRecording.sampleRate * 30);
+          var length = 0;
+          try {
+            for (var i = 0; i < 30 && _processed < _total; i++) {
+              final pcm = widget.c.visitRecordings.read(
+                widget.pid,
+                recording.id,
+                _processed,
+              )!;
+              try {
+                final data = ByteData.sublistView(pcm);
+                for (var j = 0; j < pcm.length; j += 2) {
+                  samples[length++] = data.getInt16(j, Endian.little) / 32768;
+                }
+                _processed += pcm.length;
+              } finally {
+                pcm.fillRange(0, pcm.length, 0);
               }
-              _processed += pcm.length;
-            } finally {
-              pcm.fillRange(0, pcm.length, 0);
             }
+            final result = await decode(
+              Float32List.sublistView(samples, 0, length),
+            );
+            if (!_current(operation)) return;
+            recognized = true;
+            segments.add((
+              seconds: start ~/ VisitRecording.bytesPerSecond,
+              text: result,
+            ));
+          } on AiException catch (error) {
+            if (error.code != AiFailure.noSpeech) rethrow;
+            if (!_current(operation)) return;
+            segments.add((
+              seconds: start ~/ VisitRecording.bytesPerSecond,
+              text: skipped,
+            ));
+          } finally {
+            samples.fillRange(0, samples.length, 0);
           }
-          final result = await widget.c.ai.transcribe(
-            widget.pid,
-            Float32List.sublistView(samples, 0, length),
-            widget.c.language,
-          );
-          if (!_current(operation)) return;
-          recognized = true;
-          segments.add((
-            seconds: start ~/ VisitRecording.bytesPerSecond,
-            text: result,
-          ));
-        } on AiException catch (error) {
-          if (error.code != AiFailure.noSpeech) rethrow;
-          if (!_current(operation)) return;
-          segments.add((
-            seconds: start ~/ VisitRecording.bytesPerSecond,
-            text: skipped,
-          ));
-        } finally {
-          samples.fillRange(0, samples.length, 0);
+          if (_current(operation)) setState(() {});
         }
-        if (_current(operation)) setState(() {});
-      }
+      });
       if (!mounted || !_current(operation)) return;
       if (!recognized) throw const AiException(AiFailure.noSpeech);
       final parts = _transcriptParts(recording.startedAt, segments);

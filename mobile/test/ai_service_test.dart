@@ -46,6 +46,11 @@ class FakeAi implements LocalAiRuntime {
   Future<String> transcribe(Float32List samples, String language) async =>
       'possibly wrong 15 mg';
   @override
+  Future<T> withTranscriber<T>(
+    String language,
+    Future<T> Function(SpeechTranscriber) use,
+  ) => use((samples) => transcribe(samples, language));
+  @override
   void cancel() {}
   @override
   Future<void> dispose() async {}
