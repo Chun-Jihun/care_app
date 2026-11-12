@@ -53,6 +53,11 @@ void main() {
       expect((await reader.lookupDrug('TEST-2')).single['item_seq'], 'TEST-1');
       expect(await reader.lookupDrug('missing'), isEmpty);
       expect(
+        (await reader.findDrugName(' TEST-1 ')).identified?.name,
+        'Synthetic product',
+      );
+      expect((await reader.findDrugName('TEST-2')).candidates, isEmpty);
+      expect(
         () => reader.clinicalContext('anything'),
         throwsA(isA<KnowledgePackageException>()),
       );

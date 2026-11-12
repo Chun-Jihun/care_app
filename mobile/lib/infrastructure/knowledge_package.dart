@@ -348,59 +348,61 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
 
   /// Product identity only; no inference about equivalence, dosage or safety.
   /// Entire normalized names match; partial names return candidates requiring
-  /// user selection. Packed records are scanned in order off the UI isolate.
+  /// user selection. Exact codes use the package index.
   Future<DrugNameMatches> findDrugName(String query) => Isolate.run(
     () => _read((db) {
       final key = _drugName(query);
       if (key.length < 2 || key.length > 200) {
         return const DrugNameMatches([], false);
       }
+      final item = query.trim();
+      final packed = _packed
+          ? PackedKnowledgeDrugs(db, (id) => _blob(db, id))
+          : null;
+      if (item.length <= 100) {
+        final name = packed != null
+            ? packed.nameForCode(item)
+            : db.select(
+                    "SELECT item_name FROM drug_records WHERE item_seq=? AND item_name<>'' ORDER BY id LIMIT 1",
+                    [item],
+                  ).firstOrNull?['item_name']
+                  as String?;
+        if (name != null) {
+          return DrugNameMatches([DrugIdentity(item, name)], true);
+        }
+      }
       final exact = <String, DrugIdentity>{},
           partial = <String, DrugIdentity>{};
       var exactTruncated = false, partialTruncated = false;
-      void consider(Map<String, dynamic> record) {
-        final code = '${record['ITEM_SEQ'] ?? record['itemSeq'] ?? ''}';
-        final name = '${record['ITEM_NAME'] ?? record['itemName'] ?? ''}';
+      void consider(String code, String name) {
         if (code.isEmpty || name.isEmpty) return;
         final normalized = _drugName(name);
-        final candidate = DrugIdentity(code, name);
-        if (code == query.trim() || normalized == key) {
+        if (code == item || normalized == key) {
           if (exact.containsKey(code)) return;
           if (exact.length < 21) {
-            exact[code] = candidate;
+            exact[code] = DrugIdentity(code, name);
           } else {
             exactTruncated = true;
           }
         } else if (normalized.contains(key)) {
           if (partial.containsKey(code)) return;
           if (partial.length < 21) {
-            partial[code] = candidate;
+            partial[code] = DrugIdentity(code, name);
           } else {
             partialTruncated = true;
           }
         }
       }
 
-      if (_packed) {
-        final packed = PackedKnowledgeDrugs(db, (id) => _blob(db, id));
-        for (final group in db.select(
-          'SELECT first_record,record_count FROM record_groups ORDER BY first_record',
-        )) {
-          final first = group['first_record'] as int;
-          final count = group['record_count'] as int;
-          if (count < 1 || count > 512) _fail('제품 식별 목록을 확인할 수 없습니다.');
-          for (var id = first; id < first + count; id++) {
-            consider(packed.record(id)['record'] as Map<String, dynamic>);
-          }
+      if (packed != null) {
+        for (final (code, name) in packed.identities()) {
+          consider(code, name);
         }
       } else {
         for (final row in db.select(
           'SELECT item_seq,item_name FROM drug_records ORDER BY id',
         )) {
-          consider({
-            'ITEM_SEQ': row['item_seq'],
-            'ITEM_NAME': row['item_name'],
-          });
+          consider('${row['item_seq'] ?? ''}', '${row['item_name'] ?? ''}');
         }
       }
       final selected = exact.isNotEmpty ? exact : partial;
@@ -476,8 +478,9 @@ class LocalKnowledgePackage implements KnowledgeReviewReader {
   );
 }
 
+final _drugNameWhitespace = RegExp(r'\s+');
 String _drugName(String name) =>
-    name.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    name.toLowerCase().replaceAll(_drugNameWhitespace, '');
 
 class DrugIdentity {
   const DrugIdentity(this.code, this.name);

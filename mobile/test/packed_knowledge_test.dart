@@ -49,8 +49,77 @@ void main() {
       (await reader.findDrugName('Synthetic product 500mg')).identified,
       isNull,
     );
+    expect((await reader.findDrugName('TEST-2')).candidates, isEmpty);
+    final variants = await reader.findDrugName('Var iant');
+    expect(variants.candidates.map((item) => item.code), [
+      for (var i = 0; i < 20; i++) 'ALT$i',
+    ]);
+    expect(variants.truncated, isTrue);
+    expect(variants.exact, isFalse);
     expect((await reader.findDrugName('unknown product')).candidates, isEmpty);
   });
+
+  test('exact product codes do not read unrelated record groups', () async {
+    final db = sqlite3.open(path('knowledge.sqlite3'));
+    try {
+      db.execute('UPDATE record_groups SET blob_id=-1 WHERE first_record=513');
+    } finally {
+      db.close();
+    }
+    await refreshManifest();
+    final reader = await LocalKnowledgePackage.openForReview(directory.path);
+    expect(
+      (await reader.findDrugName(' TEST-1 ')).identified?.name,
+      'Synthetic product',
+    );
+    await expectLater(
+      reader.drugRecord(513),
+      throwsA(isA<KnowledgePackageException>()),
+    );
+  });
+
+  test(
+    'name search reads identity fields before any full product record',
+    () async {
+      final db = sqlite3.open(path('knowledge.sqlite3'));
+      try {
+        final group = db.select(
+          '''SELECT blobs.id, payload FROM record_groups
+        JOIN blobs ON blobs.id=record_groups.blob_id WHERE first_record=1''',
+        ).single;
+        final records = jsonDecode(
+          utf8.decode(zlib.decode(group['payload'] as Uint8List)),
+        ) as List;
+        final keys =
+            (fixture['expected_record'] as Map).keys.cast<String>().toList()
+              ..sort();
+        final refs = (records.first as List)[3] as List;
+        refs[keys.indexOf('CONDITION')] = 0;
+        final raw = utf8.encode(jsonEncode(records));
+        db.execute(
+          'UPDATE blobs SET payload=?, raw_size=?, sha256=? WHERE id=?',
+          [
+            Uint8List.fromList(zlib.encode(raw)),
+            raw.length,
+            sha256.convert(raw).toString(),
+            group['id'],
+          ],
+        );
+      } finally {
+        db.close();
+      }
+      await refreshManifest();
+      final reader = await LocalKnowledgePackage.openForReview(directory.path);
+      expect(
+        (await reader.findDrugName('Synthetic product')).identified?.code,
+        'TEST-1',
+      );
+      await expectLater(
+        reader.drugRecord(1),
+        throwsA(isA<KnowledgePackageException>()),
+      );
+    },
+  );
 
   test(
     'Python v2 fields, Unicode and group boundaries restore exactly in Dart',
@@ -101,14 +170,18 @@ void main() {
     () async {
       final db = sqlite3.open(path('knowledge.sqlite3'));
       db.execute('UPDATE drug_lookup SET record_ids=? WHERE item_seq=?', [
-        Uint8List.fromList([128]),
-        'TEST-2',
+        Uint8List.fromList([1, 128]),
+        'TEST-1',
       ]);
       db.close();
       await refreshManifest();
       final reader = await LocalKnowledgePackage.openForReview(directory.path);
       await expectLater(
-        reader.lookupDrug('TEST-2'),
+        reader.lookupDrug('TEST-1'),
+        throwsA(isA<KnowledgePackageException>()),
+      );
+      await expectLater(
+        reader.findDrugName('TEST-1'),
         throwsA(isA<KnowledgePackageException>()),
       );
     },

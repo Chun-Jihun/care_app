@@ -41,7 +41,7 @@ class PackedKnowledgeDrugs {
     return cached.$1[offset];
   }
 
-  Map<String, dynamic> record(int id) {
+  (String, List<dynamic>) _recordRow(int id) {
     if (id < 1) _fail();
     var group = _group;
     if (group == null || id < group.$1 || id >= group.$1 + group.$3.length) {
@@ -67,6 +67,10 @@ class PackedKnowledgeDrugs {
         (row[1] as int) < 0) {
       _fail();
     }
+    return (group.$2, row);
+  }
+
+  (List<dynamic>, List<dynamic>) _fields(List<dynamic> row) {
     final keys = _value(row[2] as int) as List;
     final refs = row[3] as List;
     if (keys.any((key) => key is! String) ||
@@ -74,6 +78,51 @@ class PackedKnowledgeDrugs {
         keys.length != refs.length) {
       _fail();
     }
+    return (keys, refs);
+  }
+
+  Object? _field((List<dynamic>, List<dynamic>) fields, String key) {
+    final index = fields.$1.indexOf(key);
+    return index < 0 ? null : _value(fields.$2[index] as int);
+  }
+
+  (String, String) _identity((List<dynamic>, List<dynamic>) fields) => (
+    '${_field(fields, 'ITEM_SEQ') ?? _field(fields, 'itemSeq') ?? ''}',
+    '${_field(fields, 'ITEM_NAME') ?? _field(fields, 'itemName') ?? ''}',
+  );
+
+  Iterable<(String, String)> identities() sync* {
+    for (final group in db.select(
+      'SELECT first_record,record_count FROM record_groups ORDER BY first_record',
+    )) {
+      final first = group['first_record'] as int;
+      final count = group['record_count'] as int;
+      if (count < 1 || count > 512) _fail();
+      for (var id = first; id < first + count; id++) {
+        yield _identity(_fields(_recordRow(id).$2));
+      }
+    }
+  }
+
+  String? nameForCode(String item) {
+    String? match;
+    for (final id in _lookupIds(item)) {
+      // Validate the remaining deltas without opening any other record.
+      if (match != null) continue;
+      final fields = _fields(_recordRow(id).$2);
+      final (code, name) = _identity(fields);
+      if (code == item) {
+        if (name.isNotEmpty) match = name;
+      } else if (_field(fields, 'MIXTURE_ITEM_SEQ')?.toString() != item) {
+        _fail();
+      }
+    }
+    return match;
+  }
+
+  Map<String, dynamic> record(int id) {
+    final (source, row) = _recordRow(id);
+    final (keys, refs) = _fields(row);
     final result = <String, dynamic>{};
     for (var i = 0; i < keys.length; i++) {
       result[keys[i] as String] = _value(refs[i] as int);
@@ -81,7 +130,7 @@ class PackedKnowledgeDrugs {
     if (utf8.encode(jsonEncode(result)).length > 16 * 1024 * 1024) _fail();
     return {
       'id': id,
-      'source_id': group.$2,
+      'source_id': source,
       'page_no': row[0],
       'row_no': row[1],
       'item_seq': '${result['ITEM_SEQ'] ?? result['itemSeq'] ?? ''}',
@@ -90,7 +139,7 @@ class PackedKnowledgeDrugs {
     };
   }
 
-  List<Map<String, Object?>> lookup(String item, int limit) {
+  Iterable<int> _lookupIds(String item) {
     final sizes = db.select(
       'SELECT length(record_ids) AS n FROM drug_lookup WHERE item_seq=?',
       [item],
@@ -103,13 +152,17 @@ class PackedKnowledgeDrugs {
     );
     if (rows.isEmpty) return [];
     if (rows.length != 1) _fail();
-    final result = <Map<String, Object?>>[];
     final bytes = rows.single['record_ids'] as Uint8List;
     if (bytes.length > 16 * 1024 * 1024) _fail();
+    return _ids(bytes);
+  }
+
+  List<Map<String, Object?>> lookup(String item, int limit) {
     final selected = <int>[];
-    for (final id in _ids(bytes)) {
+    for (final id in _lookupIds(item)) {
       if (selected.length < limit) selected.add(id);
     }
+    final result = <Map<String, Object?>>[];
     for (final id in selected) {
       final restored = record(id);
       if (restored['item_seq'] != item && restored['counterpart_seq'] != item) {
