@@ -58,6 +58,7 @@ class MainActivity : FlutterFragmentActivity() {
                     "pickDocument" -> documentPicker.open(
                         checkNotNull(call.argument<Number>("maxBytes")).toLong(),
                         checkNotNull(call.argument<Number>("installBytes")).toLong(),
+                        call.argument<Boolean>("imageOnly") == true,
                         result,
                     )
                     "dailyWidgetAvailable" -> result.success(true)

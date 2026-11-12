@@ -121,11 +121,13 @@ class DevicePlatformServices extends PlatformServices {
   static Future<String?> pickBoundedDocument({
     required int maxBytes,
     int installBytes = 0,
+    bool imageOnly = false,
   }) async {
     try {
       return await privacy.invokeMethod<String>('pickDocument', {
         'maxBytes': maxBytes,
         'installBytes': installBytes,
+        if (imageOnly) 'imageOnly': true,
       });
     } on PlatformException catch (error) {
       if (error.code == 'documentSpaceInsufficient') {
@@ -294,6 +296,27 @@ class DevicePlatformServices extends PlatformServices {
 
   @override
   Future<Uint8List?> pickPhoto({bool camera = false}) async {
+    const limit = 20 * 1024 * 1024;
+    if (!camera && defaultTargetPlatform == TargetPlatform.android) {
+      final String? path;
+      try {
+        path = await pickBoundedDocument(maxBytes: limit, imageOnly: true);
+      } on PlatformException catch (error) {
+        throw CareError(
+          error.code == 'documentTooLarge'
+              ? CareErrorCode.photoTooLarge
+              : CareErrorCode.photoDecodeFailed,
+        );
+      }
+      if (path == null) return null;
+      try {
+        return await File(path).readAsBytes();
+      } on FileSystemException {
+        throw CareError(CareErrorCode.photoDecodeFailed);
+      } finally {
+        await discardPickedDocument(path);
+      }
+    }
     final photo = await ImagePicker().pickImage(
       source: camera ? ImageSource.camera : ImageSource.gallery,
       requestFullMetadata: false,
@@ -302,7 +325,7 @@ class DevicePlatformServices extends PlatformServices {
       return null;
     }
     try {
-      if (await photo.length() > 20 * 1024 * 1024) {
+      if (await photo.length() > limit) {
         throw CareError(CareErrorCode.photoTooLarge);
       }
       return await photo.readAsBytes();

@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -14,22 +15,29 @@ import java.io.OutputStream
 internal class BoundedDocumentPicker(private val activity: ComponentActivity) {
     private data class Request(val maxBytes: Long, val installBytes: Long, val result: MethodChannel.Result)
     private var pending: Request? = null
-    private val picker = activity.registerForActivityResult(ActivityResultContracts.OpenDocument(), ::onDocument)
+    private val picker = activity.registerForActivityResult(ActivityResultContracts.OpenDocument(), ::onPicked)
+    private val photoPicker = activity.registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia(), ::onPicked,
+    )
 
-    fun open(maxBytes: Long, installBytes: Long, result: MethodChannel.Result) {
+    fun open(maxBytes: Long, installBytes: Long, imageOnly: Boolean, result: MethodChannel.Result) {
         if (pending != null || maxBytes !in 1L until Long.MAX_VALUE || installBytes !in 0L..maxBytes) {
             result.error("documentOpenFailed", null, null)
             return
         }
         pending = Request(maxBytes, installBytes, result)
         try {
-            picker.launch(arrayOf("*/*"))
+            if (imageOnly) {
+                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            } else {
+                picker.launch(arrayOf("*/*"))
+            }
         } catch (_: Exception) {
             finish(null, "documentOpenFailed")
         }
     }
 
-    private fun onDocument(uri: Uri?) {
+    private fun onPicked(uri: Uri?) {
         val request = pending ?: return
         if (uri == null) {
             finish(null)
@@ -49,7 +57,8 @@ internal class BoundedDocumentPicker(private val activity: ComponentActivity) {
                             it.getLong(column).takeIf { bytes -> bytes >= 0 }
                         } else null
                     }
-                } catch (_: UnsupportedOperationException) {
+                } catch (_: RuntimeException) {
+                    // Providers may reject size queries even when the stream is readable.
                     null
                 }
                 file = stageBoundedDocument(activity.cacheDir, size, request.maxBytes, request.installBytes) {
