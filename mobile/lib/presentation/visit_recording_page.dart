@@ -11,6 +11,7 @@ import '../domain/drafts.dart';
 import '../domain/records.dart';
 import '../domain/visit_recording.dart';
 import '../l10n/app_strings.dart';
+import 'ai_input_notice.dart';
 import 'ai_settings.dart';
 import 'common.dart';
 import 'draft_page.dart';
@@ -42,6 +43,7 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
   int _processed = 0, _total = 0;
   Object? _error;
   bool _interrupted = false;
+  bool _confirmingTranscription = false;
 
   bool get _idle => _work == _AudioWork.idle;
   bool _current(int operation) {
@@ -72,7 +74,7 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
         state == AppLifecycleState.paused) {
       if (_work == _AudioWork.recording) {
         unawaited(_stop(interrupted: true));
-      } else if (!_idle) {
+      } else if (!_idle || _confirmingTranscription) {
         _cancel();
       }
     }
@@ -218,7 +220,17 @@ class _VisitRecordingPageState extends State<VisitRecordingPage>
   }
 
   Future<void> _transcribe(VisitRecording recording) async {
+    if (!_idle || _confirmingTranscription) return;
     final operation = ++_operation;
+    _confirmingTranscription = true;
+    final bool accepted;
+    try {
+      accepted = await confirmAiInput(context, photo: false);
+    } finally {
+      _confirmingTranscription = false;
+    }
+    if (!accepted || !mounted || !_current(operation)) return;
+
     setState(() {
       _work = _AudioWork.transcribing;
       _error = null;

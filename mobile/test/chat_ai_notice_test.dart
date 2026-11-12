@@ -81,6 +81,7 @@ void main() {
       await tester.pumpAndSettle();
       await open(tester);
       expect(find.textContaining('틀린 답변'), findsOneWidget);
+      expect(find.textContaining('중요한 내용을 빠뜨릴'), findsOneWidget);
       expect(find.textContaining('진단·처방·치료 결정'), findsOneWidget);
       expect(find.textContaining('대한민국에서는 119'), findsOneWidget);
       expect(find.textContaining('현재는 수첩 기록 조회'), findsOneWidget);

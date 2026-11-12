@@ -22,6 +22,7 @@ import 'package:care_notebook/presentation/checkin_history_page.dart';
 import 'support.dart';
 import 'ai_settings_ui_test.dart' show ManagedAi;
 import 'ai_service_test.dart' show FakeAi;
+import 'ai_input_ui_support.dart';
 
 // User-visible regressions: saved selection must survive search; temporary
 // photo/OCR edits and authentication settings must never silently change data.
@@ -331,6 +332,7 @@ void main() {
       await tester.pumpAndSettle();
       await reveal(tester, find.text('글자 읽기'));
       await tester.tap(find.text('글자 읽기'));
+      await acceptAiInputNotice(tester);
       await tester.pumpAndSettle();
       await reveal(tester, find.byKey(const ValueKey('aiDraftText')));
       await tester.enterText(

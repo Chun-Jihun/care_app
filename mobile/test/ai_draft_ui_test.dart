@@ -9,6 +9,7 @@ import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/ai_draft_page.dart';
 
 import 'ai_service_test.dart' show FakeAi;
+import 'ai_input_ui_support.dart';
 import 'support.dart';
 
 void main() {
@@ -17,12 +18,13 @@ void main() {
     (tester) async {
       late Directory root;
       late CareController c;
+      final ai = FakeAi();
       await tester.runAsync(() async {
         root = await Directory.systemTemp.createTemp('care-ai-review-');
         c = CareController(
           VaultStore(root, MemorySecrets()),
           FakePlatform(),
-          aiRuntime: FakeAi(),
+          aiRuntime: ai,
         );
         await c.initialize();
         await c.setPin('123456');
@@ -60,6 +62,14 @@ void main() {
       expect(find.text('possibly wrong 15 mg'), findsNothing);
       await tester.tap(find.text('글자 읽기'));
       await tester.pumpAndSettle();
+      expect(find.textContaining('원본 사진과 대조'), findsOneWidget);
+      expect(ai.ocrCalls, 0);
+      await cancelAiInputNotice(tester);
+      expect(ai.ocrCalls, 0);
+      await tester.tap(find.text('글자 읽기'));
+      await acceptAiInputNotice(tester);
+      await tester.pumpAndSettle();
+      expect(ai.ocrCalls, 1);
       expect(find.text('possibly wrong 15 mg'), findsOneWidget);
       expect(value, 'existing input');
       expect(c.entries, isEmpty);
@@ -92,6 +102,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('글자 읽기'));
+      await acceptAiInputNotice(tester);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('aiDraftText')),
@@ -184,6 +195,7 @@ void main() {
       final apply = find.widgetWithText(FilledButton, '확인한 내용을 입력란에 반영');
       await reveal(find.text('글자 읽기'), 200);
       await tester.tap(find.text('글자 읽기'));
+      await acceptAiInputNotice(tester);
       await tester.pumpAndSettle();
       await reveal(body, 200);
       await tester.enterText(body, '   ');

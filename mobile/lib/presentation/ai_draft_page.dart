@@ -10,6 +10,7 @@ import '../domain/records.dart';
 import '../domain/reviewed_input.dart';
 import '../l10n/app_strings.dart';
 import 'common.dart';
+import 'ai_input_notice.dart';
 import 'ai_field_choices.dart';
 import 'accessible_image.dart';
 import 'status_message.dart';
@@ -68,6 +69,7 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
   MicrophoneCapture? recorder;
   Timer? timer;
   bool working = false, recording = false, ready = false;
+  bool _confirming = false;
   int seconds = 0;
   int operation = 0;
   Object? error;
@@ -125,8 +127,17 @@ class _AiDraftPageState extends State<AiDraftPage> with WidgetsBindingObserver {
   }
 
   Future<void> start() async {
-    if (working || recording) return;
+    if (working || recording || _confirming) return;
     final token = ++operation;
+    _confirming = true;
+    final bool accepted;
+    try {
+      accepted = await confirmAiInput(context, photo: widget.photo != null);
+    } finally {
+      _confirming = false;
+    }
+    if (!accepted || !current(token)) return;
+
     var full = false;
     setState(() {
       working = true;

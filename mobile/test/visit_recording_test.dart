@@ -20,6 +20,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'ai_service_test.dart' show FakeAi;
+import 'ai_input_ui_support.dart';
 import 'support.dart';
 
 void main() {
@@ -90,6 +91,15 @@ void main() {
         );
         await tester.tap(find.text('전사하고 검토하기'));
         await tester.pumpAndSettle();
+        expect(find.textContaining('원래 말한 내용과 대조'), findsOneWidget);
+        expect(ai.opened, 0);
+        await cancelAiInputNotice(tester);
+        expect(ai.opened, 0);
+        expect(c.visitRecordings.list(pid), hasLength(1));
+        expect(c.drafts.list(pid), isEmpty);
+        await tester.tap(find.text('전사하고 검토하기'));
+        await acceptAiInputNotice(tester);
+        await tester.pumpAndSettle();
         expect(find.text('전사문 검토'), findsOneWidget);
         expect(ai.opened, 1);
         expect(ai.closed, 1);
@@ -158,6 +168,7 @@ void main() {
           ),
         );
         await tester.tap(find.text('전사하고 검토하기'));
+        await acceptAiInputNotice(tester);
         await tester.pumpAndSettle();
         expect(find.text('진료·연락 기록'), findsOneWidget);
         c.handleBackground();

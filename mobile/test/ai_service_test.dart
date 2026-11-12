@@ -16,6 +16,7 @@ class FakeAi implements LocalAiRuntime {
   Completer<String>? pending;
   String? question;
   int calls = 0;
+  int ocrCalls = 0;
   @override
   Future<String> extractQuery(String value, String language) {
     calls++;
@@ -38,10 +39,13 @@ class FakeAi implements LocalAiRuntime {
     void Function(double) progress,
   ) async {}
   @override
-  Future<OcrDraft> recognize(Uint8List image, String language) async =>
-      OcrDraft([
-        const OcrLine('possibly wrong 15 mg', .5, [0, 0, 1, 1]),
-      ]);
+  Future<OcrDraft> recognize(Uint8List image, String language) async {
+    ocrCalls++;
+    return OcrDraft([
+      const OcrLine('possibly wrong 15 mg', .5, [0, 0, 1, 1]),
+    ]);
+  }
+
   @override
   Future<String> transcribe(Float32List samples, String language) async =>
       'possibly wrong 15 mg';

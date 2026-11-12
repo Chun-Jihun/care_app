@@ -25,7 +25,7 @@ class ChatAiNotice extends StatelessWidget {
       children: [
         Text(
           context.tr(
-            'AI는 내용을 잘못 이해하거나 틀린 답변을 할 수 있어요. 중요한 내용은 원본 기록과 근거를 확인해 주세요.',
+            'AI는 기록을 잘못 이해하거나 틀린 답변을 할 수 있고, 중요한 내용을 빠뜨릴 수 있어요. 답변을 활용하기 전에 원본 기록과 근거를 확인해 주세요.',
           ),
         ),
         const SizedBox(height: 16),

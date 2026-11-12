@@ -12,6 +12,7 @@ import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/ai_draft_page.dart';
 
 import 'ai_service_test.dart' show FakeAi;
+import 'ai_input_ui_support.dart';
 import 'support.dart';
 
 class FieldAi extends FakeAi {
@@ -70,6 +71,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('글자 읽기'));
+      await acceptAiInputNotice(tester);
       await tester.pumpAndSettle();
       Future<void> reveal(Finder finder) async {
         await tester.scrollUntilVisible(

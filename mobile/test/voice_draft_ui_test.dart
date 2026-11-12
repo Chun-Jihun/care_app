@@ -10,6 +10,7 @@ import 'package:care_notebook/infrastructure/vault_store.dart';
 import 'package:care_notebook/presentation/ai_draft_page.dart';
 
 import 'ai_service_test.dart' show FakeAi;
+import 'ai_input_ui_support.dart';
 import 'support.dart';
 
 class TestMicrophone implements MicrophoneCapture {
@@ -68,6 +69,12 @@ void main() {
       await open(tester);
       await tester.tap(find.text('녹음 시작'));
       await tester.pumpAndSettle();
+      expect(microphones, isEmpty);
+      await cancelAiInputNotice(tester);
+      expect(microphones, isEmpty);
+      await tester.tap(find.text('녹음 시작'));
+      await acceptAiInputNotice(tester);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('녹음 마치기'));
       await tester.pumpAndSettle();
       expect(microphones.single.samples, everyElement(0));
@@ -76,6 +83,7 @@ void main() {
       await tester.enterText(body, '복용하지 않음 · 수정한 5 mg');
       await tester.ensureVisible(find.text('이어서 녹음'));
       await tester.tap(find.text('이어서 녹음'));
+      await acceptAiInputNotice(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.text('녹음 마치기'));
       await tester.pumpAndSettle();
@@ -106,6 +114,7 @@ void main() {
           .onPressed!;
       start();
       start();
+      await acceptAiInputNotice(tester);
       await tester.pump();
       expect(mic.starts, 1);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
