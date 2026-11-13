@@ -535,4 +535,6 @@ class CareDatabase implements NotebookRepository {
   ) => _backup.importBackupRows(rows, backupId, ids);
   BackupRows selectBackup(BackupSelection selection) =>
       _backup.selectBackup(selection);
+  Map<BackupCategory, int> countBackup(BackupSelection selection) =>
+      _backup.countBackup(selection);
 }

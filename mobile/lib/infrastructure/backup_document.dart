@@ -16,6 +16,17 @@ final class BackupDocument {
   static const format = 3;
   // v6 preserves model label filters. v1-v5 remain readable.
   static const version = 6;
+  static const categoryTables = {
+    BackupCategory.notebooks: 'patient_context',
+    BackupCategory.records: 'care_entry',
+    BackupCategory.medications: 'medication',
+    BackupCategory.medicationPlans: 'medication_plan',
+    BackupCategory.tasks: 'care_task',
+    BackupCategory.visits: 'visit_preparation',
+    BackupCategory.photos: 'attachment',
+    BackupCategory.chats: 'chat_message',
+    BackupCategory.checkins: 'caregiver_checkin',
+  };
 
   static BackupRows decode(Map<String, dynamic> archive) {
     final supported =
@@ -107,18 +118,7 @@ final class BackupDocument {
   };
 
   static Map<BackupCategory, int> counts(BackupRows rows) => {
-    for (final e in const {
-      BackupCategory.notebooks: 'patient_context',
-      BackupCategory.records: 'care_entry',
-      BackupCategory.medications: 'medication',
-      BackupCategory.medicationPlans: 'medication_plan',
-      BackupCategory.tasks: 'care_task',
-      BackupCategory.visits: 'visit_preparation',
-      BackupCategory.photos: 'attachment',
-      BackupCategory.chats: 'chat_message',
-      BackupCategory.checkins: 'caregiver_checkin',
-    }.entries)
-      e.key: rows[e.value]?.length ?? 0,
+    for (final e in categoryTables.entries) e.key: rows[e.value]?.length ?? 0,
   };
 }
 

@@ -215,7 +215,34 @@ final class SqliteBackup {
     });
   }
 
+  Map<BackupCategory, int> countBackup(BackupSelection selection) {
+    final scope = _BackupScope(selection);
+    final counts = {
+      for (final category in BackupDocument.categoryTables.keys) category: 0,
+    };
+    int count((String, List<Object?>) query) =>
+        _store.connection
+                .select('SELECT COUNT(*) AS total ${query.$1}', query.$2)
+                .single['total']
+            as int;
+
+    for (final pid in scope.patientIds) {
+      _store.patient(pid);
+      final queries = scope.patientQueries(pid);
+      for (final e in BackupDocument.categoryTables.entries) {
+        if (queries[e.value] case final query?) {
+          counts[e.key] = counts[e.key]! + count(query);
+        }
+      }
+    }
+    if (selection.checkins) {
+      counts[BackupCategory.checkins] = count(scope.checkins);
+    }
+    return counts;
+  }
+
   BackupRows selectBackup(BackupSelection selection) {
+    final scope = _BackupScope(selection);
     for (final pid in selection.patientIds) {
       _store.patient(pid);
     }
@@ -225,23 +252,15 @@ final class SqliteBackup {
         .select(sql, args)
         .map((r) => Map<String, Object?>.from(r))
         .toList();
-    final dates = <Object?>[
-      if (selection.from != null) selection.from!.millisecondsSinceEpoch,
-      if (selection.until != null) selection.until!.millisecondsSinceEpoch,
-    ];
-    String range(String column) =>
-        '${selection.from != null ? ' AND $column>=?' : ''}${selection.until != null ? ' AND $column<?' : ''}';
-    final pids = selection.patientIds.toList()..sort();
+    List<Map<String, Object?>> rows((String, List<Object?>) query) =>
+        select('SELECT d.* ${query.$1}', query.$2);
     for (final table in [
       ..._backupTables,
       ...EntryKind.values.map((k) => k.table),
     ]) {
       result[table] = [];
     }
-    for (final pid in pids) {
-      result['patient_context']!.addAll(
-        select('SELECT * FROM patient_context WHERE id=?', [pid]),
-      );
+    for (final pid in scope.patientIds) {
       final identity = select(
         'SELECT * FROM identity.patient_identity WHERE patient_id=?',
         [pid],
@@ -251,74 +270,91 @@ final class SqliteBackup {
         identity['contact'] = '';
       }
       result['identity.patient_identity']!.add(identity);
-      for (final table in ['medication', 'medication_plan']) {
-        result[table]!.addAll(
-          select('SELECT * FROM $table WHERE patient_id=?', [pid]),
-        );
-      }
-      final entries = select(
-        'SELECT * FROM care_entry WHERE patient_id=?${range('occurred_at')}',
-        [pid, ...dates],
-      );
-      result['care_entry']!.addAll(entries);
-      final entryIds = entries.map((r) => r['id']).toSet();
+      final selected = scope
+          .patientQueries(pid)
+          .map((table, query) => MapEntry(table, rows(query)));
       for (final table in [
         'care_entry_revision',
         ...EntryKind.values.map((k) => k.table),
-        if (selection.photos) 'attachment',
       ]) {
-        result[table]!.addAll(
-          select(
-            'SELECT d.* FROM $table d JOIN care_entry e ON d.patient_id=e.patient_id AND d.entry_id=e.id WHERE e.patient_id=?${range('e.occurred_at')}',
-            [pid, ...dates],
-          ),
+        result[table]!.addAll(rows(scope.entryChildren(table, pid)));
+      }
+      if (selection.chats) {
+        result['chat_policy']!.addAll(
+          select('SELECT * FROM chat_policy WHERE patient_id=?', [pid]),
         );
       }
-      result['care_task']!.addAll(
-        select('SELECT * FROM care_task WHERE patient_id=?${range('due_at')}', [
-          pid,
-          ...dates,
-        ]),
-      );
-      final visits = select(
-        'SELECT * FROM visit_preparation WHERE patient_id=?${range('created_at')}',
-        [pid, ...dates],
-      );
+      final entryIds = selected['care_entry']!.map((r) => r['id']).toSet();
       final sources = select(
-        'SELECT s.* FROM visit_source s JOIN visit_preparation v ON s.patient_id=v.patient_id AND s.visit_id=v.id WHERE v.patient_id=?${range('v.created_at')}',
-        [pid, ...dates],
+        'SELECT s.* FROM visit_source s JOIN visit_preparation v ON s.patient_id=v.patient_id AND s.visit_id=v.id WHERE v.patient_id=?${scope.range('v.created_at')}',
+        [pid, ...scope.dates],
       );
       final incomplete = sources
           .where((r) => !entryIds.contains(r['entry_id']))
           .map((r) => r['visit_id'])
           .toSet();
-      for (final visit in visits) {
+      for (final visit in selected['visit_preparation']!) {
         if (incomplete.contains(visit['id'])) visit['stale'] = 1;
       }
-      result['visit_preparation']!.addAll(visits);
+      for (final e in selected.entries) {
+        result[e.key]!.addAll(e.value);
+      }
       result['visit_source']!.addAll(
         sources.where((r) => entryIds.contains(r['entry_id'])),
       );
-      if (selection.chats) {
-        result['chat_policy']!.addAll(
-          select('SELECT * FROM chat_policy WHERE patient_id=?', [pid]),
-        );
-        result['chat_message']!.addAll(
-          select(
-            'SELECT * FROM chat_message WHERE patient_id=?${range('created_at')} AND (expires_at IS NULL OR expires_at>?)',
-            [pid, ...dates, DateTime.now().millisecondsSinceEpoch],
-          ),
-        );
-      }
     }
     if (selection.checkins) {
-      result['caregiver_checkin']!.addAll(
-        select(
-          'SELECT * FROM caregiver_checkin WHERE 1=1${range('occurred_at')}',
-          dates,
-        ),
-      );
+      result['caregiver_checkin'] = rows(scope.checkins);
     }
     return BackupDocument.project(result);
   }
+}
+
+final class _BackupScope {
+  _BackupScope(this.selection);
+  final BackupSelection selection;
+  final _now = DateTime.now().millisecondsSinceEpoch;
+  late final patientIds = selection.patientIds.toList()..sort();
+  late final dates = [
+    if (selection.from case final from?) from.millisecondsSinceEpoch,
+    if (selection.until case final until?) until.millisecondsSinceEpoch,
+  ];
+
+  String range(String column) =>
+      '${selection.from != null ? ' AND $column>=?' : ''}${selection.until != null ? ' AND $column<?' : ''}';
+
+  Map<String, (String, List<Object?>)> patientQueries(String pid) {
+    final period = [pid, ...dates];
+    return {
+      'patient_context': ('FROM patient_context d WHERE d.id=?', [pid]),
+      'medication': ('FROM medication d WHERE d.patient_id=?', [pid]),
+      'medication_plan': ('FROM medication_plan d WHERE d.patient_id=?', [pid]),
+      'care_entry': (
+        'FROM care_entry d WHERE d.patient_id=?${range('d.occurred_at')}',
+        period,
+      ),
+      'care_task': (
+        'FROM care_task d WHERE d.patient_id=?${range('d.due_at')}',
+        period,
+      ),
+      'visit_preparation': (
+        'FROM visit_preparation d WHERE d.patient_id=?${range('d.created_at')}',
+        period,
+      ),
+      if (selection.photos) 'attachment': entryChildren('attachment', pid),
+      if (selection.chats)
+        'chat_message': (
+          'FROM chat_message d WHERE d.patient_id=?${range('d.created_at')} AND (d.expires_at IS NULL OR d.expires_at>?)',
+          [...period, _now],
+        ),
+    };
+  }
+
+  (String, List<Object?>) entryChildren(String table, String pid) => (
+    'FROM $table d JOIN care_entry e ON d.patient_id=e.patient_id AND d.entry_id=e.id WHERE e.patient_id=?${range('e.occurred_at')}',
+    [pid, ...dates],
+  );
+
+  (String, List<Object?>) get checkins =>
+      ('FROM caregiver_checkin d WHERE 1=1${range('d.occurred_at')}', dates);
 }

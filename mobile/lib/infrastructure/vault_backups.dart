@@ -350,6 +350,6 @@ final class VaultBackups {
 
   BackupPreview previewSelection(BackupSelection selection) => BackupPreview(
     legacy: false,
-    counts: BackupDocument.counts(_state.database.selectBackup(selection)),
+    counts: _state.database.countBackup(selection),
   );
 }
