@@ -182,10 +182,11 @@ class EntryDetails extends StatelessWidget {
                                 : () async {
                                     await attempt(context, () async {
                                       final epoch = c.captureSession();
-                                      final image = await c.photo(
+                                      final image = await c.photos.open(
                                         pid,
                                         id,
                                         a.id,
+                                        forOcr: true,
                                       );
                                       if (!context.mounted) return;
                                       final reviewed = await reviewRecordInput(

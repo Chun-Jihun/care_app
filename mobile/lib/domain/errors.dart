@@ -98,6 +98,7 @@ enum CareErrorCode {
   unsupportedPhoto,
   invalidPhoto,
   photoResolutionTooLarge,
+  ocrPhotoResolutionTooLarge,
   animatedPhotoUnsupported,
   photoDecodeFailed,
   photoNotFound,

@@ -28,7 +28,7 @@ import 'ai_input_ui_support.dart';
 // photo/OCR edits and authentication settings must never silently change data.
 class PhotoPlatform extends FakePlatform {
   PhotoPlatform(this.photo);
-  final Uint8List photo;
+  Uint8List photo;
   @override
   Future<Uint8List?> pickPhoto({bool camera = false}) async => photo;
 }
@@ -253,14 +253,22 @@ void main() {
     final bytes = Uint8List.fromList(
       img.encodePng(img.Image(width: 12, height: 12)),
     );
-    editEntry(ctx, c, EntryKind.meal, initialPhoto: bytes);
+    editEntry(
+      ctx,
+      c,
+      EntryKind.meal,
+      initialPhoto: (bytes: bytes, pixels: 144),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('다른 사진 선택'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('사진 선택'));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<PendingPhotoField>(find.byType(PendingPhotoField)).photo,
+      tester
+          .widget<PendingPhotoField>(find.byType(PendingPhotoField))
+          .photo
+          ?.bytes,
       same(bytes),
     );
     expect(c.entries, isEmpty);
@@ -293,14 +301,20 @@ void main() {
     },
   );
   testWidgets(
-    'prescription OCR is reviewed before medication and its photo save together',
+    'prescription OCR explains oversized photos before review and accepts a replacement',
     (tester) async {
       final photo = Uint8List.fromList(
         img.encodePng(img.Image(width: 12, height: 12)),
       );
+      final largePhoto = img.encodePng(
+        img.Image(width: 5000, height: 4000, numChannels: 1),
+        level: 1,
+      );
       final vault = testVault(c);
       c.dispose();
-      c = CareController(vault, PhotoPlatform(photo), aiRuntime: FakeAi());
+      final platform = PhotoPlatform(largePhoto);
+      final ai = FakeAi();
+      c = CareController(vault, platform, aiRuntime: ai);
       await tester.runAsync(c.initialize);
       final ctx = await home(tester);
       editMedication(ctx, c);
@@ -308,25 +322,30 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '시험약');
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('사진 넣기'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('사진 선택'));
-      // Pump route microtasks and allow the real validation isolate to finish.
-      for (var i = 0; i < 60; i++) {
-        await tester.pump(const Duration(milliseconds: 20));
-        await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 50)),
-        );
-        if (!c.busy &&
-            tester
-                    .widget<PendingPhotoField>(find.byType(PendingPhotoField))
-                    .photo !=
-                null) {
-          break;
+      Future<void> pickPhoto(String button) async {
+        await tester.tap(find.text(button));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('사진 선택'));
+        // Allow the real validation isolate to finish.
+        for (var i = 0; i < 60; i++) {
+          await tester.pump(const Duration(milliseconds: 20));
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          if (!c.busy) break;
         }
+        expect(c.busy, false);
+        await tester.pumpAndSettle();
       }
-      expect(c.busy, false);
-      await tester.pumpAndSettle();
+
+      await pickPhoto('사진 넣기');
+      expect(find.textContaining('1,600만 화소 이하'), findsOneWidget);
+      expect(find.text('사진에서 글자 읽기'), findsNothing);
+      expect(ai.ocrCalls, 0);
+      expect(c.medications, isEmpty);
+      platform.photo = photo;
+      await pickPhoto('다른 사진 선택');
+      expect(find.textContaining('1,600만 화소 이하'), findsNothing);
       await reveal(tester, find.text('사진에서 글자 읽기'));
       await tester.tap(find.text('사진에서 글자 읽기'));
       await tester.pumpAndSettle();

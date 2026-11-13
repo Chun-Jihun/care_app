@@ -1,7 +1,5 @@
 import '../contact_action.dart';
 
-import 'dart:typed_data';
-
 import '../../domain/reviewed_input.dart';
 import '../pending_photo_field.dart';
 import '../../l10n/app_strings.dart';
@@ -10,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/care_controller.dart';
 import '../../application/draft_session.dart';
+import '../../application/services/photo_service.dart';
 import '../../domain/drafts.dart';
 import '../../domain/records.dart';
 import '../common.dart';
@@ -26,7 +25,7 @@ Future<void> editMedication(
       !context.mounted) {
     return;
   }
-  Uint8List? photo;
+  PickedPhoto? photo;
   final data = restored?.payload as MedicationDraftPayload?;
   final pid = c.selectedId!,
       name = TextEditingController(text: data?.name ?? medication?.name),
@@ -100,7 +99,7 @@ Future<void> editMedication(
             ),
           ],
           save: () async {
-            await draft.complete(photo: photo);
+            await draft.complete(photo: photo?.bytes);
           },
         ),
       ),

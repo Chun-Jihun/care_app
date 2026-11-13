@@ -13,6 +13,22 @@ import 'package:care_notebook/infrastructure/crypto.dart';
 
 import 'support.dart';
 
+Uint8List pngWithDimensions(int width, int height) {
+  final source = img.encodePng(img.Image(width: 2, height: 2));
+  final bytes = ByteData.sublistView(source);
+  bytes.setUint32(16, width);
+  bytes.setUint32(20, height);
+  var crc = 0xffffffff;
+  for (final byte in source.sublist(12, 29)) {
+    crc ^= byte;
+    for (var bit = 0; bit < 8; bit++) {
+      crc = (crc >> 1) ^ ((crc & 1) == 1 ? 0xedb88320 : 0);
+    }
+  }
+  bytes.setUint32(29, crc ^ 0xffffffff);
+  return source;
+}
+
 void main() {
   late Directory root;
   late MemorySecrets secrets;
@@ -125,22 +141,8 @@ void main() {
     },
   );
   test('REVIEW-04 rejects oversized PNG headers before allocating pixels', () {
-    final source = Uint8List.fromList(
-      img.encodePng(img.Image(width: 2, height: 2)),
-    );
-    final bytes = ByteData.sublistView(source);
-    bytes.setUint32(16, 100000);
-    bytes.setUint32(20, 100000);
-    var crc = 0xffffffff;
-    for (final byte in source.sublist(12, 29)) {
-      crc ^= byte;
-      for (var bit = 0; bit < 8; bit++) {
-        crc = (crc >> 1) ^ ((crc & 1) == 1 ? 0xedb88320 : 0);
-      }
-    }
-    bytes.setUint32(29, crc ^ 0xffffffff);
     expect(
-      () => VaultStore.normalizePhoto(source),
+      () => VaultStore.normalizePhoto(pngWithDimensions(100000, 100000)),
       throwsA(
         isA<CareError>().having(
           (e) => e.code,
@@ -150,6 +152,26 @@ void main() {
       ),
     );
   });
+
+  test(
+    'OCR preflight accepts 16 MP and rejects larger saved-photo input',
+    () async {
+      final limit = pngWithDimensions(4000, 4000);
+      final larger = pngWithDimensions(4001, 4000);
+      expect(await vault.validatePhoto(limit, forOcr: true), 16000000);
+      expect(await vault.validatePhoto(larger), 16004000);
+      await expectLater(
+        vault.validatePhoto(larger, forOcr: true),
+        throwsA(
+          isA<CareError>().having(
+            (e) => e.code,
+            'OCR resolution error',
+            CareErrorCode.ocrPhotoResolutionTooLarge,
+          ),
+        ),
+      );
+    },
+  );
 
   test(
     'REVIEW-05 restore commit wins over a future legacy clock marker',

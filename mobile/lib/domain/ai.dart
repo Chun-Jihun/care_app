@@ -5,6 +5,9 @@ import 'record_lookup.dart';
 import 'knowledge.dart';
 import 'medical_evidence.dart';
 
+const maxOcrPhotoPixels = 16000000;
+const maxOcrPhotoBytes = 24 * 1024 * 1024;
+
 enum AiReplyKind {
   records,
   noRecords,

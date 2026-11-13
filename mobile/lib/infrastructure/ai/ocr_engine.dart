@@ -16,12 +16,12 @@ Future<OcrDraft> recognizeLocal(
   String dictionary,
   Uint8List bytes,
 ) async {
-  if (bytes.length > 24 * 1024 * 1024) {
+  if (bytes.length > maxOcrPhotoBytes) {
     throw const AiException(AiFailure.invalidInput);
   }
   final decoder = img.findDecoderForData(bytes);
   final info = decoder?.startDecode(bytes);
-  if (info == null || info.width * info.height > 16000000) {
+  if (info == null || info.width * info.height > maxOcrPhotoPixels) {
     throw const AiException(AiFailure.invalidInput);
   }
   final decoded = decoder!.decodeFrame(0);

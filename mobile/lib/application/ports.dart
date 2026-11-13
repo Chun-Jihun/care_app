@@ -37,7 +37,7 @@ abstract interface class NotebookVault {
   Future<void> cleanup({bool removeOrphans = true});
   Future<void> wipe();
   Future<int> compactStorage({void Function()? beforeCommit});
-  Future<void> validatePhoto(Uint8List data);
+  Future<int> validatePhoto(Uint8List data, {bool forOcr = false});
   Future<void> addPhoto(
     String pid,
     String eid,

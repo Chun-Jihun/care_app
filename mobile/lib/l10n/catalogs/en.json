@@ -204,6 +204,7 @@
   "사진을 읽을 수 없습니다. JPG 또는 PNG 사진을 선택해 주세요.": "The photo cannot be read. Choose a JPG or PNG photo.",
   "사진 파일이 올바르지 않습니다.": "The photo file is invalid.",
   "사진 크기가 너무 큽니다. 2,400만 화소 이하의 사진을 선택해 주세요.": "The photo is too large. Choose a photo of 24 megapixels or less.",
+  "글자를 읽으려면 1,600만 화소 이하의 사진을 다시 선택해 주세요.": "To read text, choose another photo of 16 megapixels or less.",
   "움직이는 사진은 지원하지 않습니다. 정지 사진을 선택해 주세요.": "Animated images are not supported. Choose a still photo.",
   "사진을 읽을 수 없습니다.": "The photo cannot be read.",
   "현재 기록의 사진을 찾을 수 없습니다.": "The photo for this record could not be found.",

@@ -104,6 +104,8 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.invalidPhoto: '사진 파일이 올바르지 않습니다.',
   CareErrorCode.photoResolutionTooLarge:
       '사진 크기가 너무 큽니다. 2,400만 화소 이하의 사진을 선택해 주세요.',
+  CareErrorCode.ocrPhotoResolutionTooLarge:
+      '글자를 읽으려면 1,600만 화소 이하의 사진을 다시 선택해 주세요.',
   CareErrorCode.animatedPhotoUnsupported: '움직이는 사진은 지원하지 않습니다. 정지 사진을 선택해 주세요.',
   CareErrorCode.photoDecodeFailed: '사진을 읽을 수 없습니다.',
   CareErrorCode.photoNotFound: '현재 기록의 사진을 찾을 수 없습니다.',

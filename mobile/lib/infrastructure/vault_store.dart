@@ -48,8 +48,8 @@ final class VaultStore implements NotebookVault {
   @override
   void close() => _state.close();
   @override
-  Future<void> validatePhoto(Uint8List data) =>
-      Isolate.run(() => VaultPhotos.validatePhoto(data));
+  Future<int> validatePhoto(Uint8List data, {bool forOcr = false}) =>
+      Isolate.run(() => VaultPhotos.validatePhoto(data, forOcr: forOcr));
   @override
   Future<void> addPhoto(
     String pid,

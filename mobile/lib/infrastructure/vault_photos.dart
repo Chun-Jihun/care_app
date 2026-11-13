@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:image/image.dart' as img;
 
+import '../domain/ai.dart';
 import '../domain/records.dart';
 import 'care_database.dart';
 import 'crypto.dart';
@@ -71,12 +72,15 @@ final class VaultPhotos {
     }
   }
 
-  static void validatePhoto(Uint8List source) {
-    _validatedDecoder(source);
-  }
+  static int validatePhoto(Uint8List source, {bool forOcr = false}) =>
+      _validatedDecoder(source, forOcr: forOcr).pixels;
 
-  static img.Decoder _validatedDecoder(Uint8List source) {
-    if (source.length > 20 * 1024 * 1024) {
+  static ({img.Decoder decoder, int pixels}) _validatedDecoder(
+    Uint8List source, {
+    bool forOcr = false,
+  }) {
+    if (source.length > (forOcr ? maxOcrPhotoBytes : 20 * 1024 * 1024)) {
+      if (forOcr) throw const AiException(AiFailure.invalidInput);
       throw CareError(CareErrorCode.photoTooLarge);
     }
     final img.Decoder decoder;
@@ -91,17 +95,21 @@ final class VaultPhotos {
     if (info == null || info.width <= 0 || info.height <= 0) {
       throw CareError(CareErrorCode.invalidPhoto);
     }
-    if (info.width * info.height > 24000000) {
+    final pixels = info.width * info.height;
+    if (forOcr && pixels > maxOcrPhotoPixels) {
+      throw CareError(CareErrorCode.ocrPhotoResolutionTooLarge);
+    }
+    if (pixels > 24000000) {
       throw CareError(CareErrorCode.photoResolutionTooLarge);
     }
     if (info.numFrames != 1) {
       throw CareError(CareErrorCode.animatedPhotoUnsupported);
     }
-    return decoder;
+    return (decoder: decoder, pixels: pixels);
   }
 
   static Uint8List normalizePhoto(Uint8List source) {
-    final decoder = _validatedDecoder(source);
+    final decoder = _validatedDecoder(source).decoder;
     final decoded = decoder.decodeFrame(0);
     if (decoded == null) throw CareError(CareErrorCode.photoDecodeFailed);
     final oriented = img.bakeOrientation(decoded);

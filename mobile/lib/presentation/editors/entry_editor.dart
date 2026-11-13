@@ -1,7 +1,5 @@
 import '../contact_action.dart';
 
-import 'dart:typed_data';
-
 import '../pending_photo_field.dart';
 import '../../l10n/app_strings.dart';
 
@@ -9,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/care_controller.dart';
 import '../../application/draft_session.dart';
+import '../../application/services/photo_service.dart';
 import '../../domain/drafts.dart';
 import '../../domain/records.dart';
 import '../../domain/reviewed_input.dart';
@@ -25,7 +24,7 @@ Future<void> editEntry(
   CareDraft? restored,
   String? initialNote,
   DateTime? initialAt,
-  Uint8List? initialPhoto,
+  PickedPhoto? initialPhoto,
   Map<String, String> initialFields = const {},
 }) async {
   if (!await chooseDraftRetention(context, c, onlyIfUnset: true) ||
@@ -33,7 +32,7 @@ Future<void> editEntry(
     return;
   }
   final pid = c.selectedId!;
-  Uint8List? photo = initialPhoto;
+  var photo = initialPhoto;
   final data = restored?.payload as EntryDraftPayload?;
   final note = TextEditingController(
     text: data?.note ?? initialNote ?? entry?.note,
@@ -188,7 +187,7 @@ Future<void> editEntry(
               ),
           ],
           save: () async {
-            await draft.complete(photo: photo);
+            await draft.complete(photo: photo?.bytes);
           },
         ),
       ),

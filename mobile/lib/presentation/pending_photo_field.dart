@@ -1,16 +1,17 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
+import '../application/services/photo_service.dart';
+import '../domain/ai.dart';
 import '../domain/records.dart';
 import '../domain/reviewed_input.dart';
 import '../l10n/app_strings.dart';
 import 'accessible_image.dart';
 import 'ai_draft_page.dart';
 import 'common.dart';
+import 'status_message.dart';
 
-Future<Uint8List?> choosePhoto(
+Future<PickedPhoto?> choosePhoto(
   BuildContext context,
   CareController c,
   String pid,
@@ -58,8 +59,8 @@ class PendingPhotoField extends StatelessWidget {
   });
   final CareController c;
   final String pid;
-  final Uint8List? photo;
-  final ValueChanged<Uint8List?> onChanged;
+  final PickedPhoto? photo;
+  final ValueChanged<PickedPhoto?> onChanged;
   final ValueChanged<ReviewedInput> onReviewed;
   final EntryKind? kind;
   final Map<String, String> currentFields;
@@ -79,29 +80,38 @@ class PendingPhotoField extends StatelessWidget {
         }),
       ),
       if (photo case final data?) ...[
+        if (data.pixels > maxOcrPhotoPixels)
+          StatusMessage(
+            errorText(
+              context,
+              CareError(CareErrorCode.ocrPhotoResolutionTooLarge),
+            ),
+            isError: true,
+          ),
         AccessibleImage(
-          bytes: data,
+          bytes: data.bytes,
           semanticLabel: context.tr('저장할 사진 미리보기'),
           viewportHeight: 190,
         ),
-        OutlinedButton.icon(
-          icon: const Icon(Icons.document_scanner_outlined),
-          label: Text(context.tr('사진에서 글자 읽기')),
-          onPressed: () => attempt(context, () async {
-            final session = c.captureSession();
-            final reviewed = await reviewRecordInput(
-              context,
-              c,
-              pid,
-              photo: data,
-              kind: kind,
-              currentFields: currentFields,
-            );
-            if (!context.mounted || reviewed == null) return;
-            c.requireSession(session);
-            onReviewed(reviewed);
-          }),
-        ),
+        if (data.pixels <= maxOcrPhotoPixels)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.document_scanner_outlined),
+            label: Text(context.tr('사진에서 글자 읽기')),
+            onPressed: () => attempt(context, () async {
+              final session = c.captureSession();
+              final reviewed = await reviewRecordInput(
+                context,
+                c,
+                pid,
+                photo: data.bytes,
+                kind: kind,
+                currentFields: currentFields,
+              );
+              if (!context.mounted || reviewed == null) return;
+              c.requireSession(session);
+              onReviewed(reviewed);
+            }),
+          ),
         TextButton(
           onPressed: () => onChanged(null),
           child: Text(context.tr('선택한 사진 빼기')),
