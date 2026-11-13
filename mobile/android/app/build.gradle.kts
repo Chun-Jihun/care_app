@@ -36,6 +36,15 @@ tasks.register("prepareReleaseAudit") {
     val manifests = files(packagingManifest).asFileTree.matching {
         include("**/AndroidManifest.xml")
     }
+    val mergedResources = tasks.named("mergeReleaseResources")
+    dependsOn(mergedResources)
+    val resourceOutputs = files(mergedResources).asFileTree
+    val backupRules = resourceOutputs.matching {
+        include("xml/data_extraction_rules.xml", "xml-*/data_extraction_rules.xml")
+    }
+    val compiledBackupRules = resourceOutputs.matching {
+        include("**/xml_data_extraction_rules.xml.flat", "**/xml-*_data_extraction_rules.xml.flat")
+    }
     val runtime = configurations.named("releaseRuntimeClasspath")
     val reportDir = layout.buildDirectory.dir("reports/release-audit")
     doLast {
@@ -51,6 +60,20 @@ tasks.register("prepareReleaseAudit") {
         }.files.files.map { it.name.ifEmpty { it.path } }.sorted()
         val report = reportDir.get().asFile
         manifests.singleFile.copyTo(report.resolve("AndroidManifest.xml"), overwrite = true)
+        // The uncompiled output can retain qualifiers removed by an incremental merge.
+        val compiledRuleNames = compiledBackupRules.files.map { it.name }.toSet()
+        val packagedRules = backupRules.files.filter {
+            "${it.parentFile.name}_${it.name}.flat" in compiledRuleNames
+        }
+        check(compiledRuleNames.isNotEmpty() && packagedRules.size == compiledRuleNames.size) {
+            "Missing XML for compiled Android backup rules: $compiledRuleNames"
+        }
+        project.sync {
+            for (rule in packagedRules) {
+                from(rule) { into(rule.parentFile.name) }
+            }
+            into(report.resolve("backup-resources"))
+        }
         val dependencies = resolution.allComponents.map { it.id.displayName }.sorted()
         report.resolve("runtime-dependencies.txt").writeText(dependencies.joinToString("\n", postfix = "\n"))
         report.resolve("runtime-local-files.txt").writeText(localFiles.joinToString("\n"))

@@ -29,6 +29,32 @@ AD_NAMESPACES = (
 )
 
 
+def _audit_android_backup(directory, application):
+    for name, expected in (
+        ('allowBackup', 'false'),
+        ('fullBackupContent', 'false'),
+        ('dataExtractionRules', '@xml/data_extraction_rules'),
+    ):
+        if application.get(f'{ANDROID}{name}') != expected:
+            raise ValueError(f'Android release requires android:{name}="{expected}"')
+
+    resources = directory / 'backup-resources'
+    if not (resources / 'xml' / 'data_extraction_rules.xml').is_file():
+        raise ValueError('Missing merged Android backup rules')
+
+    required_domains = {'root', 'file', 'database', 'sharedpref', 'external'}
+    for path in sorted(resources.glob('xml*/data_extraction_rules.xml')):
+        rules = ET.parse(path).getroot()
+        label = path.relative_to(resources).as_posix()
+        if (rules.tag != 'data-extraction-rules' or len(rules) != 2
+                or {section.tag for section in rules} != {'cloud-backup', 'device-transfer'}):
+            raise ValueError(f'{label} must define cloud-backup and device-transfer rules')
+        for section in rules:
+            excluded = {rule.get('domain') for rule in section if rule.get('path') in {'.', './'}}
+            if any(rule.tag != 'exclude' for rule in section) or not required_domains <= excluded:
+                raise ValueError(f'{label} must exclude all app storage domains from {section.tag}')
+
+
 def audit_android_release(directory):
     manifest_path = directory / 'AndroidManifest.xml'
     manifest = ET.parse(manifest_path).getroot()
@@ -36,6 +62,7 @@ def audit_android_release(directory):
     if (manifest.tag != 'manifest' or manifest.get('package') != APPLICATION_ID
             or application is None or application.get(f'{ANDROID}debuggable') == 'true'):
         raise ValueError('Expected the packaged release manifest for the notebook app')
+    _audit_android_backup(directory, application)
 
     permissions = {
         node.attrib[f'{ANDROID}name'] for node in manifest
