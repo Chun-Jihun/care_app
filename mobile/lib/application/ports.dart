@@ -81,6 +81,10 @@ abstract class PlatformServices {
   Future<void> saveBackup(Uint8List data);
   Future<Uint8List?> pickBackup();
   Future<void> dial(String number);
+  Future<void> openCalendarEvent(DateTime at) async {
+    throw UnsupportedError('Calendar event editor unavailable');
+  }
+
   Future<bool> dailyWidgetAvailable() async => false;
   Future<bool> requestDailyWidgetPin() async => false;
   Future<void> updateDailyWidget(DailyWidgetSnapshot? snapshot) async {}

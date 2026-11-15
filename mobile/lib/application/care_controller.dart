@@ -23,6 +23,7 @@ import 'services/checkins_service.dart';
 import 'services/drafts_service.dart';
 import 'services/chat_service.dart';
 import 'services/backup_service.dart';
+import 'services/drive_backup_service.dart';
 import 'services/photo_service.dart';
 import 'services/reminder_service.dart';
 
@@ -46,8 +47,21 @@ class CareController extends ChangeNotifier {
     this.knowledge,
     this.medicalAnswers,
     this.drugCatalog,
+    BackupDrive? backupDrive,
+    SecretStore? driveSecrets,
   }) : _vault = vault,
-       _platform = platform;
+       _platform = platform {
+    driveBackup = backupDrive == null || driveSecrets == null
+        ? null
+        : DriveBackupService(
+            _scope,
+            _vault,
+            driveSecrets,
+            backupDrive,
+            _backupExclusive,
+          );
+  }
+  late final DriveBackupService? driveBackup;
   final LocalAiRuntime _aiRuntime;
   final MicrophoneCapture Function()? microphone;
   final VisitAudioDevice Function()? visitAudio;
@@ -604,6 +618,11 @@ class CareController extends ChangeNotifier {
       );
   Future<void> openDialer(String number) =>
       _external(() => _platform.dial(number));
+  Future<void> openCalendarEvent(DateTime at) {
+    captureSession();
+    if (_busy) throw CareError(CareErrorCode.busy);
+    return _platform.openCalendarEvent(at);
+  }
 
   // Small navigation facade. All operations delegate to feature services.
   List<ChatMessage> chatMessages(String pid, {int limit = 50}) =>
@@ -649,6 +668,7 @@ class CareController extends ChangeNotifier {
       }
       _uiPreferences = privatePreferences;
     }
+    await driveBackup?.clearLocalSettings();
     lock();
     try {
       await _platform.schedule([]);
@@ -665,6 +685,7 @@ class CareController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    driveBackup?.dispose();
     unawaited(_aiRuntime.dispose());
     contextTasks.cancelAll();
     _vault.close();

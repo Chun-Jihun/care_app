@@ -17,12 +17,13 @@ BACKUP_RULES = (f'<data-extraction-rules><cloud-backup>{BACKUP_EXCLUDES}</cloud-
                 f'<device-transfer>{BACKUP_EXCLUDES}</device-transfer></data-extraction-rules>')
 
 
-def write_manifest(evidence, permission='', component='', *, backup=BACKUP_SETTINGS):
+def write_manifest(evidence, permission='', component='', *, backup=BACKUP_SETTINGS,
+                   cleartext='android:usesCleartextTraffic="false"'):
     (evidence / 'AndroidManifest.xml').write_text(
         '<manifest xmlns:android="http://schemas.android.com/apk/res/android" '
         'package="org.carenotebook.care_notebook">'
         '<uses-permission android:name="android.permission.RECORD_AUDIO" />'
-        f'{permission}<application {backup}>{component}</application></manifest>',
+        f'{permission}<application {cleartext} {backup}>{component}</application></manifest>',
         encoding='utf-8',
     )
 
@@ -38,6 +39,19 @@ def write_android_evidence(evidence):
 
 
 class ReleaseAuditTests(unittest.TestCase):
+    def test_android_release_allows_drive_network_but_rejects_cleartext(self):
+        with tempfile.TemporaryDirectory() as temp:
+            evidence = Path(temp)
+            write_android_evidence(evidence)
+            internet = '<uses-permission android:name="android.permission.INTERNET" />'
+            write_manifest(evidence, internet)
+            self.assertIn('android.permission.INTERNET', audit_android_release(evidence)['permissions'])
+            for value in ('', 'android:usesCleartextTraffic="true"'):
+                with self.subTest(cleartext=value):
+                    write_manifest(evidence, internet, cleartext=value)
+                    with self.assertRaisesRegex(ValueError, 'deny cleartext'):
+                        audit_android_release(evidence)
+
     def test_android_release_checks_merged_permissions_and_resolved_ad_dependencies(self):
         with tempfile.TemporaryDirectory() as temp:
             evidence = Path(temp)
@@ -48,7 +62,7 @@ class ReleaseAuditTests(unittest.TestCase):
             self.assertEqual(audit_android_release(evidence)['permissions'], ['android.permission.RECORD_AUDIO'])
             for node, name in [
                 ('uses-permission', 'com.google.android.gms.permission.AD_ID'),
-                ('uses-permission-sdk-23', 'android.permission.INTERNET'),
+                ('uses-permission-sdk-23', 'android.permission.READ_CALENDAR'),
                 ('uses-permission', 'android.permission.READ_CONTACTS'),
             ]:
                 with self.subTest(permission=name):

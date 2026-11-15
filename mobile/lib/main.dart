@@ -13,6 +13,7 @@ import 'infrastructure/ai/device_ai_runtime.dart';
 import 'infrastructure/ai/memory_recorder.dart';
 import 'infrastructure/ai/licenses.dart';
 import 'infrastructure/device_knowledge_library.dart';
+import 'infrastructure/google_backup_drive.dart';
 import 'application/medical_answer_service.dart';
 import 'application/reviewed_knowledge_catalog.dart';
 
@@ -36,6 +37,10 @@ Future<void> main() async {
             : null,
       ),
       DevicePlatformServices(),
+      backupDrive: Platform.isAndroid && GoogleBackupDrive.clientId.isNotEmpty
+          ? GoogleBackupDrive()
+          : null,
+      driveSecrets: secrets,
       aiRuntime: ai,
       knowledge: knowledge,
       drugCatalog: knowledge.drugCatalog,

@@ -3,12 +3,54 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:care_notebook/infrastructure/platform_services.dart';
+import 'package:care_notebook/domain/errors.dart';
 import 'package:care_notebook/l10n/app_strings.dart';
 import 'package:timezone/data/latest_all.dart' as data;
 import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'calendar handoff sends only a generic title and the saved time',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final at = DateTime(2026, 11, 14, 9, 30);
+      final platform = DevicePlatformServices();
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          DevicePlatformServices.privacy,
+          null,
+        ),
+      );
+      messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, (
+        call,
+      ) async {
+        expect(call.method, 'openCalendarEvent');
+        expect(call.arguments, {
+          'begin': at.millisecondsSinceEpoch,
+          'title': '간병 일정',
+        });
+        return null;
+      });
+      await platform.openCalendarEvent(at);
+      messenger.setMockMethodCallHandler(DevicePlatformServices.privacy, (
+        _,
+      ) async {
+        throw PlatformException(code: 'unavailable');
+      });
+      await expectLater(
+        platform.openCalendarEvent(at),
+        throwsA(
+          isA<CareError>().having(
+            (error) => error.code,
+            'code',
+            CareErrorCode.calendarUnavailable,
+          ),
+        ),
+      );
+    },
+  );
   test('REVIEW-03 native scheduling preserves pending due alarms and updates only changes', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     AndroidFlutterLocalNotificationsPlugin.registerWith();

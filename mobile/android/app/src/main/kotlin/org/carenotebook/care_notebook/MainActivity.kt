@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.StatFs
+import android.provider.CalendarContract
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -73,6 +74,15 @@ class MainActivity : FlutterFragmentActivity() {
                         val number = call.argument<String>("number") ?: ""
                         require(number.matches(Regex("[+0-9 ()-]{2,32}")))
                         startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null)))
+                        result.success(null)
+                    }
+                    "openCalendarEvent" -> {
+                        val begin = checkNotNull(call.argument<Number>("begin")).toLong()
+                        startActivity(Intent(Intent.ACTION_INSERT, CalendarContract.Events.CONTENT_URI).apply {
+                            putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin)
+                            putExtra(CalendarContract.EXTRA_EVENT_END_TIME, begin + 30 * 60 * 1000)
+                            putExtra(CalendarContract.Events.TITLE, checkNotNull(call.argument<String>("title")))
+                        })
                         result.success(null)
                     }
                     else -> result.notImplemented()

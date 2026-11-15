@@ -2,6 +2,7 @@ import '../contact_action.dart';
 import '../../l10n/app_strings.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../application/care_controller.dart';
 import '../../application/draft_session.dart';
@@ -53,6 +54,26 @@ Future<void> editTask(
             textField(title, context.tr('할 일 *')),
             dateButton(context, at, update, (v) => at = v),
             textField(note, context.tr('메모'), multiline: true),
+            if (task != null && defaultTargetPlatform == TargetPlatform.android)
+              OutlinedButton.icon(
+                onPressed: () => attempt(context, () async {
+                  final session = c.captureSession();
+                  if (await confirm(
+                        context,
+                        context.tr('캘린더에 추가할까요?'),
+                        context.tr(
+                          '저장된 일정 시각과 일반 제목만 넘겨요. 캘린더에서 Google 계정을 선택하고 저장해 주세요.',
+                        ),
+                        action: context.tr('캘린더 열기'),
+                      ) &&
+                      context.mounted) {
+                    c.requireSession(session);
+                    await c.openCalendarEvent(task.dueAt);
+                  }
+                }),
+                icon: const Icon(Icons.calendar_today_outlined),
+                label: Text(context.tr('캘린더에 추가')),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(context.tr('일정 알림')),

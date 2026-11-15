@@ -31,7 +31,7 @@ flutter run
 flutter build apk --release --target-platform=android-arm64
 ```
 
-APK: `build/app/outputs/flutter-apk/app-release.apk`. 2026-09-23부터 release는 `android/key.properties`의 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`와 실제 키 파일이 있어야 빌드된다. `storeFile` 상대 경로의 기준은 `mobile/android`이며 이 파일과 키는 Git에 넣지 않는다. 디버그 서명으로 자동 대체하지 않는다. 개발 설치는 `flutter build apk --debug --target-platform=android-arm64`를 사용한다. 과거 개발 키 APK에 정식 키 APK를 덮어쓸 수 없으므로 배포 전 암호화 백업·복원/서명 전환 절차를 검증한다. release에는 인터넷 권한이 없으며 debug/profile의 인터넷 권한은 Flutter 개발 도구 연결용이다.
+APK: `build/app/outputs/flutter-apk/app-release.apk`. 2026-09-23부터 release는 `android/key.properties`의 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`와 실제 키 파일이 있어야 빌드된다. `storeFile` 상대 경로의 기준은 `mobile/android`이며 이 파일과 키는 Git에 넣지 않는다. 디버그 서명으로 자동 대체하지 않는다. 개발 설치는 `flutter build apk --debug --target-platform=android-arm64`를 사용한다. 과거 개발 키 APK에 정식 키 APK를 덮어쓸 수 없으므로 배포 전 암호화 백업·복원/서명 전환 절차를 검증한다. release의 인터넷 권한은 선택적 Google Drive 백업과 계정 연결에 사용한다. OAuth 클라이언트 설정과 배포 조건은 [모바일 현재 안내](../docs/mobile_current_guide.md#백업과-업데이트)를 따른다.
 
 iOS 지원을 재개할 때는 Mac과 Xcode, 서명 팀 설정을 준비하고 `flutter build ios --no-codesign`으로 컴파일을 확인한 후 기기에서 실행한다. Windows에서는 iOS 빌드를 검증하지 않았으며 이번 Android 출시 완료 조건에 포함하지 않는다.
 

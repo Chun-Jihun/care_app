@@ -29,14 +29,23 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
   Route<void>? backupReadingRoute;
   bool wasCommitting = false;
   bool obscured = false;
+  bool _wasUnlocked = false;
+  bool _driveBackupDue = false;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller.addListener(syncPrivateNavigation);
+    syncPrivateNavigation();
   }
 
   void syncPrivateNavigation() {
+    final unlocked = widget.controller.unlocked;
+    if (unlocked && !_wasUnlocked) _driveBackupDue = true;
+    _wasUnlocked = unlocked;
+    if (unlocked && !widget.controller.busy && _driveBackupDue) {
+      _scheduleDriveBackup();
+    }
     final committing = widget.controller.backupCommitting;
     if (committing && !wasCommitting) {
       privateNavigator = GlobalKey<NavigatorState>();
@@ -48,6 +57,23 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
     }
+  }
+
+  void _scheduleDriveBackup() {
+    if (widget.controller.driveBackup == null) {
+      _driveBackupDue = false;
+      return;
+    }
+    _driveBackupDue = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = widget.controller;
+      if (!mounted || obscured || !controller.unlocked) return;
+      if (controller.busy) {
+        _driveBackupDue = true;
+      } else {
+        unawaited(controller.driveBackup!.backup());
+      }
+    });
   }
 
   void browseBackup() {
@@ -90,6 +116,7 @@ class _CareAppState extends State<CareApp> with WidgetsBindingObserver {
     }
     setState(() => obscured = state != AppLifecycleState.resumed);
     if (state == AppLifecycleState.resumed && widget.controller.unlocked) {
+      _driveBackupDue = true;
       attempt(context, widget.controller.refresh);
     }
   }

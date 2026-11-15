@@ -1,5 +1,7 @@
 import '../l10n/app_strings.dart';
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../application/care_controller.dart';
@@ -172,9 +174,13 @@ Future<void> backupFlow(BuildContext context, CareController c) async {
   }
 }
 
-Future<void> restoreFlow(BuildContext context, CareController c) async {
+Future<void> restoreFlow(
+  BuildContext context,
+  CareController c, {
+  Future<Uint8List?> Function()? choose,
+}) async {
   await attempt(context, () async {
-    final data = await c.chooseBackup();
+    final data = await (choose ?? c.chooseBackup)();
     if (data == null || !context.mounted) return;
     final password = TextEditingController();
     BackupPreview? preview;

@@ -16,6 +16,7 @@ import 'common.dart';
 import 'editors.dart';
 import 'draft_page.dart';
 import 'backup_page.dart';
+import 'drive_backup_page.dart';
 
 List<Widget> settingsContent(BuildContext context, CareController c) => [
   Section(context.tr('화면과 사용 방법')),
@@ -156,6 +157,17 @@ List<Widget> settingsContent(BuildContext context, CareController c) => [
   Card(
     child: Column(
       children: [
+        if (c.driveBackup != null)
+          ListTile(
+            leading: const Icon(Icons.cloud_outlined, color: forest),
+            title: Text(context.tr('Google Drive 자동 백업')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: c.busy
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => DriveBackupPage(c)),
+                  ),
+          ),
         ListTile(
           leading: const Icon(Icons.lock_outline, color: forest),
           title: Text(context.tr('암호화 백업 저장')),

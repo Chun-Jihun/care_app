@@ -56,6 +56,8 @@ dependencies:
     path: packages/care_ort
   record: 7.1.1
   crypto: ^3.0.7
+  google_sign_in: ^7.2.0
+  google_sign_in_platform_interface: ^3.1.0
 
 dev_dependencies:
   flutter_test:

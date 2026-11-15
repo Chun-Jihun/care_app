@@ -49,6 +49,16 @@ const errorMessages = <CareErrorCode, String>{
   CareErrorCode.backupSaveCancelled: '백업 저장을 취소했습니다.',
   CareErrorCode.backupFileTooLarge: '백업 파일이 너무 큽니다.',
   CareErrorCode.backupOpenFailed: '백업 파일을 읽지 못했어요. 다시 선택해 주세요.',
+  CareErrorCode.driveSignInIncomplete:
+      'Google 로그인을 완료하지 못했어요. 계정을 선택해 다시 시도해 주세요.',
+  CareErrorCode.driveConsentIncomplete:
+      'Google Drive 권한 승인을 완료하지 못했어요. 연결할 계정에 백업 권한을 허용해 주세요.',
+  CareErrorCode.driveAuthorizationRequired: '연결한 Google 계정으로 다시 인증해 주세요.',
+  CareErrorCode.driveBackupFailed:
+      'Google Drive 백업을 처리하지 못했어요. 연결 상태와 저장 공간을 확인한 뒤 다시 시도해 주세요.',
+  CareErrorCode.driveBackupTooLarge:
+      '자동 백업 용량 한도를 넘었어요. 백업과 복원에서 수첩이나 기간을 나누어 암호화 백업을 저장해 주세요.',
+  CareErrorCode.calendarUnavailable: '일정을 추가할 캘린더 앱을 열 수 없어요.',
   CareErrorCode.legacyRestoreVisitAudio:
       '진료 녹음 원본이 남아 있어 이전 백업으로 수첩 전체를 교체할 수 없어요. 현재 녹음은 그대로 보관돼요.',
   CareErrorCode.newerStorageVersion: '이 백업은 더 새 버전의 앱에서 만들어졌습니다. 앱을 업데이트해 주세요.',

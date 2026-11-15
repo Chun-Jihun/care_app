@@ -405,4 +405,16 @@ class DevicePlatformServices extends PlatformServices {
   @override
   Future<void> dial(String number) =>
       privacy.invokeMethod<void>('dial', {'number': number});
+
+  @override
+  Future<void> openCalendarEvent(DateTime at) async {
+    try {
+      await privacy.invokeMethod<void>('openCalendarEvent', {
+        'begin': at.millisecondsSinceEpoch,
+        'title': strings.text('간병 일정'),
+      });
+    } on PlatformException {
+      throw CareError(CareErrorCode.calendarUnavailable);
+    }
+  }
 }

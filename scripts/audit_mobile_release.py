@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 APPLICATION_ID = 'org.carenotebook.care_notebook'
 RELEASE_PERMISSIONS = {
+    'android.permission.INTERNET',
     'android.permission.POST_NOTIFICATIONS',
     'android.permission.RECEIVE_BOOT_COMPLETED',
     'android.permission.RECORD_AUDIO',
@@ -63,6 +64,8 @@ def audit_android_release(directory):
             or application is None or application.get(f'{ANDROID}debuggable') == 'true'):
         raise ValueError('Expected the packaged release manifest for the notebook app')
     _audit_android_backup(directory, application)
+    if application.get(f'{ANDROID}usesCleartextTraffic') != 'false':
+        raise ValueError('Android release must deny cleartext traffic')
 
     permissions = {
         node.attrib[f'{ANDROID}name'] for node in manifest
