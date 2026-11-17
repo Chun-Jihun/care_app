@@ -5,6 +5,11 @@
 *.env.*
 !.env.example
 
+# Downloaded OAuth client secrets and service account credentials
+client_secret*.json
+service-account*.json
+service_account*.json
+
 # Signing credentials and private keys, even when copied outside mobile/
 key.properties
 *.keystore
@@ -42,13 +47,15 @@ checkpoint-*/
 # Downloaded or generated datasets and evaluation outputs
 /data/*
 !/data/.gitkeep
-# Downloaded medical references stay local; version metadata and code instead.
-/docs/*.pdf
-/docs/*.html
-/docs/*_files/
+# Downloaded medical references and browser assets in docs/
+/docs/**/*.pdf
+/docs/**/*.html
+/docs/**/*_files/
 /artifacts/data/raw/
 /artifacts/data/staged/
 /artifacts/eval/**/results/
+/experiments/agent_eval/results/automated_agent_evaluation_v1/
+/experiments/agent_eval/results/model_comparison_v1/
 /runs/
 /results/
 /outputs/
@@ -108,6 +115,14 @@ __pycache__/
 *.log
 .coverage
 htmlcov/
+
+# Network captures that may contain authentication headers or request bodies
+*.har
+*.pcap
+*.pcapng
+
+# 저장소의 비밀정보 노출을 확인할 때 사용한 임시 로컬 스크립트
+repository_scan.py
 
 # Editors and operating systems
 .vscode/

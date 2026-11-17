@@ -21,7 +21,7 @@ Git에는 앱 소스, 테스트, 문서, 번역 카탈로그, 패키지 잠금 �
 
 모델 본체·학습 체크포인트·변환 결과, APK/AAB/IPA 및 네이티브 빌드 결과, 실제 수첩 DB·백업, 서명 키, `.env`와 로컬 설정은 제외한다. 다운로드·기기 캡처·로컬 실행 결과는 `/data/`, 도구와 캐시는 `/.tools/`에 둔다. 환자 사진이나 녹음을 다른 소스 폴더에 보관하지 않는다. 앱 아이콘 등 필요한 자산도 있으므로 모든 이미지/음성 확장자를 통째로 무시하지는 않는다.
 
-`docs/` 바로 아래에 다운로드한 의료 PDF·HTML과 브라우저가 함께 저장한 `*_files/`도 로컬 전용이다. 출처·해시는 `docs/medical_reference_inventory.json`에 남긴다. 원문 파일은 Git 복제만으로 복구되지 않으므로 별도로 보관하거나 해당 출처에서 다시 받아야 한다. `/data/mfds/`의 API 원문·조회 DB도 동일하게 Git에서 제외한다.
+`docs/`와 그 하위 폴더에 다운로드한 의료 PDF·HTML 및 브라우저가 함께 저장한 `*_files/`도 로컬 전용이다. 출처·해시는 `docs/medical_reference_inventory.json`에 남긴다. 원문 파일은 Git 복제만으로 복구되지 않으므로 별도로 보관하거나 해당 출처에서 다시 받아야 한다. `/data/mfds/`의 API 원문·조회 DB도 동일하게 Git에서 제외한다.
 
 [백업 호환성 자료](../mobile/test/fixtures/README.md)의 `legacy_selective_v2.carebackup`과 `legacy_full_v1.carebackup`만 백업 제외 규칙의 예외다. 두 파일에는 합성 기록과 공개된 시험 비밀번호를 사용한다.
 
