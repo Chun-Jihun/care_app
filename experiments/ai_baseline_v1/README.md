@@ -1,8 +1,8 @@
 # AI baseline V1 — 사전 실험 정의
 
-2026-09-10. [모델 조사](../../docs/ai_model_research_2026-09-10.md)의 첫 비교 실험이다. 앱의 의료 기능을 활성화하거나 모델을 학습하는 실행이 아니다.
+2026-09-10. [모델 조사](../../docs/history/ai_model_research_2026-09-10.md)의 첫 비교 실험이다. 앱의 의료 기능을 활성화하거나 모델을 학습하는 실행이 아니다.
 
-완료 결과는 [판단 보고서](../../docs/ai_baseline_results_2026-09-10.md)와 [검증된 집계](results/completed-2026-09-10/results.md)를 참조한다. 토크나이저 연결부의 출처·라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 보존했다.
+완료 결과는 [판단 보고서](../../docs/history/ai_baseline_results_2026-09-10.md)와 [검증된 집계](results/completed-2026-09-10/results.md)를 참조한다. 토크나이저 연결부의 출처·라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 보존했다.
 
 ## 범위와 사전 실패 조건
 

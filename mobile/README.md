@@ -1,129 +1,141 @@
-# 간병수첩 모바일 기본 앱
+# 모바일 개발 안내
 
-현재 사용·지원 범위·백업 버전·공통 검증 명령은 [모바일 현재 안내](../docs/mobile_current_guide.md)를 따른다. 아래 날짜별 절의 시험 결과는 당시 이력이다.
+[문서 홈](../docs/README.md) · [앱 사용 안내](../docs/mobile_current_guide.md) · [제품 요구사항](../docs/caregiving_notebook_requirements.md)
 
-이번 출시 대상은 **Android Flutter 앱**이다(2026-11-06 사용자 결정). iOS는 기기·Mac/Xcode 환경을 확보한 뒤 진행할 후속 지원으로 분리하고 기존 공통 구조와 iOS 소스는 보존한다. 모델, API 키, 회원가입 없이 직접 작성하는 간병 기록을 관리한다. 전체 제품 요구사항은 [`../docs/caregiving_notebook_requirements.md`](../docs/caregiving_notebook_requirements.md), 구현 전 실패 시나리오는 [`../docs/non_ai_foundation_safety_plan.md`](../docs/non_ai_foundation_safety_plan.md)에 있다.
+Flutter 앱의 실행, 검증, 빌드와 저장소 변경에 필요한 정보입니다. 첫 출시 대상은 Android입니다.
 
-2026-09-11: Android arm64에 선택 설치형 로컬 AI(기록 조회·OCR·음성 입력)를 연결했다. [설치 방법·지원 범위·실제 실행 결과](../docs/mobile_ai_integration.md)를 먼저 확인한다. iOS AI는 OCR 실행 라이브러리 연결과 Mac 검증이 필요하여 현재 비활성화돼 있다. 직접 입력하는 기본 기능은 AI 설치 없이 동작한다.
+[실행](#실행) · [검사](#검사) · [Android 빌드와 배포](#android-빌드와-배포) · [저장소와 백업 형식](#저장소와-백업-형식)
 
 ## 실행
 
-기준 도구: Flutter 3.47.2 / Dart 3.13.2, JDK 21, Android compile SDK 37, AGP 9.3.2 / Gradle 9.5.0. 현재 대상 최소 OS: Android 7.0(API 24). 보존 중인 iOS 프로젝트의 deployment target은 15이며 현재 지원을 보장하지 않는다. 첫 의존성 설치·SQLCipher 네이티브 바이너리 다운로드·빌드에는 인터넷이 필요하다. 실행 중인 앱에는 AI 서버나 분석 SDK가 없다.
+| 도구 | 저장소 기준 |
+| --- | --- |
+| Flutter / Dart | 3.47.2 / 3.13.2 |
+| JDK | 21 |
+| Android SDK | compile SDK 37, 최소 Android 7.0(API 24) |
+| Android 빌드 | AGP 9.3.2 / Gradle 9.5.0 |
 
-프로젝트 루트의 Windows PowerShell:
+Flutter와 Android SDK를 준비하고 Android 기기 또는 에뮬레이터를 연결합니다. 첫 의존성 설치·SQLCipher 네이티브 바이너리 다운로드에는 인터넷이 필요합니다.
+
+```sh
+cd mobile
+flutter pub get
+flutter run
+```
+
+Windows에서 저장소의 `.tools/flutter`와 `.tools/android-sdk`를 사용하는 경우 루트에서 다음 명령을 실행합니다.
 
 ```powershell
 .\scripts\mobile.ps1 -Action Dependencies
-.\scripts\mobile.ps1 -Action Analyze
-.\scripts\mobile.ps1 -Action Test
-.\scripts\mobile.ps1 -Action Validate
-.\scripts\mobile.ps1 -Action BuildAndroid
 .\scripts\mobile.ps1 -Action Run
 ```
 
-이 스크립트는 `.tools/flutter`, `.tools/android-sdk`, 프로젝트 내부 의존성 캐시를 사용한다. 이미 설치한 Flutter를 사용하는 다른 환경에서는 `mobile/`에서 아래 명령을 실행한다.
+SDK Manager의 compile SDK 패키지는 `platforms;android-37.0`입니다. Windows에서는 플러그인 소스와 Android 빌드가 같은 드라이브에 있도록 저장소의 `.tools/pub-cache`를 사용합니다. 설치와 캐시 위치는 [저장소·환경 설정](../docs/repository_hygiene.md)을 함께 확인하세요.
 
-```sh
-flutter pub get
-flutter analyze
-flutter test --concurrency=1
-flutter run
-flutter build apk --release --target-platform=android-arm64
+## 검사
+
+저장소 루트의 Windows PowerShell에서 실행합니다.
+
+```powershell
+python -m pip install -r scripts/requirements-quality.txt
+.\scripts\mobile.ps1 -Action Dependencies
+.\scripts\quality.ps1
 ```
 
-APK: `build/app/outputs/flutter-apk/app-release.apk`. 2026-09-23부터 release는 `android/key.properties`의 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`와 실제 키 파일이 있어야 빌드된다. `storeFile` 상대 경로의 기준은 `mobile/android`이며 이 파일과 키는 Git에 넣지 않는다. 디버그 서명으로 자동 대체하지 않는다. 개발 설치는 `flutter build apk --debug --target-platform=android-arm64`를 사용한다. 과거 개발 키 APK에 정식 키 APK를 덮어쓸 수 없으므로 배포 전 암호화 백업·복원/서명 전환 절차를 검증한다. release의 인터넷 권한은 선택적 Google Drive 백업과 계정 연결에 사용한다. OAuth 클라이언트 설정과 배포 조건은 [모바일 현재 안내](../docs/mobile_current_guide.md#백업과-업데이트)를 따른다.
+| 확인하고 싶은 내용 | 실행 방법 |
+| --- | --- |
+| Flutter 앱만 검사 | 루트에서 `mobile.ps1 -Action Validate`를 실행하거나 `mobile/`에서 `flutter analyze`와 `flutter test --concurrency=1`을 실행합니다. |
+| Python과 Flutter를 함께 검사 | `quality.ps1`이 Python 구문·미정의 이름 lint, 단위 시험, 번역 계약, Flutter 분석·시험, 저장소 강제 종료 복구와 `care_ort` 분석을 실행합니다. |
+| Android 빌드와 배포 구성 검사 | SDK가 준비된 환경에서 `quality.ps1 -BuildAndroidDebug`. 기본·광고 시험 APK와 배포 매니페스트·백업 규칙·런타임 의존성을 검사합니다. |
+| 원격 실행 결과 확인 | [GitHub Actions 워크플로](../.github/workflows/quality.yml)의 해당 커밋 실행을 확인합니다. |
 
-iOS 지원을 재개할 때는 Mac과 Xcode, 서명 팀 설정을 준비하고 `flutter build ios --no-codesign`으로 컴파일을 확인한 후 기기에서 실행한다. Windows에서는 iOS 빌드를 검증하지 않았으며 이번 Android 출시 완료 조건에 포함하지 않는다.
+기본 시험은 합성 기록을 사용하며 모델·의료 자료·`.env`·API 키·GPU 없이 실행합니다. Flutter 시험은 순차 실행을 기본으로 합니다. 언어 카탈로그 변경은 [번역 관리 안내](lib/l10n/README.md), 기능별 기대 결과는 [안전 검증 시나리오](../docs/safety_validation.md)를 참고합니다.
 
-## 사용할 수 있는 기능
+### 기기 검증과 출시 확인
 
-| 화면 | 첫 구현 |
-|---|---|
-| 시작·잠금 | 계정·PIN 없는 시작, 설정에서 선택하는 앱 잠금(6자리 PIN), 기존 잠금 유지, 실패 횟수·대기시간 유지, 선택적 기기 인증, 백그라운드 가림 |
-| 돌봄 대상 | 이름 없이 생성, 본인·가족·동거인·간병인 역할, 수첩 전환·수정·삭제, 선택적 연락처 |
-| 오늘 | 입력된 기록 수·수분량·복용함 건수, 빠른 기록, 미완료 할 일 5개와 전체 목록, 완료·되돌리기, 지난 일정 표시 |
-| 일기 | 식사·수분, 실제 복약, 증상, 활동·재활, 측정, 생활, 사건, 진료·연락, 인계, 자유 메모의 10종 기록 |
-| 기록 상세 | 날짜·시각, 종류·날짜·검색어 필터와 초기화, 수정 이력, 삭제, 사진 촬영·선택·확대·삭제 |
-| 약 | 직접 입력한 약·처방 지시·매일 확인할 시각, 변경 전 계획 보존, 복용함·누락·거부·모름 기록, 목록 보관 |
-| 진료 준비 | 질문 목록, 사용자가 선택한 원본 기록, 원본 변경 시 재검토 표시, 의료진 설명을 직접 옮긴 진료 메모 |
-| 간병 도우미 | 상단 말풍선으로 여는 대화창, 자연어 기록 조회와 후속 질문, 조회 조건·원본 근거·전체 결과, 보관 방식 선택, 진료 준비로 옮겨 편집 |
-| 초안 | 작성 중 자동 저장, 잠금 후 이어 쓰기, 보관기간 선택, 초안 삭제, 원본 변경 시 덮어쓰기 차단 |
-| 설정 | 간병인 자신의 피로·수면·스트레스 기록, 로컬 알림, 수첩·기간별 선택 백업과 추가 복원, 전체 삭제 |
+자동 시험에는 SQLCipher 재개방·복구, 수첩 분리, 백업 호환과 복원, 권한 오류, 대화 보관, 큰 글자 UI를 포함합니다. 기기 검증은 카메라·파일 선택, 생체인증, 백그라운드·재부팅 뒤 알림과 위젯, 업데이트·서명 전환을 별도로 다룹니다. 저사양 기기에서는 큰 백업의 최고 메모리, 저장 공간 부족, 배터리와 네이티브 AI 자원 반환을 측정합니다. [Android 검증 기록](../docs/history/README.md#android와-앱-검증)
 
-약 알림이나 할 일 완료는 실제 복약 기록을 자동으로 만들지 않는다. 화면의 합계는 입력된 사실의 합계이며 임상 판단이 아니다. 진료 준비는 원본을 모아 보여 준다. 선택 설치형 OCR·음성 입력은 사용자 확인 전 초안이며 자동 저장하지 않는다. 의료 답변·상호작용 판정·운동 추천·임상 위험 판단·가족 공유·서버 동기화는 제공하지 않는다.
+2026-11-15 Android 시험에서는 Drive 첫 백업 업로드와 다운로드·비밀번호 확인을 거쳐 복원 미리보기까지 확인했습니다. 별도 기기에서 복원 수첩을 추가하는 시험은 남아 있습니다. Play 배포본은 실제 Play 앱 서명과 개인정보 처리방침, 데이터 보안 응답을 함께 검증합니다.
 
-한국어 기록 조회는 “어제 약 먹었어?”, “이번 주 뭐 먹었어?”, “물 마신 기록 오늘 보여줘”, “어제 오후 3시 30분 혈압 기록”처럼 날짜 위치와 일상 표현을 허용한다. 최대 31일 범위에서 지난달·최근 일주일·오전/오후·명시한 복용 상태를 조회하며, 바로 이어 “그럼 어제는?”처럼 조건을 바꿀 수 있다. 수첩 전환·대화 삭제·앱 이탈 후에는 이전 조건을 재사용하지 않는다. 질문에 없는 복용 여부나 저녁 시각을 추정하지 않으며 약명·용량 표기는 정확히 일치해야 한다. 답변은 최근 8개와 조회 조건을 표시하고, 전체 기록 보기는 같은 조건으로 현재 기록을 50개씩 더 보여 준다. 답변 당시 근거는 이후 수정·삭제된 내용으로 바꿔 인용하지 않는다.
+## Android 빌드와 배포
 
-## 저장 구조와 코드
+아래 명령은 `mobile/`에서 실행합니다.
 
-- `lib/domain/`: 기록 종류, 입력 검증, 데이터 모델. 임상 임계값이나 의약학 지식 없음.
-- `lib/application/`: 수첩 선택·잠금 조정자, 기능별 서비스, 저장소·기기 계약, 제한된 읽기 작업. 화면은 기능 명령으로 저장한다.
-- `lib/infrastructure/`: 기능별 SQLCipher 저장소, 스키마 이전, 암호화 세대·사진·백업, OS 보안 키와 플랫폼 어댑터.
-- `lib/presentation/`: 한국어·영어·일본어·중국어 간체/번체 화면. 편집기와 주요 탭 구성은 독립 파일로 관리한다.
+```sh
+flutter build apk --debug --target-platform=android-arm64
+flutter build appbundle --release
+```
 
-2026-09-23 조회·유지보수 보완: 진료 원본 선택과 간병인 상태 이력은 처음 30개, 할 일 목록은 50개씩 표시하며 DB에도 같은 조회 한도를 전달한다. 홈은 미완료 할 일 5개와 별도의 전체 개수만 읽는다. 날짜 범위는 시작 포함·종료 제외로 처리하고 같은 시각의 기록은 ID로 순서를 고정한다. 검색 입력은 200ms 후 반영하며 선택 항목은 검색 조건을 바꿔도 유지한다. 약·제품정보는 함께 조회하고, 복약·진료 원본의 상세 내용은 종류별 묶음 조회를 재사용한다. 복약 조회 캐시는 기록 수정·삭제·날짜·수첩 전환에 맞춰 갱신한다.
+개발 APK는 `build/app/outputs/flutter-apk/app-debug.apk`에 생성됩니다. 배포에 필요한 APK는 `flutter build apk --release --target-platform=android-arm64`로 생성합니다. 배포 빌드는 `android/key.properties`와 정식 키가 필요합니다. 속성은 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`이며 상대 `storeFile` 경로의 기준은 `mobile/android`입니다. 키와 설정 파일은 로컬에서만 관리합니다. 서명이 다른 APK로 바꿀 때는 백업·복원으로 데이터를 옮길 수 있는지 확인합니다.
 
-일반 기록과 연결된 복약은 저장·복원에 동일한 필드 길이와 시각 검증을 적용한다. 새 약의 이름·처방 지시도 복약 원문 필드와 같은 4,000자 한도를 확인한다. 기존 원문을 자동으로 잘라내지 않으며 입력 검증 실패 시 저장된 내용과 초안을 유지한다. AI 모델 재설치는 기존 해시 캐시를 무효화하고 실제 파일을 다시 확인하므로 같은 앱 실행 중 발견한 손상도 복구할 수 있다. 완료 표식의 내용과 모델 디렉터리 경계도 확인한다.
+배포 자동 감사에서는 병합 매니페스트와 백업 제외 규칙, Gradle의 전이·로컬 의존성을 검사합니다. 권한 허용 목록 밖 항목, 광고 SDK, 시험 컴포넌트, 승인되지 않은 로컬 라이브러리와 운영체제 백업·기기 전송 경계의 변경을 차단합니다. `:app:prepareReleaseAudit`의 보고 경로는 `mobile/build/app/reports/release-audit`입니다.
 
-현재 모듈 경계와 변경 방법, 검토 항목별 해결 근거는 [구조 개선 결과](../docs/architecture_refactor_2026-09-10.md)에 정리했다. `CareController`의 저장소·기기·잠금 상태는 private이고, `completeDraft`는 저장 콜백을 받지 않는다. 새 초안은 타입별 payload v1을 사용하며 기존 초안도 읽는다. 판독 불가능한 항목은 원문을 보존하고 개별 확인·삭제를 지원한다.
+### Google Drive 백업 설정
 
-`care.db`와 `identity.db`를 서로 다른 임의 256비트 키로 암호화하고, OS Keychain/Keystore 보호 저장소에 키를 보관한다. 키 저장소 오류 시 자동 초기화를 금지한다. SQLCipher가 아니거나 키·DB 무결성·스키마 버전이 맞지 않으면 열기를 중단한다. 환자 식별정보와 간병기록의 변경은 연결된 DB 트랜잭션으로 처리한다.
+1. Google Cloud 프로젝트에서 Drive API를 켭니다.
+2. 같은 프로젝트에 Android OAuth 클라이언트와 웹 OAuth 클라이언트를 등록합니다. Android 클라이언트는 실제 앱 ID와 서명 SHA-1을 사용합니다. Google Play 배포본은 Play 앱 서명 인증서 SHA-1을 등록합니다.
+3. 웹 클라이언트 ID를 빌드에 전달합니다. ID가 설정된 Android 빌드에서 Drive 메뉴가 표시됩니다.
 
-10종 상세 테이블은 공통 `care_entry`에 환자 ID와 함께 연결된다. 수정 전 값은 같은 트랜잭션의 `care_entry_revision`에 남는다. 처방 지시는 `medication_plan`의 새 버전으로 저장하고 실제 복약에는 당시 지시와 계획 ID를 보관한다. 선택한 진료 기록은 복사본 대신 `visit_source`로 연결한다. 간병인 자신의 점검은 `caregiver_checkin`으로 환자 기록과 분리한다.
+```sh
+flutter build appbundle --release --dart-define=CARE_GOOGLE_WEB_CLIENT_ID=YOUR_WEB_CLIENT_ID
+```
 
-사진은 메모리에서 방향을 적용하고 새 JPG로 변환해 EXIF·위치·원본 파일명을 제외한다. 파일별 AES-256-GCM 키를 별도로 암호화하여 저장한다. 네이티브 사진 선택기가 앱 전용 임시 폴더에 만든 파일은 처리 후 삭제하고 재실행 시 잔여 사진 캐시를 정리한다. 사진 보관함의 원본은 건드리지 않는다. 현재 입력 한도는 파일 20MB·2,400만 화소이며 JPG/PNG가 기준이다.
+OAuth 테스트 모드에서는 등록한 테스트 계정으로 검증합니다. 배포 전에는 공개 OAuth 설정·브랜딩·처리방침과 Play Console 신고를 확인합니다. 앱은 선택한 계정에서 앱 전용 Drive 공간에 접근하는 `drive.appdata` 권한을 요청합니다. [Google OAuth 대상 설정](https://support.google.com/cloud/answer/15549945?hl=ko) · [Drive 앱 전용 공간](https://developers.google.com/workspace/drive/api/guides/appdata)
 
-선택 백업은 선택한 행과 사진별 키·암호화 사진만 직렬화해 PBKDF2-HMAC-SHA256(210,000회)와 AES-256-GCM으로 감싼다. 제외한 기록의 DB 페이지나 저장소 마스터 키를 담지 않으며 임시 평문 파일도 만들지 않는다. 비밀번호는 12자 이상, 사진 합계 50MB·전체 내부 페이로드 100MB 한도다. 수첩·기간과 사진·보관 대화·간병인 상태·별칭/연락처를 선택한다. 기본 선택은 현재 수첩·전체 기간·사진 포함이며 대화·간병인 상태·별칭/연락처는 제외한다. 약 목록·처방 계획과 선택한 기록의 수정 이력은 함께 포함한다. 초안, 진료 녹음 원본, 앱 잠금·알림 설정은 제외한다. 백업 문서의 필드 계약은 DB 스키마와 별도로 관리한다. 현재 DB 스키마와 백업 문서 버전, 이전 형식의 복원 범위는 [백업과 업데이트](../docs/mobile_current_guide.md#백업과-업데이트)에서 확인한다.
+<details>
+<summary>광고와 오프라인 시험 APK</summary>
 
-선택 백업은 현재 저장소의 암호화 사본에서 새 ID와 원본 연결을 함께 생성한 뒤 별도 수첩으로 추가한다. 사진도 새 ID·키로 암호화하고 최종 검증 뒤 커밋 표식으로 전환한다. 기존 수첩·초안·현재 선택·알림 설정은 유지한다. 복원한 수첩의 알림은 설정에서 사용자가 검토 후 켜야 한다. 같은 백업이 추가한 수첩이나 내 상태 기록이 남아 있으면 중복 복원을 차단한다. 추가했던 항목을 모두 삭제했다면 다시 복원할 수 있다. 이전 전체 백업(format 1)은 명확한 전체 교체 확인 후 기존 방식으로 복원한다. 실패한 복원은 현재 DB를 교체하지 않는다.
+아래 명령은 Windows에서 `mobile/android`를 기준으로 실행합니다.
 
-스키마 v2는 v1의 기록을 보존하며 `chat_policy`, `chat_message`를 추가한다. 질문 보관은 첫 사용에 이번 앱 사용 동안만/7일/30일/직접 삭제할 때까지 중 선택한다. 임시 질문은 메모리에만 보관하고 앱을 벗어나거나 잠글 때 삭제한다. 기간을 선택한 질문은 암호화 DB에 저장하며 만료 시 조회·백업에서 제외한다. 보관 방식 변경 시 기존 내용의 삭제 가능성을 확인한다. 진료 준비로 옮긴 내용과 별도로 내보낸 암호화 백업은 독립된 사본이다. 스키마 v4는 질문과 같은 보관 정책을 따르는 구조화된 조회 답변을 추가한다. 선택 백업은 답변의 원본 ID도 복원 수첩에 맞춰 연결한다. 현재 AI는 선택 수첩의 기록 조회만 답변하고 의료 판단·자동 전송은 하지 않는다.
+```powershell
+.\gradlew.bat :ad-test:assembleDebug -PcareDeviceTest=ads
+.\gradlew.bat :app:assembleDebug -Ptarget-platform=android-arm64 -PcareDeviceTest=offline
+```
 
-스키마 v5는 동일 시각 기록의 안정적인 정렬과 검색·만료·할 일 인덱스를 보완한다. v1~v4의 모든 이전 단계와 두 DB의 버전 변경은 무결성 검사를 포함한 하나의 트랜잭션으로 확정한다. 실패 시 이전 데이터와 버전으로 되돌리고 암호화된 이전 사본을 유지한다. 정상 재개방 및 검증 이후에만 이전 사본을 정리하며, 사본 정리 실패는 앱 열기를 막지 않는다. 백업 문서 v4는 복용 상태 조회 조건을 보존하며 v1~v3도 계속 읽는다.
+광고 시험 APK는 `mobile/build/ad-test/outputs/apk/debug/ad-test-debug.apk`에 생성됩니다. 시험 배너는 공개 사용 안내에서 **시험 배너 불러오기**를 누른 때 요청합니다. 광고 시험의 `org.carenotebook.care_notebook.adtest`는 오프라인 수첩 시험의 `.devtest`와 앱 ID·UID가 분리됩니다. 수첩 시험에는 합성 자료를 사용합니다. 정식 수첩 빌드의 인터넷 권한은 선택형 Google 연결과 Drive 백업에 사용하며 평문 HTTP는 차단합니다.
 
-스키마 v3는 v1/v2의 기존 기록을 보존하면서 `record_draft`와 `imported_backup`을 추가한다. 일기·약·복약·할 일·진료 준비·간병인 상태의 입력을 400ms 지연 후 암호화 자동 저장하고 잠금 직전에 마지막 입력을 동기 저장한다. 초안 보관기간은 첫 사용에 7일/30일/직접 삭제할 때까지 중 선택하며 설정에서 바꾼다. 최종 저장과 초안 삭제는 하나의 트랜잭션이다. 수정 대상이나 처방이 달라졌다면 초안 내용을 보여 주되 자동 덮어쓰기를 막는다. 수첩 프로필, PIN·백업 비밀번호, 대화 입력창, 사진 촬영 중 상태는 초안 대상에 포함하지 않는다. OS가 자동 저장 전 프로세스를 즉시 종료하면 마지막 입력 일부는 복구되지 않을 수 있다.
+</details>
 
-미확정 초안은 일기·복약·알림·진료 원본에 사용하지 않으며 OCR 초안이나 의료진 검수 여부를 사용자 입력에서 자동으로 만들지 않는다. 목표 설계의 전체 AI·감사·지식베이스 스키마를 구현 완료한 것은 아니다. 상세 동작과 검증은 [초안·선택 백업 시험 계획 및 결과](../docs/draft_and_selective_backup_safety_plan.md)를 따른다.
+<details>
+<summary>iOS 후속 지원</summary>
 
-## 검증과 남은 기기 확인
+공통 Flutter 코드와 iOS 프로젝트를 관리합니다. 지원을 재개할 때 Mac/Xcode에서 `flutter build ios --no-codesign`으로 컴파일하고 서명·실행·앱 전환 가림·Keychain·파일 보호를 기기에서 검증합니다. WidgetKit은 Runner와 확장에 같은 Team, `group.org.carenotebook.careNotebook.widget` App Group 및 위젯 공용 Keychain 그룹이 필요합니다. 기존 Runner 기본 Keychain 그룹은 첫 항목에 둡니다. iOS 빌드와 기기 검증은 후속 지원 범위입니다.
 
-2026-09-23 최적화 후 Windows 검증: Flutter 정적 분석 오류 없음, 5개 언어 754개 문구 검사, 모바일 시험 **199개**와 별도 프로세스 강제 종료 후 암호화 저장소 복구 시험 통과. Python 시험은 175개 중 173개 통과·선택 의존성(`opencc`, `lmformatenforcer`)이 없는 2개 생략이며 Python 소스·시험 110개 파일의 구문을 확인했다. 새 회귀시험은 페이지별 조회·개수·환자 분리, 복약 입력과 백업 복원 기준 일치, 실제 저장된 약·처방 연결 반환, 조회 캐시 갱신, 묶음 조회 횟수와 같은 실행 중 AI 파일 재설치 복구를 확인한다. 휴대전화의 실제 속도·메모리·배터리와 iOS 빌드 결과를 의미하지 않는다.
+</details>
 
-2026-09-18 Windows 자동 검증: `scripts/mobile.ps1 Validate`에서 5개 번역 카탈로그의 644개 문구 검증, 정적 분석, Flutter 시험 **128개**, 별도 프로세스 종료 후 SQLCipher 복구 시험을 통과했다. 약 5년 분량의 합성 기록 12,000건으로 제한 검색·동일 시각 정렬·수정 이력·만료·환자 분리를 확인했다. 스키마 v1~v4 이전, 이전 백업 문서 호환, 검증 실패 시 두 DB의 롤백, DB 페이지 한도를 이용한 저장 공간 부족 모의 시험을 포함한다. 프로세스 종료 시험에서는 두 DB의 복구 저널 존재와 평문 미노출, 재개방 후 확정 기록 보존을 확인했다. 실제 휴대전화의 저장 공간 부족·OS 종료·업데이트 설치 시험은 배포 준비 직전에 별도로 수행한다.
+## 코드 구조
 
-2026-09-07 Windows 검증: Flutter 정적 분석 오류 없음, 모바일 단위·저장·위젯 시험 19개 통과. 기존 Python 시험은 기본 앱 구현 당시 94개 통과했으며 이번 변경은 모바일 코드에 한정된다. Android release APK 생성 성공(약 74MB). 별도 Android 15 에뮬레이터에서 카메라·기기 인증·알림을 실행했으며 세부 결과는 [네이티브 검증 보고서](../docs/android_native_validation_2026-09-07.md)에 있다. 실제 휴대전화와 iOS 실행 결과는 포함하지 않는다.
+| 경로 | 맡는 일 |
+| --- | --- |
+| [`lib/domain/`](lib/domain/) | 기록 모델, 유효성, 의료 및 AI 결과 계약 |
+| [`lib/application/`](lib/application/) | 수첩과 잠금 세션, 기능별 서비스, 저장소·플랫폼 계약 |
+| [`lib/infrastructure/`](lib/infrastructure/) | SQLCipher, 마이그레이션, 첨부·백업 암호화, 네이티브·Drive 어댑터 |
+| [`lib/presentation/`](lib/presentation/) | 오늘·일기·약·진료·설정과 사용자 입력 흐름 |
+| [`test/`](test/) | 합성 기록, 저장소 통합, 위젯과 회귀 시험 |
 
-`flutter test`: 실제 SQLCipher 파일 재개방, 잘못된 키, 환자 범위, 수정 충돌·이력, 과거 처방, 삭제 연결, 사진 메타데이터·암호화, 백업 실패·복원·재시작, 잠금 우회·지연, 알림 실패, 시간대 별칭, 대화 보관·만료·마이그레이션과 화면 입력 흐름을 검증한다. `test/app_test.dart`는 합성 데이터의 390×844 화면을 `build/preview/today.png`, `build/preview/chat.png`에 렌더링한다. Windows에서는 설치된 맑은 고딕을 미리보기용으로만 사용한다.
+기능은 서비스에서 수첩과 세션을 확인한 뒤 저장소를 사용합니다. 화면에는 기능 단위 명령과 결과를 전달합니다. [도메인 용어](../GLOSSARY.md) · [목표 데이터 스키마](../docs/mobile_app_data_schema_design.md)
 
-네이티브 어댑터는 단위·위젯 시험에서 대역으로 교체된다. 아래는 2026-09-07 기준 기기 확인 목록이며, 이후 완료한 Android 범위는 문서 끝의 2026-09-10 실기기 결과를 따른다. iOS와 아직 시험하지 않은 조건은 계속 남아 있다.
+## 저장소와 백업 형식
 
-1. 사진·파일 선택의 취소, 저장 공간 부족, 카메라 실행 중 프로세스 종료와 재시작.
-2. 생체인증·기기 잠금 변경, 앱 전환과 화면 잠금, OS 키 접근 실패.
-3. 알림 권한 거부·재부팅·시간대 변경·절전 상태. 알림은 정밀 투약 타이머가 아니며 지연될 수 있다. 가까운 일정부터 최대 60개를 예약한다.
-4. 비행기 모드에서 저장·검색·첨부·재실행·백업·복원. iOS 빌드·Keychain·파일 보호·전환 화면 가림.
+| 구성 | 현재 계약 |
+| --- | --- |
+| 로컬 DB | **schema 7**. `care.db`와 `identity.db`를 별도 256비트 키로 암호화합니다. 키·스키마·무결성이 맞지 않으면 열기를 중단합니다. |
+| 선택 백업 | **format 3 / document_version 6**. PBKDF2-HMAC-SHA256 210,000회와 AES-256-GCM으로 보호합니다. 사진 합계 50MiB·내부 데이터 100MiB 한도가 적용됩니다. |
+| 읽기 호환 | 선택 백업 문서 v1~v5와 format 2/schema 3, 이전 전체 교체 format 1을 읽습니다. format 1은 현재 기기나 백업에 녹음 원본이 있을 때 차단합니다. |
+| 선택 복원 | 새 수첩과 새 ID로 원본 참조를 연결합니다. 실제 남은 복원 항목을 기준으로 중복을 차단합니다. 복원한 항목을 모두 삭제한 뒤 다시 복원할 수 있습니다. |
 
-Android는 화면 캡처 보호와 OS 자동 백업·기기 전송 제외를 구성했다. iOS는 앱 전환 가림과 파일 백업 제외를 구성했으며 사용자가 직접 찍는 모든 스크린샷을 차단한다고 보장하지 않는다. 요일·기간·필요 시 복용 같은 복잡한 반복 일정, 대용량 스트리밍 백업, 앱스토어 배포는 후속 작업이다.
+DB와 백업 문서 버전은 각각 관리합니다. [백업 계약 설계 결정](../docs/adr/0001-frozen-backup-contract.md) · [사용자 백업·복원 흐름](../docs/mobile_current_guide.md#백업과-업데이트)
 
-참고: [Flutter 설치](https://docs.flutter.dev/install), [sqlite3 SQLCipher 빌드 훅](https://pub.dev/documentation/sqlite3/latest/topics/hook-topic.html), [flutter_secure_storage 변경사항](https://pub.dev/packages/flutter_secure_storage/changelog), [AGP 9.3 호환성](https://developer.android.com/build/releases/agp-9-3-0-release-notes).
+- 식별정보와 간병기록의 연결 변경은 DB 트랜잭션으로 처리합니다. 처방 이력과 기록 수정 전 버전을 보존하고, 진료 준비는 `visit_source`의 원본 참조를 사용합니다.
+- 사진은 메모리에서 사진 방향을 적용하고 다시 인코딩해 EXIF·위치·원본 파일명을 제거합니다. 사진별 키와 AES-256-GCM으로 암호화합니다. 일반 첨부 한도는 20MiB·2,400만 화소입니다. OCR 입력 한도는 [AI 안내](../docs/mobile_ai_integration.md)를 따릅니다.
+- 초안은 입력 후 약 400ms 뒤 암호화해 저장합니다. 확정 기록 저장과 초안 삭제는 한 트랜잭션에서 수행합니다. 저장된 원본이나 처방 버전이 바뀌면 자동 덮어쓰기를 막습니다.
+- 백업에는 선택 행과 사진별 키·암호화 사진을 담습니다. 기기의 저장소 마스터 키는 보안 저장소에 남고, 백업 생성은 메모리에서 암호화한 뒤 저장합니다. 복원은 새 암호화 세대에서 참조와 무결성을 확인한 뒤 전환합니다.
 
-## 전체 코드 검토 후 갱신 (2026-09-07)
+<details>
+<summary>네이티브 AI 패키지와 과거 실험 재현</summary>
 
-위 초기 검증 이후 전체 모바일 코드와 개발 도구의 보안 경계를 추가 검토했다. 잠금 후 비동기 작업 차단·DB/이미지 캐시 정리, 저장 작업의 동시 실행 방지, 알림 변경분 예약, 복원 커밋 순서, 이미지 디코딩 전 크기 검사, 기록 조회 최적화, 큰 글자 대화 화면과 미저장 폼 나가기 확인을 개선했다. Python 다운로드 도구의 인증키 오류 출력도 보완했다.
+AI·근거 패키지는 최종 경로 옆 `.partial`에서 크기와 해시를 확인한 뒤 pack, 신뢰 명세 순으로 게시합니다. I/O 오류는 이 실행의 산출물만 되돌립니다. 중단으로 남은 임시 파일은 실행 중인 작업과 최종 명세·pack 무결성을 확인한 뒤 처리합니다. 새 버전은 파일명과 manifest 버전을 바꾸고 기존 버전을 보존합니다. [모바일 AI 빌드](../docs/mobile_ai_integration.md#개발-재현) · [근거 자료 패키지](../docs/mobile_knowledge_package.md)
 
-전체 코드 검토 당시 Flutter 시험 **34개**, Python 시험 **96개**가 통과했다. 수정 근거와 당시 Android 결과는 [전체 코드 검토 보고서](../docs/code_review_2026-09-07.md)를 따른다.
+`python -m unittest discover -s integration_tests -v`는 고정한 `ds-agent-pilot-v1`, `qwen35-nf4-smoke-v6` 및 통합 결과가 있는 환경에서 실행합니다. 과거 입력이 빠지면 해시 대조 시험에서 실패합니다. 자동 시험과 연구 결과의 해석 범위는 [AI 연구와 검증](../docs/README.md#ai-연구와-검증)에 있습니다.
 
-초안 복구·선택 백업 추가 당시 Flutter 시험은 **47개 통과**, 정적 분석 문제 없음이다. Android 15 가상기기에 업데이트한 뒤 기존 수첩과 114KB 사진 연결 유지, 입력 중 강제 종료 후 초안의 원문·시각 복구, 명시적 저장 후 초안 제거와 단일 기록 생성을 확인했다. 선택 백업의 제외 범위·비밀번호·변조·참조 검증·기존 데이터 보존·추가 복원·중복 차단은 실제 SQLCipher 및 UI 시험으로 검증했다. 이 작업에서 Python 코드는 변경하지 않았다. iOS 실행 검증, 실물 저사양 기기의 메모리·저장 공간 부족 시험, 배포 서명은 남아 있다.
-
-## Android 실기기 검증 (2026-09-10, 다국어 추가 전)
-
-사용자가 연결한 삼성 SM-S926N / Android 16에서 합성 메모의 강제 종료 후 초안 복구·단일 확정 저장, 실물 카메라 촬영·취소·사진 보기, 실제 OS 파일 선택창을 통한 선택 백업 저장·별도 수첩 추가 복원·중복 차단을 확인했다. 실제 지문 인증과 인증 취소, 알림 권한·예약·게시, 백그라운드에서 알림 선택 후 앱 잠금 유지도 확인했다. 알림은 16:37 예약에 대해 16:38:23에 게시되어 약 83초 지연됐다.
-
-제품 코드는 변경하지 않았으며 이 날 Flutter 자동 시험을 다시 실행한 것은 아니다. OS 재부팅·장기 절전·저장공간 부족·다른 기기와 iOS 시험은 남아 있다. 실제 관측과 사용자 확인, 시험 후 남긴 데이터·설정, 한계는 [실기기 검증 보고서](../docs/android_device_validation_2026-09-10.md)를 따른다.
-
-## 표시 언어 (2026-09-10)
-
-한국어, English, 日本語, 简体中文, 繁體中文 번역 자산을 보유한다. **2026-09-11부터 문서와 언어별 지원 준비가 끝날 때까지 잠금 화면과 설정의 언어 메뉴를 비활성화**했다. 메뉴와 준비 중 안내는 표시하고 기존에 저장한 언어는 재실행 후에도 보존한다. 신규 기본값은 한국어다. 기존 사용자 입력과 백업 형식은 바꾸지 않는다.
-
-다국어 기능 추가 시점의 Flutter 시험 **58개 통과**, 정적 분석 문제 없음, Android release APK 빌드 성공. 다국어 버전은 기존 휴대전화에 자동 설치하지 않았으며 APK 업데이트 후 사용할 수 있다.
-
-긴 문구와 큰 글자에 맞춰 기록 종류 선택창에 스크롤을 추가하고, 일기의 날짜·건수와 섹션 제목·동작을 줄바꿈할 수 있게 조정했다. 당시 번역 528개와 다섯 표기의 자리표시자 일치, 언어 선택 저장/실패, 사용자 원문·초안·잠금 유지, 320×640/200% 글꼴의 주요 화면, 알림 ID·시각 유지 및 문구 갱신을 자동 검증한다. 번역 수정 방법은 [언어 관리 안내](lib/l10n/README.md), 검증 범위는 [다국어 안전 계획](../docs/localization_safety_plan.md)을 따른다. 이전 Android 실기기 검증은 다국어 추가 전 버전의 결과이며, 새 언어의 실기기 표시·OS 대화창 및 iOS 실행 검증은 별도 확인이 필요하다.
+</details>

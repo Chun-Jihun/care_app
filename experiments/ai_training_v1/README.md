@@ -57,7 +57,7 @@ PC 자원은 RTX 3060 Ti 8GB다. GPU 작업은 순차 실행한다. 결과가 �
 
 ## 실행 파일과 재현
 
-학습·평가를 완료했으며 실제 결과는 [추가 학습·증류 결과 문서](../../docs/ai_training_results_2026-09-11.md)와 [봉인한 결과](results/completed-2026-09-11/results.md)를 따른다. 아래 명령은 프로젝트 루트의 PowerShell에서 사용하는 단계다. 기존 입력·실행 ID·결과 폴더가 있으면 덮어쓰지 않고 종료한다. 재실험은 별도 작업 디렉터리나 새로운 실행 ID로 수행한다.
+학습·평가를 완료했으며 실제 결과는 [추가 학습·증류 결과 문서](../../docs/history/ai_training_results_2026-09-11.md)와 [봉인한 결과](results/completed-2026-09-11/results.md)를 따른다. 아래 명령은 프로젝트 루트의 PowerShell에서 사용하는 단계다. 기존 입력·실행 ID·결과 폴더가 있으면 덮어쓰지 않고 종료한다. 재실험은 별도 작업 디렉터리나 새로운 실행 ID로 수행한다.
 
 실험 Python은 `.tools/ai-training-venv/Scripts/python.exe`다. PEFT 0.20.0을 별도 환경에 설치하고, 기존 `.tools/ai-baseline-venv`와 `.venv-qwen35`의 패키지를 `.pth`로 읽는다. 이 PC의 환경을 수정 없이 격리해 사용하기 위한 방식이며 독립적인 배포 환경이 아니다. 다른 PC에서는 [실제 활성 패키지 버전](training-environment.json)에 맞는 새 환경과 동일 CUDA/Paddle 구성을 준비해야 한다. 초기 실행 메타데이터의 중복 numpy 배포판 표시는 결과 JSON의 설명을 함께 참조한다.
 

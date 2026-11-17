@@ -6,7 +6,7 @@
 
 챗봇의 좁은 기록 조회 과업은 증류 모델이 가장 좋은 결과를 보였다. OCR의 합성 행 인식과 ASR의 일반 전사 CER도 개선됐지만 영어 OCR, SFT 일본어, ASR 숫자·단위 검사에서는 퇴보가 있었다. 새 가중치를 제품에 적용할 수 있는 검증 수준과 구분한다.
 
-원본 예측 재채점·파일 해시 검사를 통과한 [전체 실행 결과 표](../experiments/ai_training_v1/results/completed-2026-09-11/results.md)와 [상세 결과 JSON](../experiments/ai_training_v1/results/completed-2026-09-11/results.json)을 보관했다. 총 19개 실행 이력 중 15개 완료, 2개 실패, 2개 중단이며 실패·중단 결과는 완료 성능에 합산하지 않았다.
+원본 예측 재채점·파일 해시 검사를 통과한 [전체 실행 결과 표](../../experiments/ai_training_v1/results/completed-2026-09-11/results.md)와 [상세 결과 JSON](../../experiments/ai_training_v1/results/completed-2026-09-11/results.json)을 보관했다. 총 19개 실행 이력 중 15개 완료, 2개 실패, 2개 중단이며 실패·중단 결과는 완료 성능에 합산하지 않았다.
 
 ## 범위와 자료
 
@@ -20,7 +20,7 @@
 
 OCR 영어 자료는 두 인식기에 공통이므로 모델별 실행 수를 독립적인 문서 수로 합산하지 않는다. 모든 합성 결과는 `compiler_generated_unreviewed`, `evaluation_eligible=false`다. 전체 실험은 `medical_release_gate_result=false`를 유지한다.
 
-자료 분리·실패 조건·학습 설정은 [실험 프로토콜](../experiments/ai_training_v1/README.md)에 있다. [실행 환경](../experiments/ai_training_v1/training-environment.json), [OCR 자산 잠금](../experiments/ai_training_v1/ocr-assets.lock.json), [공개 음성 자산 잠금](../experiments/ai_training_v1/asr-assets.lock.json)을 함께 기록했다.
+자료 분리·실패 조건·학습 설정은 [실험 프로토콜](../../experiments/ai_training_v1/README.md)에 있다. [실행 환경](../../experiments/ai_training_v1/training-environment.json), [OCR 자산 잠금](../../experiments/ai_training_v1/ocr-assets.lock.json), [공개 음성 자산 잠금](../../experiments/ai_training_v1/asr-assets.lock.json)을 함께 기록했다.
 
 ## 완료된 OCR 결과
 

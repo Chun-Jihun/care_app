@@ -2,7 +2,7 @@
 
 첫 PC 비교 실험과 구조·표기 처리 대조시험을 완료했다. 현재 우선안은 **챗봇의 조건 추출과 호스트 조회, PP-OCRv5 언어별 조합, Whisper small을 중심으로 한 모바일 전사 검증**이다. 추가 학습·증류를 시작하기 전에 입력 처리와 역할 분담에서 해결되는 오류가 많았다.
 
-검증된 상세 집계는 [실행 결과 표](../experiments/ai_baseline_v1/results/completed-2026-09-10/results.md)와 [언어별 결과 JSON](../experiments/ai_baseline_v1/results/completed-2026-09-10/results.json)에 보관했다. 환경 오류·수정 전 이력·일부 사례 재실행은 채택 비교와 구분했다.
+검증된 상세 집계는 [실행 결과 표](../../experiments/ai_baseline_v1/results/completed-2026-09-10/results.md)와 [언어별 결과 JSON](../../experiments/ai_baseline_v1/results/completed-2026-09-10/results.json)에 보관했다. 환경 오류·수정 전 이력·일부 사례 재실행은 채택 비교와 구분했다.
 
 ## 실험 범위
 
@@ -16,7 +16,7 @@
 
 ## 재현과 결과 검증
 
-실행 명령·전처리·실패 조건은 [실험 README](../experiments/ai_baseline_v1/README.md), 모델 revision과 파일 SHA-256은 [assets.lock.json](../experiments/ai_baseline_v1/assets.lock.json), 패키지 버전은 [runtime-environment.json](../experiments/ai_baseline_v1/runtime-environment.json)을 참조한다.
+실행 명령·전처리·실패 조건은 [실험 README](../../experiments/ai_baseline_v1/README.md), 모델 revision과 파일 SHA-256은 [assets.lock.json](../../experiments/ai_baseline_v1/assets.lock.json), 패키지 버전은 [runtime-environment.json](../../experiments/ai_baseline_v1/runtime-environment.json)을 참조한다.
 
 원본은 `data/ai-baseline-v1/runs/<run-id>/`에 보관한다. 각 실행은 모델·입력·코드·프롬프트·패키지 버전·원본 출력·시간·메모리·상태를 기록한다. 실행 ID를 재사용하거나 기존 자료를 덮어쓰지 않는다. 집계 도구는 파일 해시와 ID·건수·완료 상태를 확인하며 불완전 실행을 정상 성능으로 표시하지 않는다.
 

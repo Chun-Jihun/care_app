@@ -66,11 +66,11 @@ OCR 약 0.40~0.79초, 음성 약 4.61~7.39초였다. 다른 개발 작업을 병
 
 ## 자료 위치
 
-- [네이티브 출력](../experiments/mobile_ai_v1/android-native-smoke.json)
-- [재채점·APK/모델 해시](../experiments/mobile_ai_v1/validation-summary.json)
-- [모델 묶음 잠금](../experiments/mobile_ai_v1/model-pack.lock.json)
-- [시험 자료 잠금](../experiments/mobile_ai_v1/fixtures.lock.json)
-- [설치·구현 경계·iOS 미완료 사항](./mobile_ai_integration.md)
+- [네이티브 출력](../../experiments/mobile_ai_v1/android-native-smoke.json)
+- [재채점·APK/모델 해시](../../experiments/mobile_ai_v1/validation-summary.json)
+- [모델 묶음 잠금](../../experiments/mobile_ai_v1/model-pack.lock.json)
+- [시험 자료 잠금](../../experiments/mobile_ai_v1/fixtures.lock.json)
+- [설치·구현 경계·iOS 미완료 사항](../mobile_ai_integration.md)
 
 마이크 권한 창, 실제 녹음 품질, 사진 입력, 모델 선택창·저장 공간 부족, 발열·배터리·절전은
 실제 Android 휴대전화에서 추가 확인해야 한다. iOS는 필요한 OCR native bridge와 Mac 빌드가 남아 있다.

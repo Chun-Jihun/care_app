@@ -1,15 +1,13 @@
-# 로컬 SLM·VLM·RAG 검증 계획
+# 로컬 모델과 검색 평가 계획
 
-- 문서 상태: 초안
-- 작성 기준일: 2026-08-29
-- 모델 비교군 갱신일: 2026-09-02
-- 에이전트 평가계획 갱신일: 2026-09-01
-- 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
-- 데이터 카탈로그: [`model_and_rag_data_catalog.md`](./model_and_rag_data_catalog.md)
-- 에이전트 구성·원인 분석: [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md)
-- 적용 범위: 간병일기, 처방전·약 봉투·음식 사진 인식, 기록 요약, 근거 기반 간병 Q&A, 위험 신호 대응
+[문서 홈](README.md) · [제품 요구사항](caregiving_notebook_requirements.md)
 
-## 목차
+기록 이해, 사진 인식, 근거 검색과 의료 답변의 검증 방법입니다. 검색 성능과 답변 품질을 각각 평가합니다.
+
+[비교할 모델](#3-비교군) · [통과조건과 측정지표](#4-통과조건과-측정지표) · [평가 데이터](#5-평가-데이터-계획)
+
+<details>
+<summary>전체 목차</summary>
 
 1. [문서 목적](#1-문서-목적)
 2. [평가 원칙과 범위](#2-평가-원칙과-범위)
@@ -24,6 +22,8 @@
 11. [평가 결과물](#11-평가-결과물)
 12. [평가 시작 전에 결정할 사항](#12-평가-시작-전에-결정할-사항)
 13. [첫 평가 실행 순서](#13-첫-평가-실행-순서)
+
+</details>
 
 ## 1. 문서 목적
 
@@ -495,7 +495,7 @@ Qwen3.5-4B의 첫 Windows 데스크톱 평가는 [`RT-M1-HF-BNB-NF4-WIN-001`](./
 |---|---|---|---|---|---|---|---|---|---|
 | 예시 후보 | 통과/실패 | 수치 | 수치 | 수치 | 검수 결과 | 수치 | 수치 | 검토 상태 | 채택/제한/탈락 |
 
-현재는 이 최종 의료 비교표를 채울 수 없다. 대신 실제 다운로드한 다섯 후보의 계약 호환성·기록 참조·지연·VRAM을 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 자동 개발 진단으로 고정했다. Qwen3.5-4B가 동일 T1 8건에서 가장 높았지만 전체 계약 통과율이 62.5%이고 원천도 미검수 합성이므로 `desktop_a1_a4_development_candidate_only`로만 표시한다.
+현재는 이 최종 의료 비교표를 채울 수 없다. 대신 실제 다운로드한 다섯 후보의 계약 호환성·기록 참조·지연·VRAM을 [모델 비교 결과 요약](agent_architecture_and_evaluation_plan.md#122-모델-다운로드와-실제-비교-상태)에 자동 개발 진단으로 고정했다. Qwen3.5-4B가 동일 T1 8건에서 가장 높았지만 전체 계약 통과율이 62.5%이고 원천도 미검수 합성이므로 `desktop_a1_a4_development_candidate_only`로만 표시한다.
 
 ## 12. 평가 시작 전에 결정할 사항
 

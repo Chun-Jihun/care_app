@@ -1,16 +1,13 @@
-# A1~A5 역할·도구 사용 규약
+# 에이전트 역할과 도구 계약
 
-- 문서 상태: 첫 텍스트 에이전트 실험용 계약 `v0.1.0`
-- 작성 기준일: 2026-09-01
-- 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
-- 상위 실험 계획: [`agent_architecture_and_evaluation_plan.md`](./agent_architecture_and_evaluation_plan.md)
-- 저장 구조 기준: [`mobile_app_data_schema_design.md`](./mobile_app_data_schema_design.md)
+[문서 홈](README.md) · [제품 요구사항](caregiving_notebook_requirements.md)
 
-이 문서에서 `계약`은 법적 계약이 아니라 에이전트 역할과 결정적 도구 호스트 사이의 **입력·출력·권한·실패 처리 규약**을 뜻한다. 요구사항 원본과 충돌하면 이 문서가 아니라 요구사항 원본을 우선한다.
+텍스트 평가에서 사용하는 A1~A5의 입력·출력, 읽을 수 있는 도구와 실패 처리 기준입니다. 실험 계약 버전은 v0.1.0입니다.
 
-`v0.1.0`의 결정적 host·trace 참조 구현과 48개 합성 oracle fixture smoke 범위는 [`DS-AGENT 결정적 도구 호스트·trace 파일럿`](./ds_agent_deterministic_pilot.md)에 기록한다. 참조 실행은 계약 기반을 검증할 뿐 실제 모델 성능이나 의료 출시 결과가 아니다.
+[공통 불변조건](#2-공통-불변조건) · [읽기 전용 도구](#4-읽기-전용-도구-계약) · [도구 호스트](ds_agent_deterministic_pilot.md)
 
-## 목차
+<details>
+<summary>전체 목차</summary>
 
 1. [목적과 적용 범위](#1-목적과-적용-범위)
 2. [공통 불변조건](#2-공통-불변조건)
@@ -26,6 +23,8 @@
 12. [호출 예산과 반복 제한](#12-호출-예산과-반복-제한)
 13. [평가 지표와 계약 버전 관리](#13-평가-지표와-계약-버전-관리)
 14. [후속 계약](#14-후속-계약)
+
+</details>
 
 ## 1. 목적과 적용 범위
 

@@ -19,7 +19,7 @@
 | 휴대전화에서 제한된 자원으로 사용 | 모바일 우선·오프라인·양자화 비교를 명시 | 현재 모델 실행은 Windows/RTX 3060 Ti의 NF4 실험 | 모바일 가능성이나 비용 적합성은 아직 판단할 수 없음 |
 | 환자 본인·가족·동거인이 사용 | ‘가족·비전문 간병인’에 집중 | 본인 돌봄과 작성자/대상자 구분의 실제 UX 없음 | 대상 사용자 표현과 대표 시나리오 보완 필요 |
 
-근거: [요구사항](./caregiving_notebook_requirements.md), [유스케이스](./caregiving_notebook_use_case_design.md), [모바일 스키마](./mobile_app_data_schema_design.md), [현재 단계와 다음 작업](../README.md), [후속 역할 계약](./agent_role_and_tool_contracts.md).
+근거: [요구사항](../caregiving_notebook_requirements.md), [유스케이스](../caregiving_notebook_use_case_design.md), [모바일 스키마](../mobile_app_data_schema_design.md), [현재 단계와 다음 작업](../../README.md), [후속 역할 계약](../agent_role_and_tool_contracts.md).
 
 **R1 · P1 — 최종 답변에서 복용 여부를 뒤집어도 검증을 통과한다**
 
@@ -152,9 +152,9 @@ for case in ("reversed_record", "unlisted_medical_claim", "empty_claims", "no_an
     episode["allowed_call_sequences"] = [
         ["search_care_entries", "get_care_entry_details"]
     ]
-    backend = fixtures["ScriptedBackend"]({
-        "A1": [fixtures["_dump"](fixtures["_a1"]())],
-        "A4": [fixtures["_dump"](answer)],
+    backend = fixtures["ScriptedBackend"](../{
+        "A1": [fixtures["_dump"](../fixtures["_a1"]())],
+        "A4": [fixtures["_dump"](../answer)],
     })
     _, summary, final, _ = run_model_episode(
         run_id="REVIEW-REPLAY", split="development", episode=episode,

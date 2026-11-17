@@ -185,7 +185,7 @@ replay는 로컬 모델 추론 결과가 아니다. 실행 manifest의 `actual_l
 
 ### 7.2 T0~T3 전체 자동 개발 진단
 
-최종 기계 판독 결과와 입력 hash는 [`자동화 에이전트 평가 보고서`](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)와 그 디렉터리의 `manifest.json`에 고정했다.
+[자동 평가 결과 요약](no_human_review_development_plan.md#41-자동화-에이전트-실험-완료)에서 통합 진단의 범위와 지표를 확인할 수 있다. 전체 기계 판독 결과와 입력 해시를 재현하려면 로컬 결과 디렉터리의 `manifest.json`이 필요하다.
 
 | 토폴로지 | 기대 상태 일치 | 도구 순서 | 기록 참조 | 호출/episode | 평균 생성시간 | peak VRAM |
 |---|---:|---:|---:|---:|---:|---:|

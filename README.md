@@ -8,6 +8,7 @@
 <p align="center">
   <a href="./docs/mobile_current_guide.md">앱 사용 안내</a> ·
   <a href="#android에서-실행">소스로 실행하기</a> ·
+  <a href="./docs/README.md">전체 문서</a> ·
   <a href="https://github.com/Chun-Jihun/care_app/issues">버그·기능 제안</a>
 </p>
 
@@ -47,13 +48,13 @@ flutter run
 
 앱은 Android 7.0 이상에서 실행할 수 있습니다. SDK 버전, 테스트, APK 빌드와 서명 설정은 [모바일 개발 안내](./mobile/README.md#실행)에 정리돼 있습니다.
 
-## 개발 문서
+## 문서
 
-| 문서 | 내용 |
+| 찾는 내용 | 열어 볼 문서 |
 | --- | --- |
-| [제품 요구사항](./docs/caregiving_notebook_requirements.md) | 돌봄 기능의 범위와 의료·개인정보 안전 원칙 |
-| [설계 결정 기록](./docs/adr/) · [용어집](./GLOSSARY.md) | 데이터와 의료 근거를 다루는 설계 기준 |
-| [AI 연구 계획](./docs/agent_architecture_and_evaluation_plan.md) · [실험 결과](./docs/no_human_review_development_plan.md#4-자동화-평가-완료-상태와-남은-작업) | 모델과 근거 검색 실험의 평가 방법 및 결과 |
-| [프로젝트 작업 원칙](./AGENTS.md) · [환경 설정](./docs/repository_hygiene.md) | 저장소에서 개발을 시작할 때 필요한 안내 |
+| 수첩·복약·진료와 백업 사용법 | [앱 사용 안내](./docs/mobile_current_guide.md) |
+| 기능 범위와 의료·개인정보 기준 | [제품 요구사항](./docs/caregiving_notebook_requirements.md) |
+| 빌드·검증·배포와 데이터 구조 | [모바일 개발 안내](./mobile/README.md) |
+| AI 연구, 설계 결정, 과거 검증 | [전체 문서](./docs/README.md) |
 
 버그를 제보할 때는 사용 환경과 재현 단계를 적고, 기록이나 사진이 필요하면 예시 데이터를 사용해 주세요.

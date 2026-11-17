@@ -2,9 +2,9 @@
 
 - 조사일: 2026-09-10
 - 상태: **개발 실험 제안. 모델 채택·학습 실행·의료 기능 출시 승인 아님.**
-- 요구사항 원본: [간병수첩 요구사항](./caregiving_notebook_requirements.md)
-- 관련 문서: [모델·데이터 카탈로그](./model_and_rag_data_catalog.md), [SLM·RAG 검증 계획](./slm_rag_validation_plan.md), [사람 검수 없는 개발 범위](./no_human_review_development_plan.md)
-- 후속 실행 기록: [기준선 비교](./ai_baseline_results_2026-09-10.md), [추가 학습·증류 파일럿](./ai_training_results_2026-09-11.md). 이 조사 당시의 제안과 실제 측정 결과를 구분한다.
+- 요구사항 원본: [간병수첩 요구사항](../caregiving_notebook_requirements.md)
+- 관련 문서: [모델·데이터 카탈로그](../model_and_rag_data_catalog.md), [SLM·RAG 검증 계획](../slm_rag_validation_plan.md), [사람 검수 없는 개발 범위](../no_human_review_development_plan.md)
+- 후속 실행 기록: [기준선 비교](ai_baseline_results_2026-09-10.md), [추가 학습·증류 파일럿](ai_training_results_2026-09-11.md). 이 조사 당시의 제안과 실제 측정 결과를 구분한다.
 
 ## 1. 권고
 
@@ -24,7 +24,7 @@
 
 ### 기존 실험의 의미
 
-[로컬 모델 비교 V1](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)은 동일한 합성 개발 사례 8건에서 다음 결과를 기록했다.
+[모델 비교 결과 요약](../agent_architecture_and_evaluation_plan.md#122-모델-다운로드와-실제-비교-상태)은 동일한 합성 개발 사례 8건에서 다음 결과를 기록했다.
 
 | 모델 | 전체 계약 통과 | 평균 모델 생성 시간/사례 | 관찰된 주요 문제 |
 |---|---:|---:|---|
@@ -34,9 +34,9 @@
 
 이는 의료 정답률이 아니다. 자동 생성한 개발 사례이며 사람·임상 검수 전이다. 기대 의료 근거 ID가 비어 있어, 해당 검사 100%를 근거 검색 성능으로 해석할 수도 없다. MedGemma와 Nanbeige는 역할 계약 연결 시험 각 1건만 실행했으므로 위 8건 순위에 넣지 않는다. 실패한 1건만으로 모델 전체의 의료·언어 능력을 판정하지 않는다.
 
-[기존 구성 비교](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)의 동일 48건에서는 T1의 기록 참조율 50.0%, 평균 지연 약 38.2초에 비해 T3는 27.1%, 약 58.2초였다. 이 제한된 실험에서는 생성 역할을 늘리는 이득이 관찰되지 않았다. T0의 100%는 정답 도구 요청을 재생하는 oracle 기준선으로, 실제 사용자 질문을 코드만으로 100% 해결했다는 결과가 아니다.
+[자동 평가 결과 요약](../no_human_review_development_plan.md#41-자동화-에이전트-실험-완료)의 동일 48건에서는 T1의 기록 참조율 50.0%, 평균 지연 약 38.2초에 비해 T3는 27.1%, 약 58.2초였다. 이 제한된 실험에서는 생성 역할을 늘리는 이득이 관찰되지 않았다. T0의 100%는 정답 도구 요청을 재생하는 oracle 기준선으로, 실제 사용자 질문을 코드만으로 100% 해결했다는 결과가 아니다.
 
-현재 [고정 런타임](./qwen35_local_runtime_decision.md)은 Windows·RTX 3060 Ti 8GB·Transformers·bitsandbytes NF4이며, Qwen 선형 attention은 PyTorch reference 구현을 사용했다. 따라서 위 지연을 모델 자체의 최선 성능이나 휴대전화 지연으로 일반화할 수 없다. NF4 추론을 했다는 사실은 QLoRA 학습을 했다는 뜻도 아니다.
+현재 [고정 런타임](../qwen35_local_runtime_decision.md)은 Windows·RTX 3060 Ti 8GB·Transformers·bitsandbytes NF4이며, Qwen 선형 attention은 PyTorch reference 구현을 사용했다. 따라서 위 지연을 모델 자체의 최선 성능이나 휴대전화 지연으로 일반화할 수 없다. NF4 추론을 했다는 사실은 QLoRA 학습을 했다는 뜻도 아니다.
 
 현재 앱에는 실제 챗봇·OCR·ASR 모델이 연결되지 않았다. 확인한 모델 평가 결과에도 처방자료 OCR 및 간병 음성 전사의 성능 측정은 없다. 두 과업은 기준선부터 만들어야 한다.
 
@@ -194,7 +194,7 @@ RTF는 처리 시간÷음성 길이로 기록하고, 반대 방향의 속도 배
 
 ## 8. 모바일 통합과 자원 검증
 
-현재 [ContextTasks](../mobile/lib/application/context_tasks.dart), [NotebookContextReader](../mobile/lib/domain/notebook_context.dart), [DraftService](../mobile/lib/application/services/drafts_service.dart)의 경계를 활용한다. 챗봇은 제한된 읽기 문맥, OCR은 사용자가 선택한 이미지, ASR은 해당 입력 작업의 음성만 받아야 한다. OCR·ASR 입력을 처리하기 위해 전체 저장소나 복호화 키를 모델 어댑터에 넘기지 않는다.
+현재 [ContextTasks](../../mobile/lib/application/context_tasks.dart), [NotebookContextReader](../../mobile/lib/domain/notebook_context.dart), [DraftService](../../mobile/lib/application/services/drafts_service.dart)의 경계를 활용한다. 챗봇은 제한된 읽기 문맥, OCR은 사용자가 선택한 이미지, ASR은 해당 입력 작업의 음성만 받아야 한다. OCR·ASR 입력을 처리하기 위해 전체 저장소나 복호화 키를 모델 어댑터에 넘기지 않는다.
 
 추후 `ChatInference`·`OcrEngine`·`SpeechTranscriber` 같은 좁은 포트를 추가하는 방향을 제안한다. 이는 현재 존재하는 구현 이름이 아니다. 모델별 전처리·토큰화·native binding은 구현 계층에 두고, 결과 DTO에 원문 위치·모델 버전·미확정 상태를 담는다. 기록 확정 명령과 추론 결과 반환은 분리한다.
 
@@ -202,7 +202,7 @@ RTF는 처리 시간÷음성 길이로 기록하고, 반대 방향의 속도 배
 
 모바일 비교에서는 다음을 기록한다.
 
-- 기존 검증 기기 SM-S926N / Android 16부터 cold/warm 실행, 모델 로딩 시간, 첫 결과와 전체 결과 시간, peak RAM·GPU 사용량·저장용량을 측정한다. 하위 기기와 iOS는 별도 판정한다. [기존 Android 시험 기록](./android_device_validation_2026-09-10.md).
+- 기존 검증 기기 SM-S926N / Android 16부터 cold/warm 실행, 모델 로딩 시간, 첫 결과와 전체 결과 시간, peak RAM·GPU 사용량·저장용량을 측정한다. 하위 기기와 iOS는 별도 판정한다. [기존 Android 시험 기록](android_device_validation_2026-09-10.md).
 - 모델의 광고상 최대 문맥 대신 앱 과업에 필요한 문맥·출력 길이로 시험한다. 문맥 제한 때문에 중요한 원문을 조용히 자르지 않는다.
 - 같은 모델의 원 정밀도, 가능한 8비트 및 모바일 4/5비트 변환본을 대조한다. 4비트에서 중요 필드 보존이 떨어지면 더 높은 정밀도나 다른 모델을 선택한다.
 - OCR·ASR·LLM의 동시 적재와 순차 적재를 비교하고 메모리 압박·발열·연속 작업 후 지연을 측정한다. 통과하지 못하는 기기에는 수동 입력을 유지한다.
@@ -218,4 +218,4 @@ RTF는 처리 시간÷음성 길이로 기록하고, 반대 방향의 속도 배
 5. **남는 오류에만 SFT/LoRA 또는 OCR·ASR 미세조정을 적용한다.** 학습 전후의 의미 보존과 언어별 회귀를 비교한다.
 6. **작은 후보가 자원 조건은 맞지만 품질이 부족하고, 검증된 교사가 확보되면 증류한다.** 교사의 정답성·학습 데이터 권리·의료 검수 경계는 유지한다.
 
-이 조사 문서 작성 단계에서는 기존 코드와 고정 모델 프로필을 바꾸지 않았으며 모델 다운로드·학습·새 성능 시험을 수행하지 않았다. 이후 승인받아 실행한 비교와 개선 대조시험은 [후속 기준선 실험 결과](./ai_baseline_results_2026-09-10.md)에 별도로 기록했다.
+이 조사 문서 작성 단계에서는 기존 코드와 고정 모델 프로필을 바꾸지 않았으며 모델 다운로드·학습·새 성능 시험을 수행하지 않았다. 이후 승인받아 실행한 비교와 개선 대조시험은 [후속 기준선 실험 결과](ai_baseline_results_2026-09-10.md)에 별도로 기록했다.

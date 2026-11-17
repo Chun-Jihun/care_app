@@ -1,13 +1,13 @@
-# 로컬 간병 에이전트 구성 및 성능평가 계획
+# 로컬 간병 에이전트 연구와 평가
 
-- 문서 상태: 선행 연구·실험 계획 및 공개 구성요소 하네스 구현 중
-- 작성 기준일: 2026-09-01
-- 요구사항 원본: [`caregiving_notebook_requirements.md`](./caregiving_notebook_requirements.md)
-- 세부 모델·RAG 평가 기준: [`slm_rag_validation_plan.md`](./slm_rag_validation_plan.md)
-- A1~A5 세부 역할·도구 계약: [`agent_role_and_tool_contracts.md`](./agent_role_and_tool_contracts.md)
-- 공개 구성요소 실행·채점 경계: [`role_component_evaluation_harness.md`](./role_component_evaluation_harness.md)
+[문서 홈](README.md) · [제품 요구사항](caregiving_notebook_requirements.md)
 
-## 목차
+기록 조회와 승인 근거 검색을 역할별로 나누었을 때의 비용과 정확성을 비교하는 연구입니다. 이 문서의 실험 결과는 개발 진단으로 사용합니다.
+
+[질문 처리 흐름](#41-간병-질문-처리) · [역할 구성 비교](#71-비교-토폴로지) · [자동 평가 요약](#111-현재-결과) · [모델 비교](#122-모델-다운로드와-실제-비교-상태)
+
+<details>
+<summary>전체 목차</summary>
 
 1. [연구 목적과 현재 상태](#1-연구-목적과-현재-상태)
 2. [에이전트와 비에이전트 구성요소의 구분](#2-에이전트와-비에이전트-구성요소의-구분)
@@ -23,6 +23,8 @@
 12. [실험 준비와 다운로드 계획](#12-실험-준비와-다운로드-계획)
 13. [실행 순서와 종료 조건](#13-실행-순서와-종료-조건)
 14. [참고 문서](#14-참고-문서)
+
+</details>
 
 ## 1. 연구 목적과 현재 상태
 
@@ -220,7 +222,7 @@ flowchart TB
     class FIXED deterministic
 ```
 
-MedGemma와 Nanbeige는 각각 A4와 A1의 1건 protocol probe만 실행했다. 따라서 이 두 결과는 JSON 역할 계약 연결 가능성 신호이며, Qwen3.5·Qwen3·EXAONE의 동일 T1 8건 E2E 결과와 직접 순위를 매길 수 없다. 상세 수치와 출력 예시는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 기록한다.
+MedGemma와 Nanbeige는 각각 A4와 A1의 1건 protocol probe만 실행했다. 따라서 이 두 결과는 JSON 역할 계약 연결 가능성 신호이며, Qwen3.5·Qwen3·EXAONE의 동일 T1 8건 E2E 결과와 직접 순위를 매길 수 없다. 모델별 표본과 계약 통과율은 [모델 비교 결과 요약](#122-모델-다운로드와-실제-비교-상태)에서 확인한다.
 
 ## 5. 역할별 LLM 후보
 
@@ -461,7 +463,7 @@ development 연결 smoke만으로 “멀티에이전트 성능이 좋다”, “
 
 T1~T3의 A1 gold 요청 exact match는 모두 0%였다. exact match는 날짜·검색어 문자열 차이도 실패로 세므로, 실제 검색 결과와 trace 단계 실패를 함께 봤다. T3는 T2보다 도구 순서가 개선되지 않은 채 생성 역할·지연·인계 실패만 늘었다. 이는 이 실험 조건에서는 H1·H3을 지지하지 않으며, 역할 수 증가가 자동으로 품질 향상을 만들지 않음을 보여준다. H2는 별도 A5의 안전 개선보다 상태 불일치가 관찰되어 지지되지 않았다. H4는 다른 모델을 실행하지 않았으므로 미검증이다.
 
-전체 기계 판독 결과는 [`자동화 에이전트 평가 보고서`](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)에 고정했다. 모든 실행은 `automated_development_diagnostic=true`, `evaluation_eligible=false`, `model_performance_result=false`, `medical_release_gate_result=false`다.
+자동 진단 결과를 [자동 평가 결과 요약](no_human_review_development_plan.md#41-자동화-에이전트-실험-완료)에 정리했다. 모든 실행은 `automated_development_diagnostic=true`, `evaluation_eligible=false`, `model_performance_result=false`, `medical_release_gate_result=false`다.
 
 ### 11.3 결과 설명 형식
 
@@ -499,7 +501,7 @@ T1~T3의 A1 gold 요청 exact match는 모두 0%였다. exact match는 날짜·�
 | M4 | [Nanbeige4-3B-Thinking-2511](https://huggingface.co/Nanbeige/Nanbeige4-3B-Thinking-2511) | **원본·revision·파일 hash 고정, `trust_remote_code=false` A1 protocol probe 1건 완료** | A1 코디네이터의 도구 호출 특화 비교 | 첫 출력 스키마 오류 뒤 2,048-token 수리도 실패. 현재 JSON 계약과 추론 예산에는 부적합하며 모델별 constrained decoding 가설이 있을 때 재시험 |
 | M5 | [EXAONE-4.0-1.2B](https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B) | **원본·revision·파일 hash 고정, 동일 T1 8건 완료** | 한국어 소형·온디바이스 하한 기준선 | 최대 VRAM **1.54 GiB**로 가장 작지만 A1 필수 필드 누락이 수리 후에도 반복되어 전체 계약 **0%**. 현재 계약의 단독 에이전트 후보에서는 제외 |
 
-다섯 모델은 모두 로컬에서 실제 load·생성을 수행했다. 비교 원본과 실행 프로필은 `model_comparison_v1` lock으로 분리했고 결과는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 고정했다. 이 8건 선별과 역할별 1건 protocol probe는 다음 실험 가설을 정하기 위한 자동 개발 진단이며 의료 성능 순위가 아니다.
+다섯 모델은 모두 로컬에서 실제 load·생성을 수행했다. 비교 원본과 실행 프로필은 `model_comparison_v1` lock으로 분리했고 아래 후보 판단은 이 비교의 개발 진단을 기준으로 한다. 이 8건 선별과 역할별 1건 protocol probe는 다음 실험 가설을 정하기 위한 자동 개발 진단이며 의료 성능 순위가 아니다.
 
 다음은 첫 실험에서 다운로드하지 않는다.
 
@@ -602,4 +604,4 @@ experiments/agent_eval/results/
 8. [SLM·VLM·RAG 검증 계획](./slm_rag_validation_plan.md) — 전체 hard gate, 데이터와 실행 절차
 9. [모델·RAG 데이터 카탈로그](./model_and_rag_data_catalog.md) — 데이터별 출처, 권리와 채택 상태
 10. [Qwen3.5-4B 로컬 추론 런타임·양자화 결정](./qwen35_local_runtime_decision.md) — 첫 데스크톱 실험의 고정 환경과 모바일 검증 경계
-11. [로컬 모델 비교 실험 V1](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md) — 다섯 로컬 모델의 동일 T1 선별·역할 계약 probe와 기술 후보 판단
+11. [모델 비교 결과 요약](#122-모델-다운로드와-실제-비교-상태) — 다섯 로컬 모델의 동일 T1 선별·역할 계약 probe와 기술 후보 판단

@@ -2,7 +2,7 @@
 
 - 대상: 기존 `care_app` 프로젝트의 현재 작업 트리
 - 기준 커밋: `754ff69b6b566f6d2c6a57195339abbdfd6f28f0`
-- 제품 요구사항 원본: [caregiving_notebook_requirements.md](caregiving_notebook_requirements.md)
+- 제품 요구사항 원본: [caregiving_notebook_requirements.md](../caregiving_notebook_requirements.md)
 - 범위: 현황·문서·아키텍처·코드·테스트·요구사항 대응과 개선 계획
 - 변경 정책: 기존 소스·문서·사용자 변경을 수정하지 않았다. 새로 작성한 이 보고서와 Git에서 제외되는 감사용 로그·합성 재현 자료만 추가했다. 실제 수정은 사용자 승인 이후의 별도 작업이다.
 - 성격: 개발 품질 감사다. 임상적 정확성, 이용 권리, 스토어 심사 적합성 또는 모든 보안 취약점의 부재를 인증하는 결과가 아니다.
@@ -155,7 +155,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 ### F-01 · High · 앱 잠금 활성화와 백그라운드 전환의 경쟁 상태
 
 - **분류:** 실행으로 확인한 결함. 실제 OS의 전환 타이밍·발생 빈도는 미검증.
-- **근거:** [care_controller.dart](../mobile/lib/application/care_controller.dart#L270) 270·278·306행, [app.dart](../mobile/lib/presentation/app.dart#L44) 44행, [local_credentials.dart](../mobile/lib/infrastructure/local_credentials.dart).
+- **근거:** [care_controller.dart](../../mobile/lib/application/care_controller.dart#L270) 270·278·306행, [app.dart](../../mobile/lib/presentation/app.dart#L44) 44행, [local_credentials.dart](../../mobile/lib/infrastructure/local_credentials.dart).
 - **조건:** 잠금 없는 수첩에서 PIN 활성화가 자격정보 해시·저장을 기다리는 동안 앱이 백그라운드로 전환된다.
 - **관찰:** `setPin()` 완료 후 `hasPin == true`인데 `unlocked == true`다. `handleBackground()`는 아직 false인 `_hasPin`을 보고 잠금 없는 경로를 선택해 기존 epoch를 유지한다. resume 경로는 열린 수첩을 갱신하며 잠금 여부를 다시 강제하지 않는다. 이후 한 번 더 백그라운드 전환하면 정상 잠금된다.
 - **공개 interface 재현:** 잠금 없이 시작 → `final pending = c.setPin(합성 6자리 PIN)` → `c.handleBackground()` → `await pending` → PIN 활성·잠금 해제 상태를 확인.
@@ -167,7 +167,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 ### F-02 · Medium · 백업 확인의 처방 이력 개수는 항상 0
 
 - **분류:** 실행으로 확인한 표시 결함.
-- **근거:** [backup_page.dart](../mobile/lib/presentation/backup_page.dart#L11) 11·16행, [backup_document.dart](../mobile/lib/infrastructure/backup_document.dart#L109) 109행, [backup.dart](../mobile/lib/domain/backup.dart).
+- **근거:** [backup_page.dart](../../mobile/lib/presentation/backup_page.dart#L11) 11·16행, [backup_document.dart](../../mobile/lib/infrastructure/backup_document.dart#L109) 109행, [backup.dart](../../mobile/lib/domain/backup.dart).
 - **원인:** `Map<BackupCategory,int>`에 `'medication_plan'` 문자열을 넣어 조회한다. enum 계약에는 처방 이력 category가 없어 `null ?? 0`으로 표시된다.
 - **재현:** 약을 등록한 뒤 처방 지시를 한 번 변경하여 plan 2개를 만든다. 실제 선택 백업 rows의 `medication_plan`은 2개지만 `backupCounts()`는 `처방 이력 0개`를 반환한다.
 - **영향:** 사용자가 백업 범위를 잘못 이해한다. 이번 재현에서 실제 처방 이력 누락이나 복원 손실은 발견하지 않았다.
@@ -178,7 +178,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 ### F-03 · Medium · 패키지 게시 실패 후 불완전 결과가 남고 재시도가 차단됨
 
 - **분류:** 두 실제 생성 함수를 합성 파일·예외 주입으로 실행해 확인한 개발 도구 결함.
-- **근거:** [package_mobile_ai.py](../scripts/package_mobile_ai.py#L36) 36~41행의 final-name 직접 쓰기, [build_knowledge_delivery.py](../scripts/build_knowledge_delivery.py#L74) 74·78행의 pack rename 후 descriptor 쓰기.
+- **근거:** [package_mobile_ai.py](../../scripts/package_mobile_ai.py#L36) 36~41행의 final-name 직접 쓰기, [build_knowledge_delivery.py](../../scripts/build_knowledge_delivery.py#L74) 74·78행의 pack rename 후 descriptor 쓰기.
 - **재현 A:** AI pack의 첫 복사에서 `OSError`를 발생시키면 최종 이름의 불완전 `.careai`가 남고 앱 manifest는 생성되지 않는다. 같은 경로 재실행은 `FileExistsError`로 끝난다.
 - **재현 B:** knowledge pack을 완성한 뒤 descriptor 쓰기를 실패시키면 pack만 존재한다. 같은 출력 경로에서 재실행하면 역시 `FileExistsError`로 끝난다.
 - **영향:** 공간 부족·프로세스 중단 등에서 배포 산출물 조합이 불완전해지고 수동 정리가 필요해진다. 앱의 hash 검증은 잘못된 파일 활성화를 막는 방어이며, 이 결함이 임상 승인 우회나 기록 손실을 일으킨다고 확인한 것은 아니다.
@@ -189,7 +189,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 ### F-04 · Medium · 기본 Python 테스트 4개가 미추적 로컬 실험 자료에 의존
 
 - **분류:** 실행 실패와 코드·ignore 대조로 확인한 테스트 재현성 결함. 앱 기능 결함으로 집계하지 않는다.
-- **근거:** [test_ds_agent_model_runner.py](../tests/test_ds_agent_model_runner.py#L225) 225·459행, [test_ds_agent_automated_report.py](../tests/test_ds_agent_automated_report.py#L14) 14행, [test_automated_agent_evaluation_report.py](../tests/test_automated_agent_evaluation_report.py#L12) 12·45행, [.gitignore](../.gitignore#L43) 43행.
+- **근거:** [test_ds_agent_model_runner.py](../../tests/test_ds_agent_model_runner.py#L225) 225·459행, [test_ds_agent_automated_report.py](../../tests/test_ds_agent_automated_report.py#L14) 14행, [test_automated_agent_evaluation_report.py](../../tests/test_automated_agent_evaluation_report.py#L12) 12·45행, [.gitignore](../../.gitignore#L43) 43행.
 - **관찰:** 175개 실행 중 169개 통과·4개 error·2개 skip. error 4개는 `data/agent-eval/.../manifest.json`·`episodes.jsonl` 및 연계 결과 자료를 읽지 못했다. 임시 폴더를 바꾸고 권한 제약 밖에서도 재실행했으나 같은 4개가 남았다.
 - **구조적 문제:** `data/`는 Git 제외 대상이고 시험이 이를 선택적 integration 자료로 분리하지 않는다. 이 의존은 해당 자료가 없는 새 clone에서 기본 suite 전체를 그대로 재현할 수 없게 만든다. 현재 Windows 접근 거부의 운영체제 원인까지 조사하거나 ACL을 변경하지 않았다.
 - **권장:** 계약·실행 경로 시험은 작고 결정적인 합성 fixture 또는 생성기로 자체 준비한다. 실제 고정 실험을 검증하는 시험은 명시적인 통합 검사로 분리하고 입력 획득 방법·해시·완료 조건을 문서화한다. 단순히 모든 실패를 skip 처리해 검증을 약화하지 않는다.
@@ -198,7 +198,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 ### F-05 · Medium · 현재 사용 안내와 역사적 상태가 섞여 있음
 
 - **분류:** 문서와 현재 코드의 불일치 확인. 날짜가 붙은 모든 과거 기록을 오류로 보지는 않는다.
-- **근거:** [mobile_ai_integration.md](mobile_ai_integration.md#L18) 18행은 상대 날짜 미지원으로 안내하고 76행은 백업 document version 2라고 설명한다. 현재 [ai_service.dart](../mobile/lib/application/services/ai_service.dart#L88)는 `RecordLookupParser`를 사용하며 자연어·후속 조회 시험이 있고, [backup_document.dart](../mobile/lib/infrastructure/backup_document.dart#L18)는 version 5다. [모바일 README](../mobile/README.md#L113) 113행의 `최신 Flutter 시험 47개`는 같은 문서의 88행 199개 기록과 함께 남아 있다.
+- **근거:** [mobile_ai_integration.md](https://github.com/Chun-Jihun/care_app/blob/c2a5d0fb0d3373dd18891ed3edf18e0ad26822d3/docs/mobile_ai_integration.md#L18) 18행은 상대 날짜 미지원으로 안내하고 76행은 백업 document version 2라고 설명한다. 현재 [ai_service.dart](../../mobile/lib/application/services/ai_service.dart#L88)는 `RecordLookupParser`를 사용하며 자연어·후속 조회 시험이 있고, [backup_document.dart](../../mobile/lib/infrastructure/backup_document.dart#L18)는 version 5다. [모바일 README](https://github.com/Chun-Jihun/care_app/blob/c2a5d0fb0d3373dd18891ed3edf18e0ad26822d3/mobile/README.md#L113) 113행의 `최신 Flutter 시험 47개`는 같은 문서의 88행 199개 기록과 함께 남아 있다.
 - **영향:** 설치·지원·수정 시 어떤 문서를 현재 계약으로 삼을지 혼동한다. 설계 초안의 목표 테이블과 실제 SQL schema가 다른 사실 자체는 이미 문서에 구분되어 있으므로 결함으로 중복 집계하지 않는다.
 - **권장:** 현재 실행 안내·지원 기능·버전은 한 진입점에서 안내한다. 과거 실험·개선 기록은 날짜·당시 기준임을 보존하고 현재 안내로 연결한다. 기존 연구 수치와 설계 의도는 지우거나 일괄 새 형식으로 변환하지 않는다.
 - **변경 위험:** 과거 재현 조건을 현재 값으로 덮어써 역사적 근거를 손상할 수 있다. 현재 문서와 당시 스냅샷을 분명히 구분하는 수정만 먼저 수행한다.
@@ -215,7 +215,7 @@ domain의 import 스캔에서는 Flutter·SQLite·application·infrastructure �
 
 ### R-02 · Medium · 긴 백업 작업의 입력 차단 범위 줄이기
 
-[BackupService](../mobile/lib/application/services/backup_service.dart#L23)는 암호화·파일 IO·파일 선택 동안 `_scope.run`을 유지하고, [app.dart](../mobile/lib/presentation/app.dart#L136)는 busy 동안 private Navigator 전체에 `AbsorbPointer`를 적용한다. 구조상 긴 백업 동안 앱 내 읽기·이동·연락 버튼도 응답하지 못할 수 있다. 실제 최대 시간·사용자 피해를 측정한 것은 아니다.
+[BackupService](../../mobile/lib/application/services/backup_service.dart#L23)는 암호화·파일 IO·파일 선택 동안 `_scope.run`을 유지하고, [app.dart](../../mobile/lib/presentation/app.dart#L136)는 busy 동안 private Navigator 전체에 `AbsorbPointer`를 적용한다. 구조상 긴 백업 동안 앱 내 읽기·이동·연락 버튼도 응답하지 못할 수 있다. 실제 최대 시간·사용자 피해를 측정한 것은 아니다.
 
 - **삭제 시험 판단:** 쓰기 직렬화를 삭제하면 무결성 복잡성이 여러 caller로 퍼진다. 유지해야 한다. 대신 operation 진행 상태와 화면 입력 차단의 Interface를 구분하는 deepening 후보로 본다.
 - **권장:** read/contact·진행 표시·안전한 취소 가능 구간과 commit 구간의 의미를 먼저 정의한다. 현재 기록을 바꾸는 동시 작업까지 무조건 허용하지 않는다.
@@ -248,7 +248,7 @@ ADR 후보는 ① 식별 DB 분리와 attached transaction, ② frozen 선택 �
 
 ### U-02 · Medium · 시간대 변경 후 기록의 표시 의미
 
-[records.dart](../mobile/lib/infrastructure/repositories/records.dart#L28)는 UTC 시각을 현재 local timezone으로 변환하고 저장 당시 `offset_minutes`도 보관한다. 현재 기기 시각 기준 표시가 잘못되었다고 단정할 수 없다. 여행·기기 시간대 변경 시 기록 당시 시각과 현재 시각 중 무엇을 보여줄지, 수정·진료 자료·백업의 날짜 범위가 어느 기준인지 제품 정책을 먼저 확인해야 한다.
+[records.dart](../../mobile/lib/infrastructure/repositories/records.dart#L28)는 UTC 시각을 현재 local timezone으로 변환하고 저장 당시 `offset_minutes`도 보관한다. 현재 기기 시각 기준 표시가 잘못되었다고 단정할 수 없다. 여행·기기 시간대 변경 시 기록 당시 시각과 현재 시각 중 무엇을 보여줄지, 수정·진료 자료·백업의 날짜 범위가 어느 기준인지 제품 정책을 먼저 확인해야 한다.
 
 ### U-03 · Medium · 큰 백업·모델 설치의 메모리·시간 여유
 

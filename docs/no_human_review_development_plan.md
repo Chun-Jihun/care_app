@@ -1,4 +1,6 @@
-# 사람 검수 없는 자동화 개발 트랙
+# 자동 평가 결과와 의료 검수 범위
+
+[문서 홈](README.md) · [자동화 실험 결과](#41-자동화-에이전트-실험-완료) · [의료 안전 요구사항](caregiving_notebook_requirements.md#ai와-의료-안전)
 
 - 상태 기준일: 2026-09-02
 - 현재 가정: 평가 case 사람 검수, 임상 검수와 가족간병인 사용성 평가 자원을 확보하지 못함
@@ -51,7 +53,7 @@ HealthBench의 자동 judge나 다른 LLM의 합의는 참고 지표로만 분�
 
 ### 4.1 자동화 에이전트 실험 완료
 
-Qwen3.5-4B를 development 28건, validation 14건, frozen-test 6건에 실행했고, 같은 48건에서 T0~T3를 비교했다. 실제 모델 실행은 episode별 checkpoint로 재개할 수 있고 입력 bundle, runner 소스, runtime profile과 출력 trace의 SHA-256을 검증한다. 통합 결과는 [`자동화 에이전트 평가 보고서`](../experiments/agent_eval/results/automated_agent_evaluation_v1/automated_agent_evaluation.md)에 고정했다.
+Qwen3.5-4B를 development 28건, validation 14건, frozen-test 6건에 실행했고, 같은 48건에서 T0~T3를 비교했다. 실제 모델 실행은 episode별 checkpoint로 재개할 수 있고 입력 bundle, runner 소스, runtime profile과 출력 trace의 SHA-256을 검증한다. 통합 결과의 주요 수치는 아래 표에 정리했다.
 
 | 토폴로지 | 기대 상태 일치 | 도구 순서 일치 | 기대 기록 참조 | 모델 호출/episode | 평균 생성시간/episode | 해석 |
 |---|---:|---:|---:|---:|---:|---|
@@ -116,7 +118,7 @@ T1~T3의 A1 gold 요청 exact match는 모두 0%였다. 여기에는 날짜·검
 - [x] 승인 의료 지식이 없을 때 의학 설명을 안전 보류함
 - [x] 결과 manifest가 미검수·비출시 상태를 자동으로 표시함
 
-추가 모델 선별은 완료했다. Qwen3.5-4B·Qwen3-4B·EXAONE 1.2B의 동일 T1 8건과 MedGemma 1.5 4B·Nanbeige4-3B의 목표 역할 protocol probe 결과는 [`로컬 모델 비교 실험 V1`](../experiments/agent_eval/results/model_comparison_v1/model_comparison.md)에 고정했다. Qwen3.5만 데스크톱 기술 후보로 유지하며, 더 큰 T4 역할별 특화 실험은 현재 실패를 개선할 구체적인 프롬프트·constrained decoding·검색 가설이 있을 때만 재개한다.
+추가 모델 선별은 완료했다. Qwen3.5-4B·Qwen3-4B·EXAONE 1.2B의 동일 T1 8건과 MedGemma 1.5 4B·Nanbeige4-3B의 목표 역할 protocol probe 결과는 [모델 비교 결과 요약](agent_architecture_and_evaluation_plan.md#122-모델-다운로드와-실제-비교-상태)에 고정했다. Qwen3.5만 데스크톱 기술 후보로 유지하며, 더 큰 T4 역할별 특화 실험은 현재 실패를 개선할 구체적인 프롬프트·constrained decoding·검색 가설이 있을 때만 재개한다.
 
 ## 6. 검수 자원이 끝내 확보되지 않는 경우의 제품 범위
 
